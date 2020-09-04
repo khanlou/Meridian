@@ -12,37 +12,35 @@ import NIOHTTP1
 
 struct EmptyResponseTestRoute: Route {
     static let route: RouteMatcher = "/emptyResponse"
-
+    
     func execute() throws -> Response {
         EmptyResponse()
     }
 }
 
 final class EmptyResponseRouteTests: XCTestCase {
-
-    func makeWorld() throws -> (EmbeddedChannel, RecordingHandler<HTTPServerRequestPart, HTTPServerResponsePart>) {
+    
+    func makeChannel() throws -> EmbeddedChannel {
         let handler = HTTPHandler(routes: [
             EmptyResponseTestRoute.self,
         ], errorRenderer: BasicErrorRenderer.self)
-        let recorder = RecordingHandler<HTTPServerRequestPart, HTTPServerResponsePart>()
-
+        
         let channel = EmbeddedChannel()
-        try channel.pipeline.addHandler(recorder).wait()
         try channel.pipeline.addHandler(handler).wait()
-
-        return (channel, recorder)
+        
+        return channel
     }
-
+    
     func testBasic() throws {
-
-        let (channel, recorder) = try self.makeWorld()
-
+        
+        let channel = try self.makeChannel()
+        
         let request = HTTPRequestBuilder(uri: "/emptyResponse", method: .GET)
         try channel.writeInbound(request.head)
         try channel.writeInbound(request.body)
         try channel.writeInbound(request.end)
-
-        let response = try HTTPResponseReader(head: recorder.writes[0], body: recorder.writes[1], end: recorder.writes[2])
+        
+        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
         XCTAssertEqual(response.statusCode, .noContent)
         XCTAssertEqual(response.bodyString, "")
     }

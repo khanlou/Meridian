@@ -12,37 +12,35 @@ import NIOHTTP1
 
 struct RedirectResponseTestRoute: Route {
     static let route: RouteMatcher = "/redirect"
-
+    
     func execute() throws -> Response {
         Redirect.temporary(url: URL(string: "https://example.com")!)
     }
 }
 
 final class RedirectRouteTests: XCTestCase {
-
-    func makeWorld() throws -> (EmbeddedChannel, RecordingHandler<HTTPServerRequestPart, HTTPServerResponsePart>) {
+    
+    func makeChannel() throws -> EmbeddedChannel {
         let handler = HTTPHandler(routes: [
             RedirectResponseTestRoute.self,
         ], errorRenderer: BasicErrorRenderer.self)
-        let recorder = RecordingHandler<HTTPServerRequestPart, HTTPServerResponsePart>()
-
+        
         let channel = EmbeddedChannel()
-        try channel.pipeline.addHandler(recorder).wait()
         try channel.pipeline.addHandler(handler).wait()
-
-        return (channel, recorder)
+        
+        return channel
     }
-
+    
     func testBasic() throws {
-
-        let (channel, recorder) = try self.makeWorld()
-
+        
+        let channel = try self.makeChannel()
+        
         let request = HTTPRequestBuilder(uri: "/redirect", method: .GET)
         try channel.writeInbound(request.head)
         try channel.writeInbound(request.body)
         try channel.writeInbound(request.end)
-
-        let response = try HTTPResponseReader(head: recorder.writes[0], body: recorder.writes[1], end: recorder.writes[2])
+        
+        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
         XCTAssert(response.headers.contains(where: { $0.name == "Location" && $0.value == "https://example.com" }))
         XCTAssertEqual(response.statusCode, .temporaryRedirect)
         XCTAssertEqual(response.bodyString, "")
