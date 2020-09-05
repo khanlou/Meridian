@@ -11,7 +11,7 @@ public struct RequestHeader {
     public let method: HTTPMethod
     public let headers: Headers
 
-    private let urlComponents: URLComponents
+    private var urlComponents: URLComponents
 
     public init(method: HTTPMethod, uri: String, headers: [(String, String)]) {
         self.method = method
@@ -19,8 +19,13 @@ public struct RequestHeader {
         self.urlComponents = URLComponents(string: uri)!
     }
 
-    public var path: String {
-        urlComponents.path
+    internal(set) public var path: String {
+        get {
+            urlComponents.path
+        }
+        set {
+            urlComponents.path = newValue
+        }
     }
 
     public var queryParameters: [URLQueryItem] {

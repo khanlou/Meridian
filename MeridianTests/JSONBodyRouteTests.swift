@@ -31,9 +31,9 @@ struct JSONBodyTestRoute: Route {
 final class JSONBodyRouteTests: XCTestCase {
     
     func makeChannel() throws -> EmbeddedChannel {
-        let handler = HTTPHandler(routes: [
+        let handler = HTTPHandler(routesByPrefix: ["": [
             JSONBodyTestRoute.self,
-        ], errorRenderer: BasicErrorRenderer.self)
+        ]], errorRenderer: BasicErrorRenderer.self)
         
         let channel = EmbeddedChannel()
         try channel.pipeline.addHandler(handler).wait()

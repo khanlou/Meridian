@@ -21,9 +21,9 @@ struct EmptyResponseTestRoute: Route {
 final class EmptyResponseRouteTests: XCTestCase {
     
     func makeChannel() throws -> EmbeddedChannel {
-        let handler = HTTPHandler(routes: [
+        let handler = HTTPHandler(routesByPrefix: ["": [
             EmptyResponseTestRoute.self,
-        ], errorRenderer: BasicErrorRenderer.self)
+        ]], errorRenderer: BasicErrorRenderer.self)
         
         let channel = EmbeddedChannel()
         try channel.pipeline.addHandler(handler).wait()

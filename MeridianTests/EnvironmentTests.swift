@@ -54,10 +54,10 @@ struct EnvironmentObjectTestRoute: Route {
 final class EnvironmentTests: XCTestCase {
     
     func makeChannel() throws -> EmbeddedChannel {
-        let handler = HTTPHandler(routes: [
+        let handler = HTTPHandler(routesByPrefix: ["": [
             EnvironmentKeyTestRoute.self,
             EnvironmentObjectTestRoute.self,
-        ], errorRenderer: BasicErrorRenderer.self)
+        ]], errorRenderer: BasicErrorRenderer.self)
         
         let channel = EmbeddedChannel()
         try channel.pipeline.addHandler(handler).wait()

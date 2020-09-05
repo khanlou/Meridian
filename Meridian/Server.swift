@@ -21,12 +21,24 @@ public final class Server {
 
     let loopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
 
-    let routes: [Route.Type]
+    var routesByPrefix: [String: [Route.Type]]
     let errorRenderer: ErrorRenderer.Type
 
-    public init(routes: [Route.Type], errorRenderer: ErrorRenderer.Type) {
-        self.routes = routes
+    public init(errorRenderer: ErrorRenderer.Type) {
+        self.routesByPrefix = [:]
         self.errorRenderer = errorRenderer
+    }
+
+    @discardableResult
+    public func register(_ routes: Route.Type...) -> Self {
+        self.routesByPrefix["", default: []].append(contentsOf: routes)
+        return self
+    }
+
+    @discardableResult
+    public func group(prefix: String, _ routes: Route.Type...) -> Self {
+        self.routesByPrefix[prefix, default: []].append(contentsOf: routes)
+        return self
     }
 
     public func listen() {
@@ -38,7 +50,7 @@ public final class Server {
             .childChannelInitializer({ channel in
                 channel.pipeline.configureHTTPServerPipeline()
                     .flatMap({
-                        channel.pipeline.addHandler(HTTPHandler(routes: self.routes, errorRenderer: self.errorRenderer))
+                        channel.pipeline.addHandler(HTTPHandler(routesByPrefix: self.routesByPrefix, errorRenderer: self.errorRenderer))
                     })
             })
             .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)

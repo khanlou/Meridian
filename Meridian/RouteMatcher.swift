@@ -28,6 +28,8 @@ public struct RouteMatcher {
         })
     }
 
+    public static let root = RouteMatcher.path("")
+
     public static let any = RouteMatcher(matches: { _ in MatchedRoute() })
 
     public static func method(_ method: HTTPMethod, _ matcher: RouteMatcher) -> RouteMatcher {

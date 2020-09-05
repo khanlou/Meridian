@@ -11,17 +11,14 @@ import Meridian
 
 Backtrace.install()
 
-let app = Server(
-    routes: [
-        DeleteTodo.self,
-        EditTodo.self,
-        ShowTodo.self,
-        ClearTodos.self,
-        CreateTodo.self,
-        ListTodos.self,
-    ],
-    errorRenderer: JSONErrorRenderer.self
-)
-.environmentObject(Database())
-
-app.listen()
+Server(errorRenderer: JSONErrorRenderer.self)
+    .group(prefix: "/todos",
+           DeleteTodo.self,
+           EditTodo.self,
+           ShowTodo.self,
+           ClearTodos.self,
+           CreateTodo.self,
+           ListTodos.self
+    )
+    .environmentObject(Database())
+    .listen()

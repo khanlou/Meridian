@@ -21,9 +21,9 @@ struct CustomStatusCodeTestRoute: Route {
 final class CustomStatusCodeRouteTests: XCTestCase {
     
     func makeChannel() throws -> EmbeddedChannel {
-        let handler = HTTPHandler(routes: [
+        let handler = HTTPHandler(routesByPrefix: ["": [
             CustomStatusCodeTestRoute.self,
-        ], errorRenderer: BasicErrorRenderer.self)
+        ]], errorRenderer: BasicErrorRenderer.self)
         
         let channel = EmbeddedChannel()
         try channel.pipeline.addHandler(handler).wait()

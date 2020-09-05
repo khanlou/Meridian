@@ -23,7 +23,7 @@ extension Response {
 
 struct ListTodos: Route {
 
-    static let route: RouteMatcher = "/todos"
+    static let route: RouteMatcher = .root
 
     @EnvironmentObject var database: Database
 
@@ -35,7 +35,7 @@ struct ListTodos: Route {
 }
 
 struct ClearTodos: Route {
-    static let route: RouteMatcher = .delete("/todos")
+    static let route: RouteMatcher = .delete(.root)
 
     @EnvironmentObject var database: Database
 
@@ -47,7 +47,7 @@ struct ClearTodos: Route {
 }
 
 struct CreateTodo: Route {
-    static let route: RouteMatcher = .post("/todos")
+    static let route: RouteMatcher = .post(.root)
 
     @JSONBody var todo: Todo
 
@@ -62,7 +62,7 @@ struct CreateTodo: Route {
 }
 
 struct ShowTodo: Route {
-    static let route: RouteMatcher = "/todos/\(.id)"
+    static let route: RouteMatcher = "/\(.id)"
 
     @URLParameter(key: .id) var id: String
 
@@ -84,7 +84,7 @@ struct TodoPatch: Codable {
 }
 
 struct EditTodo: Route {
-    static let route: RouteMatcher = .patch("/todos/\(.id)")
+    static let route: RouteMatcher = .patch("/\(.id)")
 
     @URLParameter(key: .id) var id: String
 
@@ -110,7 +110,7 @@ struct EditTodo: Route {
 }
 
 struct DeleteTodo: Route {
-    static let route: RouteMatcher = .delete("/todos/\(.id)")
+    static let route: RouteMatcher = .delete("/\(.id)")
 
     @URLParameter(key: .id) var id: String
 

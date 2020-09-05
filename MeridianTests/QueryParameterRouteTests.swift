@@ -92,7 +92,7 @@ struct RequiredFlagParameterRoute: Route {
 class QueryParameterRouteTests: XCTestCase {
     
     func makeChannel() throws -> EmbeddedChannel {
-        let handler = HTTPHandler(routes: [
+        let handler = HTTPHandler(routesByPrefix: ["": [
             StringQueryParameterRoute.self,
             IntQueryParameterRoute.self,
             LetterQueryParameterRoute.self,
@@ -100,7 +100,7 @@ class QueryParameterRouteTests: XCTestCase {
             MultipleParameterRoute.self,
             OptionalFlagParameterRoute.self,
             RequiredFlagParameterRoute.self,
-        ], errorRenderer: BasicErrorRenderer.self)
+        ]], errorRenderer: BasicErrorRenderer.self)
         
         let channel = EmbeddedChannel()
         try channel.pipeline.addHandler(handler).wait()

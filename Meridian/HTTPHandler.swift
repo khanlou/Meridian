@@ -37,14 +37,14 @@ final class HTTPHandler: ChannelInboundHandler {
         case complete(HTTPRequestHead, Data)
     }
 
-    let routes: [Route.Type]
+    let routesByPrefix: [String: [Route.Type]]
 
     let errorRenderer: ErrorRenderer.Type
 
     var state = State.initial
 
-    init(routes: [Route.Type], errorRenderer: ErrorRenderer.Type) {
-        self.routes = routes
+    init(routesByPrefix: [String: [Route.Type]], errorRenderer: ErrorRenderer.Type) {
+        self.routesByPrefix = routesByPrefix
         self.errorRenderer = errorRenderer
     }
 
@@ -82,7 +82,7 @@ final class HTTPHandler: ChannelInboundHandler {
 
             let channel = context.channel
 
-            let header = RequestHeader(
+            var header = RequestHeader(
                 method: HTTPMethod(name: head.method.rawValue),
                 uri: head.uri,
                 headers: head.headers.map({ ($0, $1) })
@@ -90,10 +90,17 @@ final class HTTPHandler: ChannelInboundHandler {
 
             var optionalRouteType: (Route.Type, MatchedRoute)?
 
-            for route in routes {
-                if let matchedRoute = route.route.matches(header) {
-                    optionalRouteType = (route, matchedRoute)
-                    break
+            let originalPath = header.path
+
+            let prefixesAndRoutes = routesByPrefix.flatMap({ prefix, routes in routes.map({ (prefix, $0) })})
+            for (prefix, route) in prefixesAndRoutes {
+                header.path = originalPath
+                if header.path.hasPrefix(prefix) {
+                    header.path.removeFirst(prefix.count)
+                    if let matchedRoute = route.route.matches(header) {
+                        optionalRouteType = (route, matchedRoute)
+                        break
+                    }
                 }
             }
 
