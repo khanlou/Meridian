@@ -138,79 +138,51 @@ final class HTTPHandler: ChannelInboundHandler {
 
                 let response = try route.execute()
 
-                var statusCode = StatusCode.ok
-                var additionalHeaders: [String: String] = [:]
-                if let responseWithDetails = response as? ResponseDetails {
-                    statusCode = responseWithDetails.statusCode
-                    additionalHeaders = responseWithDetails.additionalHeaders
-                }
-                var head = HTTPResponseHead(version: head.version, status: HTTPResponseStatus(statusCode: statusCode.code))
-
-                for (name, value) in additionalHeaders {
-                    head.headers.add(name: name, value: value)
-                }
-
-                let part = HTTPServerResponsePart.head(head)
-
-                let future = channel.write(part)
-
-                var buffer = channel.allocator.buffer(capacity: 100)
-                buffer.writeBytes(try response.body())
-
-                let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
-                let future2 = channel.write(bodyPart)
-
-                let endPart = HTTPServerResponsePart.end(nil)
-                let future3 = channel.writeAndFlush(endPart)
-
-                _ = future.and(future2).and(future3)
-                    .flatMap({ (_) -> EventLoopFuture<Void> in
-                        Thread.current.threadDictionary[CurrentRequestKey] = nil
-                        Thread.current.threadDictionary[RequestErrorsKey] = nil
-
-                        return channel.close()
-                    })
+                try send(response, head.version, to: channel)
 
             } catch {
                 let errorRenderer = errorRenderer.init(error: error)
 
                 let response = try! errorRenderer.render()
 
-                var statusCode = StatusCode.ok
-                var additionalHeaders: [String: String] = [:]
-                if let responseWithDetails = response as? ResponseDetails {
-                    statusCode = responseWithDetails.statusCode
-                    additionalHeaders = responseWithDetails.additionalHeaders
-                }
-                var head = HTTPResponseHead(version: head.version, status: HTTPResponseStatus(statusCode: statusCode.code))
-
-                for (name, value) in additionalHeaders {
-                    head.headers.add(name: name, value: value)
-                }
-
-                let part = HTTPServerResponsePart.head(head)
-
-                let future = channel.write(part)
-
-                var buffer = channel.allocator.buffer(capacity: 100)
-                buffer.writeBytes(try! response.body())
-
-                let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
-                let future2 = channel.write(bodyPart)
-
-                let endPart = HTTPServerResponsePart.end(nil)
-                let future3 = channel.writeAndFlush(endPart)
-
-                _ = future.and(future2).and(future3)
-                    .flatMap({ (_) -> EventLoopFuture<Void> in
-                        Thread.current.threadDictionary[CurrentRequestKey] = nil
-                        Thread.current.threadDictionary[RequestErrorsKey] = nil
-
-                        return channel.close()
-                    })
-
+                try! send(response, head.version, to: channel)
             }
-
         }
     }
+
+    fileprivate func send(_ response: Response, _ version: HTTPVersion, to channel: Channel) throws {
+        var statusCode = StatusCode.ok
+        var additionalHeaders: [String: String] = [:]
+        if let responseWithDetails = response as? ResponseDetails {
+            statusCode = responseWithDetails.statusCode
+            additionalHeaders = responseWithDetails.additionalHeaders
+        }
+        var head = HTTPResponseHead(version: version, status: HTTPResponseStatus(statusCode: statusCode.code))
+
+        for (name, value) in additionalHeaders {
+            head.headers.add(name: name, value: value)
+        }
+
+        let part = HTTPServerResponsePart.head(head)
+
+        let future = channel.write(part)
+
+        var buffer = channel.allocator.buffer(capacity: 100)
+        buffer.writeBytes(try response.body())
+
+        let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
+        let future2 = channel.write(bodyPart)
+
+        let endPart = HTTPServerResponsePart.end(nil)
+        let future3 = channel.writeAndFlush(endPart)
+
+        _ = future.and(future2).and(future3)
+            .flatMap({ (_) -> EventLoopFuture<Void> in
+                Thread.current.threadDictionary[CurrentRequestKey] = nil
+                Thread.current.threadDictionary[RequestErrorsKey] = nil
+
+                return channel.close()
+            })
+    }
+
 }
