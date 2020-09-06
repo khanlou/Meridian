@@ -128,7 +128,7 @@ final class HTTPHandler: ChannelInboundHandler {
                     postBody: body
                 )
 
-                print("request: \(requestContext)")
+                print("request: \(requestContext.header)")
 
                 Thread.current.threadDictionary[CurrentRequestKey] = requestContext
 
