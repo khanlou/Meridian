@@ -104,7 +104,7 @@ extension Server {
     }
 
     public func environment<Key: EnvironmentKey>(_ key: Key, _ value: Key.Value) -> Self {
-//        EnvironmentValues.shared.keyedObjects[key] = value
+        EnvironmentValues.shared.keyedObjects.append(value) // is this right?
         return self
     }
 }
