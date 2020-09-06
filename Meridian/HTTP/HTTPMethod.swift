@@ -7,8 +7,12 @@
 
 import Foundation
 
-public struct HTTPMethod: Equatable {
+public struct HTTPMethod: CustomStringConvertible, Equatable {
     public let name: String
+
+    public var description: String {
+        name
+    }
 
     public static let GET = HTTPMethod(name: "GET")
     public static let PUT = HTTPMethod(name: "PUT")

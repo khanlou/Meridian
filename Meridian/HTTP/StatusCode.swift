@@ -7,13 +7,17 @@
 
 import Foundation
 
-public struct StatusCode: Equatable {
+public struct StatusCode: CustomStringConvertible, Equatable {
     public let code: Int
     public let name: String
 
     public init(code: Int, name: String) {
         self.code = code
         self.name = name
+    }
+
+    public var description: String {
+        "\(code) \(name)"
     }
 }
 
