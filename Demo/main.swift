@@ -11,14 +11,15 @@ import Meridian
 
 Backtrace.install()
 
-Server(errorRenderer: JSONErrorRenderer.self)
+Server(errorRenderer: BasicErrorRenderer.self)
     .group(prefix: "/todos",
            DeleteTodo.self,
            EditTodo.self,
            ShowTodo.self,
            ClearTodos.self,
            CreateTodo.self,
-           ListTodos.self
+           ListTodos.self,
+           errorRenderer: JSONErrorRenderer.self
     )
     .environmentObject(Database())
     .listen()

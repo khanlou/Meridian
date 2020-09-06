@@ -37,15 +37,37 @@ final class HTTPHandler: ChannelInboundHandler {
         case complete(HTTPRequestHead, Data)
     }
 
-    let routesByPrefix: [String: [Route.Type]]
+    let routesByPrefix: [String: RouteGroup]
 
-    let errorRenderer: ErrorRenderer.Type
+    let defaultErrorRenderer: ErrorRenderer.Type
 
     var state = State.initial
 
-    init(routesByPrefix: [String: [Route.Type]], errorRenderer: ErrorRenderer.Type) {
+    init(routesByPrefix: [String: RouteGroup], errorRenderer: ErrorRenderer.Type) {
         self.routesByPrefix = routesByPrefix
-        self.errorRenderer = errorRenderer
+        self.defaultErrorRenderer = errorRenderer
+    }
+
+    private func route(for header: RequestHeader) -> ((Route.Type, MatchedRoute)?, ErrorRenderer.Type) {
+        let originalPath = header.path
+
+        var header = header
+
+        var errorHandlerBestGuess = defaultErrorRenderer
+
+        for (prefix, routeGroup) in self.routesByPrefix {
+            header.path = originalPath
+            if header.path.hasPrefix(prefix) {
+                errorHandlerBestGuess = routeGroup.customErrorRenderer ?? defaultErrorRenderer
+                header.path.removeFirst(prefix.count)
+                for route in routeGroup.routes {
+                    if let matchedRoute = route.route.matches(header) {
+                        return ((route, matchedRoute), errorHandlerBestGuess)
+                    }
+                }
+            }
+        }
+        return (nil, errorHandlerBestGuess)
     }
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -82,30 +104,16 @@ final class HTTPHandler: ChannelInboundHandler {
 
             let channel = context.channel
 
-            var header = RequestHeader(
+            let header = RequestHeader(
                 method: HTTPMethod(name: head.method.rawValue),
                 uri: head.uri,
                 headers: head.headers.map({ ($0, $1) })
             )
 
-            var optionalRouteType: (Route.Type, MatchedRoute)?
-
-            let originalPath = header.path
-
-            let prefixesAndRoutes = routesByPrefix.flatMap({ prefix, routes in routes.map({ (prefix, $0) })})
-            for (prefix, route) in prefixesAndRoutes {
-                header.path = originalPath
-                if header.path.hasPrefix(prefix) {
-                    header.path.removeFirst(prefix.count)
-                    if let matchedRoute = route.route.matches(header) {
-                        optionalRouteType = (route, matchedRoute)
-                        break
-                    }
-                }
-            }
+            let (results, errorRenderer) = route(for: header)
 
             do {
-                guard let (routeType, matchedRoute) = optionalRouteType else {
+                guard let (routeType, matchedRoute) = results else {
                     throw NoRouteFound()
                 }
 
@@ -164,7 +172,7 @@ final class HTTPHandler: ChannelInboundHandler {
                     })
 
             } catch {
-                let errorRenderer = self.errorRenderer.init(error: error)
+                let errorRenderer = errorRenderer.init(error: error)
 
                 let response = try! errorRenderer.render()
 

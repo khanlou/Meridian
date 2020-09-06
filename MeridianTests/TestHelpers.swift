@@ -17,20 +17,6 @@ extension URLParameterKey {
     static let secondTester = URLParameterKey()
 }
 
-struct BasicErrorRenderer: ErrorRenderer {
-    
-    let error: Error
-    
-    init(error: Error) {
-        self.error = error
-    }
-    
-    func render() throws -> Response {
-        return ((error as? ErrorWithMessage)?.message ?? "An error occurred")
-            .statusCode( (error as? ErrorWithStatusCode)?.statusCode ?? .badRequest)
-    }
-}
-
 struct HTTPRequestBuilder {
     let uri: String
     let method: NIOHTTP1.HTTPMethod

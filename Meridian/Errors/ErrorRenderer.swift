@@ -32,3 +32,18 @@ public struct JSONErrorRenderer: ErrorRenderer {
             .statusCode( (error as? ErrorWithStatusCode)?.statusCode ?? .badRequest)
     }
 }
+
+public struct BasicErrorRenderer: ErrorRenderer {
+
+    public let error: Error
+
+    public init(error: Error) {
+        self.error = error
+    }
+
+    public func render() throws -> Response {
+        return ((error as? ErrorWithMessage)?.message ?? "An error occurred")
+            .statusCode( (error as? ErrorWithStatusCode)?.statusCode ?? .badRequest)
+    }
+}
+
