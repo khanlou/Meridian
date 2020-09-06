@@ -25,7 +25,7 @@ public final class EnvironmentValues {
 
     public subscript<Key: EnvironmentKey>(key: Key.Type) -> Key.Value {
         get {
-            keyedObjects.lazy.compactMap({ $0 as? Key.Value }).first ?? Key.defaultValue
+            keyedObjects.reversed().lazy.compactMap({ $0 as? Key.Value }).first ?? Key.defaultValue
         }
         set {
             keyedObjects.append(newValue)
