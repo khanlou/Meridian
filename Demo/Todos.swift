@@ -11,16 +11,6 @@ import Meridian
 // Specs
 // https://www.todobackend.com/specs/index.html?https://meridian-demo.herokuapp.com/todos
 
-extension Response {
-    func allowCORS() -> Response {
-        return self.additionalHeaders([
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "X-Requested-With, Origin, Content-Type, Accept",
-            "Access-Control-Allow-Methods": "POST, GET, PUT, OPTIONS, DELETE, PATCH",
-        ])
-    }
-}
-
 struct ListTodos: Route {
 
     static let route: RouteMatcher = .root
