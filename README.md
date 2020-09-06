@@ -15,7 +15,7 @@ struct SampleEndpoint: Route {
   
     @QueryParameter("sort_direction") var sortDirection: SortDirection
   
-    @URLParameter(key: .id) var userID: String
+    @URLParameter(.id) var userID: String
     
     @EnivronmentObject var database: Database
     

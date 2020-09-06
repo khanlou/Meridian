@@ -64,7 +64,7 @@ struct CreateTodo: Route {
 struct ShowTodo: Route {
     static let route: RouteMatcher = "/\(.id)"
 
-    @URLParameter(key: .id) var id: String
+    @URLParameter(.id) var id: String
 
     @EnvironmentObject var database: Database
 
@@ -86,7 +86,7 @@ struct TodoPatch: Codable {
 struct EditTodo: Route {
     static let route: RouteMatcher = .patch("/\(.id)")
 
-    @URLParameter(key: .id) var id: String
+    @URLParameter(.id) var id: String
 
     @JSONBody var patch: TodoPatch
 
@@ -112,7 +112,7 @@ struct EditTodo: Route {
 struct DeleteTodo: Route {
     static let route: RouteMatcher = .delete("/\(.id)")
 
-    @URLParameter(key: .id) var id: String
+    @URLParameter(.id) var id: String
 
     @EnvironmentObject var database: Database
 

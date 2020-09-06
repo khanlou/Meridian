@@ -7,29 +7,21 @@
 
 import Foundation
 
-@propertyWrapper
-public struct URLParameter<Type: LosslessStringConvertible> {
+public typealias URLParameter<Type: LosslessStringConvertible> = Custom<URLParameterExtractor<Type>>
 
-    let finalValue: Type?
+public struct URLParameterExtractor<Type: LosslessStringConvertible>: ParameterExtractor {
 
-    public init(key: URLParameterKey) {
-        guard let substring = _currentRequest.urlParameters[key] else {
-            _errors.append(MissingURLParameterError())
-            self.finalValue = nil
-            return
+    public static func extract(from context: RequestContext, parameters: URLParameterKey) throws -> Type {
+        guard let substring = _currentRequest.urlParameters[parameters] else {
+            throw MissingURLParameterError()
         }
         let value = String(substring)
         if Type.self == String.self {
-            self.finalValue = value as? Type
+            return value as! Type
         } else if let finalValue = Type(value) {
-            self.finalValue = finalValue
+            return finalValue
         } else {
-            self.finalValue = nil
-            _errors.append(URLParameterDecodingError(type: Type.self))
+            throw URLParameterDecodingError(type: Type.self)
         }
-    }
-
-    public var wrappedValue: Type {
-        return finalValue!
     }
 }

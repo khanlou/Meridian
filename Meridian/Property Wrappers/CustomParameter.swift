@@ -9,8 +9,9 @@ import Foundation
 
 public protocol ParameterExtractor {
     associatedtype Output
+    associatedtype Parameters
 
-    static func extract(from context: RequestContext) throws -> Output
+    static func extract(from context: RequestContext, parameters: Parameters) throws -> Output
 
 }
 
@@ -19,9 +20,9 @@ public struct Custom<Extractor: ParameterExtractor> {
 
     let finalValue: Extractor.Output?
 
-    public init() {
+    public init(_ parameters: Extractor.Parameters) {
         do {
-            self.finalValue = try Extractor.extract(from: _currentRequest)
+            self.finalValue = try Extractor.extract(from: _currentRequest, parameters: parameters)
         } catch let error as ReportableError {
             _errors.append(error)
             self.finalValue = nil
@@ -33,5 +34,11 @@ public struct Custom<Extractor: ParameterExtractor> {
 
     public var wrappedValue: Extractor.Output {
         finalValue!
+    }
+}
+
+extension Custom where Extractor.Parameters == Void {
+    init() {
+        self.init(())
     }
 }
