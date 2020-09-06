@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol ParameterExtractor {
+public protocol ParameterizedExtractor {
     associatedtype Output
     associatedtype Parameters
 
@@ -15,8 +15,15 @@ public protocol ParameterExtractor {
 
 }
 
+public protocol NonParameterizedExtractor {
+    associatedtype Output
+
+    static func extract(from context: RequestContext) throws -> Output
+
+}
+
 @propertyWrapper
-public struct Custom<Extractor: ParameterExtractor> {
+public struct CustomWithParameters<Extractor: ParameterizedExtractor> {
 
     let finalValue: Extractor.Output?
 
@@ -37,8 +44,24 @@ public struct Custom<Extractor: ParameterExtractor> {
     }
 }
 
-extension Custom where Extractor.Parameters == Void {
-    init() {
-        self.init(())
+@propertyWrapper
+public struct Custom<Extractor: NonParameterizedExtractor> {
+
+    let finalValue: Extractor.Output?
+
+    public init() {
+        do {
+            self.finalValue = try Extractor.extract(from: _currentRequest)
+        } catch let error as ReportableError {
+            _errors.append(error)
+            self.finalValue = nil
+        } catch {
+            _errors.append(BasicError(message: "An unknown error occurred in \(Extractor.self)."))
+            self.finalValue = nil
+        }
+    }
+
+    public var wrappedValue: Extractor.Output {
+        finalValue!
     }
 }

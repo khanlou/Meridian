@@ -7,9 +7,9 @@
 
 import Foundation
 
-public typealias URLParameter<Type: LosslessStringConvertible> = Custom<URLParameterExtractor<Type>>
+public typealias URLParameter<Type: LosslessStringConvertible> = CustomWithParameters<URLParameterExtractor<Type>>
 
-public struct URLParameterExtractor<Type: LosslessStringConvertible>: ParameterExtractor {
+public struct URLParameterExtractor<Type: LosslessStringConvertible>: ParameterizedExtractor {
 
     public static func extract(from context: RequestContext, parameters: URLParameterKey) throws -> Type {
         guard let substring = _currentRequest.urlParameters[parameters] else {
