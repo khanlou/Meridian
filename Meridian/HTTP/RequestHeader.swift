@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct RequestHeader {
+public struct RequestHeader: CustomStringConvertible {
     public let method: HTTPMethod
     public let headers: Headers
 
@@ -32,4 +32,7 @@ public struct RequestHeader {
         urlComponents.queryItems ?? []
     }
 
+    public var description: String {
+        "\(Self.self)(method: \(method), uri: \(path))"
+    }
 }
