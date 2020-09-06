@@ -67,6 +67,11 @@ final class HTTPHandler: ChannelInboundHandler {
                 }
             }
         }
+
+        if header.method == .OPTIONS {
+            return ((OptionsRoute.self, MatchedRoute()), errorHandlerBestGuess)
+        }
+
         return (nil, errorHandlerBestGuess)
     }
 

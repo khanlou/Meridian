@@ -15,6 +15,14 @@ struct ServeOptions: ParsableArguments {
     @Option var host: String = "localhost"
 }
 
+final class Router {
+    let routes: [String: RouteGroup]
+
+    init(routes: [String: RouteGroup]) {
+        self.routes = routes
+    }
+}
+
 struct RouteGroup: ExpressibleByArrayLiteral {
 
     var routes: [Route.Type]
@@ -74,6 +82,9 @@ public final class Server {
     }
 
     public func listen() {
+
+        EnvironmentStorage.shared.keyedObjects[.routes] = Router(routes: routesByPrefix)
+        
         let reuseAddrOpt = ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR)
 
         let bootstrap = ServerBootstrap(group: loopGroup)

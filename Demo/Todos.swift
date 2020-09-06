@@ -13,7 +13,7 @@ import Meridian
 
 struct ListTodos: Route {
 
-    static let route: RouteMatcher = .root
+    static let route: RouteMatcher = .get(.root)
 
     @EnvironmentObject var database: Database
 
@@ -52,7 +52,7 @@ struct CreateTodo: Route {
 }
 
 struct ShowTodo: Route {
-    static let route: RouteMatcher = "/\(.id)"
+    static let route: RouteMatcher = .get("/\(.id)")
 
     @URLParameter(.id) var id: String
 
