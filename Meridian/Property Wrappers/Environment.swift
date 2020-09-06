@@ -7,9 +7,9 @@
 
 import Foundation
 
-public typealias EnvironmentObject<Type> = Custom<EnvironmentExtractor<Type>>
+public typealias EnvironmentObject<Type> = Custom<EnvironmentObjectExtractor<Type>>
 
-public struct EnvironmentExtractor<Type>: NonParameterizedExtractor {
+public struct EnvironmentObjectExtractor<Type>: NonParameterizedExtractor {
     public static func extract(from context: RequestContext) throws -> Type {
         guard let value = EnvironmentStorage.shared.objects.lazy.compactMap({ $0 as? Type }).first else {
             throw MissingEnvironmentObject(type: Type.self)
@@ -18,28 +18,14 @@ public struct EnvironmentExtractor<Type>: NonParameterizedExtractor {
     }
 }
 
-@propertyWrapper
-public struct Environment<Type> {
+public typealias Environment<Type> = CustomWithParameters<EnvironmentKeyExtractor<Type>>
 
-    let key: EnvironmentKey
-
-    let finalValue: Type?
-
-    public init(_ key: EnvironmentKey) {
-        self.key = key
-
-        if let value = EnvironmentStorage.shared.keyedObjects[key] as? Type {
-            self.finalValue = value
+public struct EnvironmentKeyExtractor<Type>: ParameterizedExtractor {
+    public static func extract(from context: RequestContext, parameters: EnvironmentKey) throws -> Type {
+        if let value = EnvironmentStorage.shared.keyedObjects[parameters] as? Type {
+            return value
         } else {
-            self.finalValue = nil
-            _errors.append(MissingEnvironmentObject(type: Type.self))
+            throw MissingEnvironmentObject(type: Type.self)
         }
     }
-
-    public var wrappedValue: Type {
-        return finalValue!
-    }
 }
-
-
-
