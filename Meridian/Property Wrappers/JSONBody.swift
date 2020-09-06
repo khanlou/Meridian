@@ -13,55 +13,61 @@ public struct JSONBody<Type: Decodable> {
     let finalValue: Type?
 
     public init<Inner>(decoder: JSONDecoder = .init()) where Type == Inner? {
-        guard _currentRequest.header.method != .GET else {
-            _errors.append(UnexpectedGETRequestError())
-            self.finalValue = nil
-            return
-        }
-
-        guard let contentType = _currentRequest.header.headers["Content-Type"], contentType.contains("application/json") else {
-            _errors.append(JSONContentTypeError())
-            self.finalValue = nil
-            return
-        }
-
-        guard !_currentRequest.postBody.isEmpty else {
-            self.finalValue = .some(.none)
-            return
-        }
         do {
+            guard _currentRequest.header.method != .GET else {
+                throw UnexpectedGETRequestError()
+            }
+
+            guard let contentType = _currentRequest.header.headers["Content-Type"], contentType.contains("application/json") else {
+                throw JSONContentTypeError()
+            }
+
+            guard !_currentRequest.postBody.isEmpty else {
+                self.finalValue = .some(.none)
+                return
+            }
+
             self.finalValue = try decoder.decode(Type.self, from: _currentRequest.postBody)
-        } catch {
+        } catch let error as DecodingError {
             self.finalValue = nil
-            _errors.append(JSONBodyDecodingError(type: Type.self, underlyingError: error as? DecodingError))
+            _errors.append(JSONBodyDecodingError(type: Type.self, underlyingError: error))
+        } catch let error as ReportableError {
+            _errors.append(error)
+            self.finalValue = nil
+        } catch {
+            _errors.append(BasicError(message: "An unknown error occurred in \(JSONBody.self)."))
+            self.finalValue = nil
         }
+
     }
     
     @_disfavoredOverload
     public init(decoder: JSONDecoder = .init()) {
-        guard _currentRequest.header.method != .GET else {
-            _errors.append(UnexpectedGETRequestError())
-            self.finalValue = nil
-            return
-        }
-
-        guard let contentType = _currentRequest.header.headers["Content-Type"], contentType.contains("application/json") else {
-            _errors.append(JSONContentTypeError())
-            self.finalValue = nil
-            return
-        }
-
-        guard !_currentRequest.postBody.isEmpty else {
-            _errors.append(MissingBodyError())
-            self.finalValue = nil
-            return
-        }
         do {
+            guard _currentRequest.header.method != .GET else {
+                throw UnexpectedGETRequestError()
+            }
+
+            guard let contentType = _currentRequest.header.headers["Content-Type"], contentType.contains("application/json") else {
+                throw JSONContentTypeError()
+            }
+
+            guard !_currentRequest.postBody.isEmpty else {
+                throw MissingBodyError()
+            }
+
             self.finalValue = try decoder.decode(Type.self, from: _currentRequest.postBody)
-        } catch {
+        } catch let error as DecodingError {
             self.finalValue = nil
-            _errors.append(JSONBodyDecodingError(type: Type.self, underlyingError: error as? DecodingError))
+            _errors.append(JSONBodyDecodingError(type: Type.self, underlyingError: error))
+        } catch let error as ReportableError {
+            _errors.append(error)
+            self.finalValue = nil
+        } catch {
+            _errors.append(BasicError(message: "An unknown error occurred in \(JSONBody.self).")) // maybe fatal
+            self.finalValue = nil
         }
+
     }
 
     public var wrappedValue: Type {
