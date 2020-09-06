@@ -8,10 +8,25 @@
 import Foundation
 
 public struct MatchedRoute {
-    public let parameters: [URLParameterKey: Substring]
+    let parameters: [String: Substring]
 
-    public init(parameters: [URLParameterKey: Substring] = [:]) {
+    public init(parameters: [String: Substring] = [:]) {
         self.parameters = parameters
+    }
+
+    public func parameter<Key: URLParameterKey>(for key: Key.Type) throws -> Key.DecodeType {
+        guard let substring = self.parameters[Key.stringKey] else {
+            throw MissingURLParameterError()
+        }
+        let value = String(substring)
+        if Key.DecodeType.self == String.self {
+            return value as! Key.DecodeType
+        } else if let finalValue = Key.DecodeType(value) {
+            return finalValue
+        } else {
+            throw URLParameterDecodingError(type: Key.DecodeType.self)
+        }
+
     }
 }
 
@@ -58,25 +73,13 @@ public struct RouteMatcher {
     }
 }
 
-public struct URLParameterKey: Hashable {
-
-    public let id = UUID()
-
-    public init() {
-
-    }
-
-    public static let id = URLParameterKey()
-}
-
-
 extension RouteMatcher: ExpressibleByStringInterpolation {
 
     public struct RegexMatcher: StringInterpolationProtocol {
 
         var regexString = ""
 
-        var mapping: [URLParameterKey] = []
+        var mapping: [String] = []
 
         public init(literalCapacity: Int, interpolationCount: Int) {
 
@@ -86,11 +89,11 @@ extension RouteMatcher: ExpressibleByStringInterpolation {
             regexString.append(literal) // escape for regex
         }
 
-        public mutating func appendInterpolation(_ urlParameter: URLParameterKey) {
+        public mutating func appendInterpolation<SpecificKey: URLParameterKey>(_ urlParameter: KeyPath<ParameterKeys, SpecificKey>) {
 
             regexString.append("([^/]+)")
 
-            mapping.append(urlParameter)
+            mapping.append(SpecificKey.stringKey)
         }
     }
 
@@ -108,16 +111,16 @@ extension RouteMatcher: ExpressibleByStringInterpolation {
                 return nil
             }
 
-            var result: [URLParameterKey: Substring] = [:]
+            var result: [String: Substring] = [:]
 
             for match in matches {
                 let ranges = (0..<match.numberOfRanges)
                     .dropFirst() /*ignore the first match*/
                     .map({ match.range(at: $0) })
 
-                zip(stringInterpolation.mapping, ranges).forEach({ urlParameter, range in
+                zip(stringInterpolation.mapping, ranges).forEach({ urlParameterName, range in
                     guard let betterRange = Range(range, in: header.path) else { fatalError("Should be able to convert ranges") }
-                    result[urlParameter] = header.path[betterRange]
+                    result[urlParameterName] = header.path[betterRange]
                 })
             }
 

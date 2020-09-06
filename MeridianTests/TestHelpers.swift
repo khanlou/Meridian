@@ -12,11 +12,6 @@ import Meridian
 
 let http11 = HTTPVersion.init(major: 1, minor: 1)
 
-extension URLParameterKey {
-    static let tester = URLParameterKey()
-    static let secondTester = URLParameterKey()
-}
-
 struct HTTPRequestBuilder {
     let uri: String
     let method: NIOHTTP1.HTTPMethod
@@ -103,6 +98,31 @@ enum MusicNote: String, Decodable {
     }
 }
 
-extension URLParameterKey {
-    static let letter = URLParameterKey()
+struct LetterParameterKey: URLParameterKey {
+    typealias DecodeType = LetterGrade
 }
+
+struct TesterParameterKey: URLParameterKey {
+    typealias DecodeType = String
+}
+
+struct SecondTesterParameterKey: URLParameterKey {
+    typealias DecodeType = String
+}
+
+struct StringIDParameter: URLParameterKey {
+    public typealias DecodeType = String
+}
+
+struct NumberParameter: URLParameterKey {
+    public typealias DecodeType = Int
+}
+
+extension ParameterKeys {
+    var letter: LetterParameterKey { .init() }
+    var tester: TesterParameterKey { .init() }
+    var secondTester: SecondTesterParameterKey { .init() }
+    var id: StringIDParameter { .init() }
+    var number: NumberParameter { .init() }
+}
+

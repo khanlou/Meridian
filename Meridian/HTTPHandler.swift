@@ -14,12 +14,12 @@ let RequestErrorsKey = "RequestErrors"
 
 public struct RequestContext {
     public let header: RequestHeader
-    public let urlParameters: [URLParameterKey: Substring]
+    public let matchedRoute: MatchedRoute
     public let postBody: Data
 
-    public init(header: RequestHeader, urlParameters: [URLParameterKey: Substring] = [:], postBody: Data = Data()) {
+    public init(header: RequestHeader, matchedRoute: MatchedRoute, postBody: Data = Data()) {
         self.header = header
-        self.urlParameters = urlParameters
+        self.matchedRoute = matchedRoute
         self.postBody = postBody
     }
 
@@ -98,7 +98,7 @@ final class HTTPHandler: ChannelInboundHandler {
 
                 let requestContext = RequestContext(
                     header: header,
-                    urlParameters: matchedRoute.parameters,
+                    matchedRoute: matchedRoute,
                     postBody: body
                 )
 

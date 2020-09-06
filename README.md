@@ -11,11 +11,11 @@ extension URLParameters {
 
 struct SampleEndpoint: Route {
   
-    static let path: RouteMatcher = "/api/users/\(.id))/followers"
+    static let path: RouteMatcher = "/api/users/\(\.id))/followers"
   
     @QueryParameter("sort_direction") var sortDirection: SortDirection
   
-    @URLParameter(.id) var userID: String
+    @URLParameter(\.id) var userID
     
     @EnivronmentObject var database: Database
     

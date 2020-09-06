@@ -19,9 +19,9 @@ struct NoURLParameterRoute: Route {
 }
 
 struct StringURLParameterRoute: Route {
-    static let route: RouteMatcher = "/string/\(.id)"
+    static let route: RouteMatcher = "/string/\(\.id)"
 
-    @URLParameter(.id) var id: String
+    @URLParameter(\.id) var id
 
     func execute() throws -> Response {
         "The ID is \(id)"
@@ -29,9 +29,9 @@ struct StringURLParameterRoute: Route {
 }
 
 struct IntURLParameterRoute: Route {
-    static let route: RouteMatcher = "/int/\(.id)"
+    static let route: RouteMatcher = "/int/\(\.number)"
 
-    @URLParameter(.id) var id: Int
+    @URLParameter(\.number) var id
 
     func execute() throws -> Response {
         "The ID+1 is \(id+1)"
@@ -39,10 +39,10 @@ struct IntURLParameterRoute: Route {
 }
 
 struct MultipleURLParameterRoute: Route {
-    static let route: RouteMatcher = "/int/\(.id)/letter/\(.letter)"
+    static let route: RouteMatcher = "/int/\(\.number)/letter/\(\.letter)"
 
-    @URLParameter(.id) var id: Int
-    @URLParameter(.letter) var letter: LetterGrade
+    @URLParameter(\.number) var id
+    @URLParameter(\.letter) var letter
 
     func execute() throws -> Response {
         "The ID+2 is \(id+2) and the letter is \(letter)"
@@ -50,9 +50,9 @@ struct MultipleURLParameterRoute: Route {
 }
 
 struct LetterURLParameterRoute: Route {
-    static let route: RouteMatcher = "/letter/\(.letter)"
+    static let route: RouteMatcher = "/letter/\(\.letter)"
 
-    @URLParameter(.letter) var grade: LetterGrade
+    @URLParameter(\.letter) var grade
 
     func execute() throws -> Response {
         "The letter grade is \(grade)"

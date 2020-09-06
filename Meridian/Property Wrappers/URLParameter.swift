@@ -7,21 +7,10 @@
 
 import Foundation
 
-public typealias URLParameter<Type: LosslessStringConvertible> = CustomWithParameters<URLParameterExtractor<Type>>
+public typealias URLParameter<SpecificURLParameterKey: URLParameterKey> = CustomWithParameters<URLParameterExtractor<SpecificURLParameterKey>>
 
-public struct URLParameterExtractor<Type: LosslessStringConvertible>: ParameterizedExtractor {
-
-    public static func extract(from context: RequestContext, parameters: URLParameterKey) throws -> Type {
-        guard let substring = _currentRequest.urlParameters[parameters] else {
-            throw MissingURLParameterError()
-        }
-        let value = String(substring)
-        if Type.self == String.self {
-            return value as! Type
-        } else if let finalValue = Type(value) {
-            return finalValue
-        } else {
-            throw URLParameterDecodingError(type: Type.self)
-        }
+public struct URLParameterExtractor<SpecificURLParameterKey: URLParameterKey>: ParameterizedExtractor {
+    public static func extract(from context: RequestContext, parameters: KeyPath<ParameterKeys, SpecificURLParameterKey>) throws -> SpecificURLParameterKey.DecodeType {
+        try _currentRequest.matchedRoute.parameter(for: SpecificURLParameterKey.self)
     }
 }

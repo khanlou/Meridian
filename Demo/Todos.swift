@@ -11,6 +11,16 @@ import Meridian
 // Specs
 // https://www.todobackend.com/specs/index.html?https://meridian-demo.herokuapp.com/todos
 
+struct IDParameter: URLParameterKey {
+    public typealias DecodeType = String
+}
+
+extension ParameterKeys {
+    var id: IDParameter {
+        IDParameter()
+    }
+}
+
 struct ListTodos: Route {
 
     static let route: RouteMatcher = .get(.root)
@@ -52,9 +62,9 @@ struct CreateTodo: Route {
 }
 
 struct ShowTodo: Route {
-    static let route: RouteMatcher = .get("/\(.id)")
+    static let route: RouteMatcher = .get("/\(\.id)")
 
-    @URLParameter(.id) var id: String
+    @URLParameter(\.id) var id
 
     @EnvironmentObject var database: Database
 
@@ -74,9 +84,9 @@ struct TodoPatch: Codable {
 }
 
 struct EditTodo: Route {
-    static let route: RouteMatcher = .patch("/\(.id)")
+    static let route: RouteMatcher = .patch("/\(\.id)")
 
-    @URLParameter(.id) var id: String
+    @URLParameter(\.id) var id
 
     @JSONBody var patch: TodoPatch
 
@@ -100,9 +110,9 @@ struct EditTodo: Route {
 }
 
 struct DeleteTodo: Route {
-    static let route: RouteMatcher = .delete("/\(.id)")
+    static let route: RouteMatcher = .delete("/\(\.id)")
 
-    @URLParameter(.id) var id: String
+    @URLParameter(\.id) var id
 
     @EnvironmentObject var database: Database
 

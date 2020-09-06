@@ -64,27 +64,27 @@ final class RoutingTests: XCTestCase {
     }
     
     func testURLParameters() {
-        let matcher: RouteMatcher = "/testing/\(.tester)"
+        let matcher: RouteMatcher = "/testing/\(\.tester)"
         
         let matchedRoute = matcher.matches(RequestHeader(method: .GET, uri: "/testing/123", headers: []))
         
         XCTAssertNotNil(matchedRoute)
         
-        XCTAssertEqual(matchedRoute?.parameters[.tester], "123")
+        XCTAssertEqual(try matchedRoute?.parameter(for: TesterParameterKey.self), "123")
         
         XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing/", headers: [])))
         XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing/123/456", headers: [])))
     }
     
     func testTwoURLParameters() {
-        let matcher: RouteMatcher = "/testing/\(.tester)/sub/\(.secondTester)"
+        let matcher: RouteMatcher = "/testing/\(\.tester)/sub/\(\.secondTester)"
         
         let matchedRoute = matcher.matches(RequestHeader(method: .GET, uri: "/testing/123/sub/hello", headers: []))
         
         XCTAssertNotNil(matchedRoute)
         
-        XCTAssertEqual(matchedRoute?.parameters[.tester], "123")
-        XCTAssertEqual(matchedRoute?.parameters[.secondTester], "hello")
+        XCTAssertEqual(try matchedRoute?.parameter(for: TesterParameterKey.self), "123")
+        XCTAssertEqual(try matchedRoute?.parameter(for: SecondTesterParameterKey.self), "hello")
         
         XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing/123", headers: [])))
         XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing/123", headers: [])))
