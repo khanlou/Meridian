@@ -15,14 +15,6 @@ struct ServeOptions: ParsableArguments {
     @Option var host: String = "localhost"
 }
 
-final class Router {
-    let routes: [String: RouteGroup]
-
-    init(routes: [String: RouteGroup]) {
-        self.routes = routes
-    }
-}
-
 struct RouteGroup: ExpressibleByArrayLiteral {
 
     var routes: [Route.Type]
@@ -54,36 +46,27 @@ public final class Server {
 
     let loopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
 
-    var routesByPrefix: [String: RouteGroup]
-    let defaultErrorRenderer: ErrorRenderer.Type
+    var router: Router
 
     public init(errorRenderer: ErrorRenderer.Type) {
-        self.routesByPrefix = [:]
-        self.defaultErrorRenderer = errorRenderer
+        self.router = Router(routesByPrefix: [:], defaultErrorRenderer: errorRenderer)
     }
 
     @discardableResult
     public func register(_ routes: Route.Type..., errorRenderer: ErrorRenderer.Type? = nil) -> Self {
-        self.add(routes: routes, prefix: "", errorRenderer: errorRenderer)
+        self.router.register(routes, errorRenderer: errorRenderer)
         return self
     }
 
     @discardableResult
     public func group(prefix: String, _ routes: Route.Type..., errorRenderer: ErrorRenderer.Type? = nil) -> Self {
-        self.add(routes: routes, prefix: prefix, errorRenderer: errorRenderer)
+        self.router.group(prefix: prefix, routes, errorRenderer: errorRenderer)
         return self
-    }
-
-    private func add(routes: [Route.Type], prefix: String, errorRenderer: ErrorRenderer.Type?) {
-        self.routesByPrefix[prefix, default: RouteGroup()].append(contentsOf: routes)
-        if let errorRenderer = errorRenderer {
-            self.routesByPrefix[prefix, default: RouteGroup()].customErrorRenderer = errorRenderer
-        }
     }
 
     public func listen() {
 
-        EnvironmentStorage.shared.keyedObjects[.routes] = Router(routes: routesByPrefix)
+        EnvironmentStorage.shared.keyedObjects[.routes] = self.router
         
         let reuseAddrOpt = ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR)
 
@@ -93,7 +76,7 @@ public final class Server {
             .childChannelInitializer({ channel in
                 channel.pipeline.configureHTTPServerPipeline()
                     .flatMap({
-                        channel.pipeline.addHandler(HTTPHandler(routesByPrefix: self.routesByPrefix, errorRenderer: self.defaultErrorRenderer))
+                        channel.pipeline.addHandler(HTTPHandler(router: self.router))
                     })
             })
             .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)

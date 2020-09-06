@@ -37,42 +37,16 @@ final class HTTPHandler: ChannelInboundHandler {
         case complete(HTTPRequestHead, Data)
     }
 
-    let routesByPrefix: [String: RouteGroup]
-
-    let defaultErrorRenderer: ErrorRenderer.Type
+    let router: Router
 
     var state = State.initial
 
-    init(routesByPrefix: [String: RouteGroup], errorRenderer: ErrorRenderer.Type) {
-        self.routesByPrefix = routesByPrefix
-        self.defaultErrorRenderer = errorRenderer
+    convenience init(routesByPrefix: [String: RouteGroup], errorRenderer: ErrorRenderer.Type) {
+        self.init(router: Router(routesByPrefix: routesByPrefix, defaultErrorRenderer: errorRenderer))
     }
 
-    private func route(for header: RequestHeader) -> ((Route.Type, MatchedRoute)?, ErrorRenderer.Type) {
-        let originalPath = header.path
-
-        var header = header
-
-        var errorHandlerBestGuess = defaultErrorRenderer
-
-        for (prefix, routeGroup) in self.routesByPrefix {
-            header.path = originalPath
-            if header.path.hasPrefix(prefix) {
-                errorHandlerBestGuess = routeGroup.customErrorRenderer ?? defaultErrorRenderer
-                header.path.removeFirst(prefix.count)
-                for route in routeGroup.routes {
-                    if let matchedRoute = route.route.matches(header) {
-                        return ((route, matchedRoute), errorHandlerBestGuess)
-                    }
-                }
-            }
-        }
-
-        if header.method == .OPTIONS {
-            return ((OptionsRoute.self, MatchedRoute()), errorHandlerBestGuess)
-        }
-
-        return (nil, errorHandlerBestGuess)
+    init(router: Router) {
+        self.router = router
     }
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -115,7 +89,7 @@ final class HTTPHandler: ChannelInboundHandler {
                 headers: head.headers.map({ ($0, $1) })
             )
 
-            let (results, errorRenderer) = route(for: header)
+            let (results, errorRenderer) = router.route(for: header)
 
             do {
                 guard let (routeType, matchedRoute) = results else {

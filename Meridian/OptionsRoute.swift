@@ -16,26 +16,13 @@ struct OptionsRoute: Route {
         header.method == .OPTIONS ? MatchedRoute() : nil
     })
 
-    @Environment(.routes) var routes: Router
+    @Environment(.routes) var router: Router
 
     @Path var path: String
 
     func execute() throws -> Response {
-        var matchingMethods: Array<HTTPMethod> = []
 
-        for (prefix, routeGroup) in routes.routes {
-            for method in HTTPMethod.primaryMethods {
-                var header = RequestHeader(method: method, uri: path, headers: [])
-                if header.path.hasPrefix(prefix) {
-                    header.path.removeFirst(prefix.count)
-                    for route in routeGroup.routes {
-                        if route.route.matches(header) != nil {
-                            matchingMethods.append(method)
-                        }
-                    }
-                }
-            }
-        }
+        let matchingMethods = self.router.methods(for: path)
 
         return EmptyResponse()
             .additionalHeaders([
