@@ -7,14 +7,14 @@
 
 import Foundation
 
-public struct StringResponseError: Error {
+public struct StringEncodingError: Error {
 
 }
 
 extension String: Response {
     public func body() throws -> Data {
         guard let data = self.data(using: .utf8) else {
-            throw StringResponseError()
+            throw StringEncodingError()
         }
         return data
     }
