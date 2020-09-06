@@ -10,14 +10,26 @@ import NIO
 import NIOHTTP1
 @testable import Meridian
 
-extension EnvironmentKey {
-    static let formatter = EnvironmentKey()
+struct NumberFormatterEnvironmentKey: EnvironmentKey {
+    static var defaultValue = NumberFormatter()
 }
+
+extension EnvironmentValues {
+    var formatter: NumberFormatter {
+        get {
+            self[NumberFormatterEnvironmentKey.self]
+        }
+        set {
+            self[NumberFormatterEnvironmentKey.self] = newValue
+        }
+    }
+}
+
 
 struct EnvironmentKeyTestRoute: Route {
     static let route: RouteMatcher = "/environmentKey"
     
-    @Environment(.formatter) var formatter: NumberFormatter
+    @Environment(\.formatter) var formatter
     
     func execute() throws -> Response {
         formatter.string(from: 343) ?? "formatter couldn't format"
@@ -65,9 +77,9 @@ final class EnvironmentTests: XCTestCase {
         let formatter = NumberFormatter()
         formatter.locale = Locale(identifier: "en_US")
         formatter.numberStyle = .spellOut
-        EnvironmentStorage.shared.keyedObjects[.formatter] = formatter
+        EnvironmentValues.shared[NumberFormatterEnvironmentKey.self] = formatter
         
-        EnvironmentStorage.shared.objects.append(Database())
+        EnvironmentValues.shared.objects.append(Database())
         
         return channel
     }

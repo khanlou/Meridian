@@ -7,8 +7,19 @@
 
 import Foundation
 
-extension EnvironmentKey {
-    static let routes = EnvironmentKey()
+struct RouterEnvironmentKey: EnvironmentKey {
+    static var defaultValue = Router(routesByPrefix: [:], defaultErrorRenderer: BasicErrorRenderer.self)
+}
+
+extension EnvironmentValues {
+    var router: Router {
+        get {
+            self[RouterEnvironmentKey.self]
+        }
+        set {
+            self[RouterEnvironmentKey.self] = newValue
+        }
+    }
 }
 
 struct OptionsRoute: Route {
@@ -16,7 +27,7 @@ struct OptionsRoute: Route {
         header.method == .OPTIONS ? MatchedRoute() : nil
     })
 
-    @Environment(.routes) var router: Router
+    @Environment(\.router) var router
 
     @Path var path: String
 

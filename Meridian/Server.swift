@@ -66,7 +66,7 @@ public final class Server {
 
     public func listen() {
 
-        EnvironmentStorage.shared.keyedObjects[.routes] = self.router
+        EnvironmentValues.shared[RouterEnvironmentKey.self] = self.router
         
         let reuseAddrOpt = ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR)
 
@@ -99,12 +99,12 @@ public final class Server {
 
 extension Server {
     public func environmentObject(_ object: AnyObject) -> Self {
-        EnvironmentStorage.shared.objects.append(object)
+        EnvironmentValues.shared.objects.append(object)
         return self
     }
 
-    public func environment(_ key: EnvironmentKey, _ value: AnyObject) -> Self {
-        EnvironmentStorage.shared.keyedObjects[key] = value
+    public func environment<Key: EnvironmentKey>(_ key: Key, _ value: Key.Value) -> Self {
+//        EnvironmentValues.shared.keyedObjects[key] = value
         return self
     }
 }
