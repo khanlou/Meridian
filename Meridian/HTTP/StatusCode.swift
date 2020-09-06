@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct StatusCode: CustomStringConvertible, Equatable {
+public struct StatusCode: CustomStringConvertible, Equatable, Hashable {
     public let code: Int
     public let name: String
 
