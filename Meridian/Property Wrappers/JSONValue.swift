@@ -17,10 +17,10 @@ enum KeyPathError: Error {
     case notAnArray(NSObject)
 }
 
-func private components(from keyPath: String) throws -> Array<KeyPathComponent> {
+private func components(from keyPath: String) throws -> Array<KeyPathComponent> {
     let separators = CharacterSet(charactersIn: ".[")
-    var pieces = keyPath.components(separatedBy: separators)
-    return try pieces
+    return try keyPath
+        .components(separatedBy: separators)
         .drop(while: { $0.isEmpty })
         .map({ piece in
             if piece.hasSuffix("]") {
