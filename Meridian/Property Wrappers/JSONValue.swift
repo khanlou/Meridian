@@ -7,6 +7,62 @@
 
 import Foundation
 
+enum KeyPathComponent {
+    case name(String)
+    case index(Int)
+}
+
+enum KeyPathError: Error {
+    case invalidKeyPath(String)
+    case notAnArray(NSObject)
+}
+
+func private components(from keyPath: String) throws -> Array<KeyPathComponent> {
+    let separators = CharacterSet(charactersIn: ".[")
+    var pieces = keyPath.components(separatedBy: separators)
+    return try pieces
+        .drop(while: { $0.isEmpty })
+        .map({ piece in
+            if piece.hasSuffix("]") {
+                let trimmed = piece.dropLast()
+                guard let num = Int(trimmed) else {
+                    throw KeyPathError.invalidKeyPath("[" + piece)
+                }
+                return .index(num)
+            }
+
+            guard !piece.isEmpty else {
+                throw KeyPathError.invalidKeyPath(keyPath)
+            }
+            return .name(piece)
+        })
+}
+
+extension NSObject {
+    func _value(forKeyPath keyPath: String) throws -> Any {
+        let path = try components(from: keyPath)
+        return try _value(forKeyPath: path)
+    }
+
+    private func _value(forKeyPath: Array<KeyPathComponent>) throws -> Any {
+        assert(self is NSArray || self is NSDictionary)
+        guard let first = forKeyPath.first else { return self }
+        switch first {
+            case .name(let property):
+                guard let object = (self as? NSDictionary)?[property] as? NSObject else {
+                    throw KeyPathError.invalidKeyPath(property)
+                }
+                return try object._value(forKeyPath: Array(forKeyPath.dropFirst()))
+            case .index(let i):
+                guard let array = self as? NSArray else {
+                    throw KeyPathError.notAnArray(self)
+                }
+                let object = array[i] as! NSObject
+                return try object._value(forKeyPath: Array(forKeyPath.dropFirst()))
+        }
+    }
+}
+
 @propertyWrapper
 public struct JSONValue<Type: Decodable> {
 
@@ -28,7 +84,7 @@ public struct JSONValue<Type: Decodable> {
             }
 
             let object = try JSONSerialization.jsonObject(with: _currentRequest.postBody, options: []) as? NSDictionary ?? .init()
-            let result = object.value(forKeyPath: keyPath) as? Inner
+            let result = try? object._value(forKeyPath: keyPath) as? Inner
             if let value = result {
                 self.finalValue = value
             } else {
@@ -41,7 +97,6 @@ public struct JSONValue<Type: Decodable> {
             _errors.append(BasicError(message: "An unknown error occurred in \(JSONValue.self)."))
             self.finalValue = nil
         }
-
     }
 
     @_disfavoredOverload
@@ -60,7 +115,7 @@ public struct JSONValue<Type: Decodable> {
             }
 
             let object = try JSONSerialization.jsonObject(with: _currentRequest.postBody, options: []) as? NSDictionary ?? .init()
-            let result = object.value(forKeyPath: keyPath) as? Type
+            let result = try object._value(forKeyPath: keyPath) as? Type
             guard let value = result else {
                 throw JSONKeyNotFoundError(keyPath: keyPath)
             }
