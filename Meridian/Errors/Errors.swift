@@ -122,6 +122,17 @@ public struct JSONBodyDecodingError: ReportableError {
     }
 }
 
+public struct JSONKeyNotFoundError: Error {
+
+    public let keyPath: String
+
+    public let statusCode: StatusCode = .badRequest
+
+    public var message: String {
+        "The endpoint expects a value at the key path \"\(keyPath)\" but one could not be found."
+    }
+}
+
 public struct QueryParameterDecodingError: ReportableError {
     public let statusCode: StatusCode = .badRequest
 

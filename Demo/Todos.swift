@@ -74,13 +74,6 @@ struct ShowTodo: Route {
         }
         return JSON(todo).allowCORS()
     }
-
-}
-
-struct TodoPatch: Codable {
-    var title: String?
-    var completed: Bool?
-    var order: Int?
 }
 
 struct EditTodo: Route {
@@ -88,7 +81,9 @@ struct EditTodo: Route {
 
     @URLParameter(\.id) var id
 
-    @JSONBody var patch: TodoPatch
+    @JSONValue("title") var title: String?
+    @JSONValue("completed") var completed: Bool?
+    @JSONValue("order") var order: Int?
 
     @EnvironmentObject var database: Database
 
@@ -96,13 +91,13 @@ struct EditTodo: Route {
         guard let index = database.todos.firstIndex(where: { $0.id.uuidString == id }) else {
             throw NoRouteFound()
         }
-        if let newTitle = patch.title {
+        if let newTitle = title {
             database.todos[index].title = newTitle
         }
-        if let newCompleted = patch.completed {
+        if let newCompleted = completed {
             database.todos[index].completed = newCompleted
         }
-        if let newOrder = patch.order {
+        if let newOrder = order {
             database.todos[index].order = newOrder
         }
         return JSON(database.todos[index]).allowCORS()
