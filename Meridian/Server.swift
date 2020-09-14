@@ -98,13 +98,13 @@ public final class Server {
 }
 
 extension Server {
-    public func environmentObject(_ object: AnyObject) -> Self {
-        EnvironmentValues.shared.objects.append(object)
+    public func environmentObject<T: AnyObject>(_ object: T) -> Self {
+        EnvironmentValues.shared.storage[ObjectIdentifier(T.self)] = object
         return self
     }
 
     public func environment<Key: EnvironmentKey>(_ key: Key, _ value: Key.Value) -> Self {
-        EnvironmentValues.shared.keyedObjects.append(value) // is this right?
+        EnvironmentValues.shared[Key.self] = value
         return self
     }
 }

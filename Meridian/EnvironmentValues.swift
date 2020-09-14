@@ -19,16 +19,15 @@ public final class EnvironmentValues {
 
     static let shared = EnvironmentValues()
 
-    var objects: [AnyObject] = []
-
-    var keyedObjects: [Any] = []
+    var storage: [ObjectIdentifier: Any] = [:]
 
     public subscript<Key: EnvironmentKey>(key: Key.Type) -> Key.Value {
         get {
-            keyedObjects.reversed().lazy.compactMap({ $0 as? Key.Value }).first ?? Key.defaultValue
+            let id = ObjectIdentifier(key)
+            return (storage[id] as? Key.Value) ?? Key.defaultValue
         }
         set {
-            keyedObjects.append(newValue)
+            storage[ObjectIdentifier(key)] = newValue
         }
     }
 }

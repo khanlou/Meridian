@@ -79,7 +79,7 @@ final class EnvironmentTests: XCTestCase {
         formatter.numberStyle = .spellOut
         EnvironmentValues.shared[NumberFormatterEnvironmentKey.self] = formatter
         
-        EnvironmentValues.shared.objects.append(Database())
+        EnvironmentValues.shared.storage[ObjectIdentifier(Database.self)] = Database()
         
         return channel
     }

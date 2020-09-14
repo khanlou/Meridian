@@ -11,7 +11,7 @@ public typealias EnvironmentObject<Type> = Custom<EnvironmentObjectExtractor<Typ
 
 public struct EnvironmentObjectExtractor<Type>: NonParameterizedExtractor {
     public static func extract(from context: RequestContext) throws -> Type {
-        guard let value = EnvironmentValues.shared.objects.lazy.compactMap({ $0 as? Type }).first else {
+        guard let value = EnvironmentValues.shared.storage[ObjectIdentifier(Type.self)] as? Type else {
             throw MissingEnvironmentObject(type: Type.self)
         }
         return value
