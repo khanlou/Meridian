@@ -18,7 +18,7 @@ struct JSONExample: Codable {
     var objects: [InnerObject]
 }
 
-struct JSONBodyTestRoute: Route {
+struct JSONBodyTestRoute: Responder {
     static let route: RouteMatcher = "/json_body"
     
     @JSONBody var content: JSONExample

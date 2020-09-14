@@ -17,22 +17,22 @@ final class Router {
         self.defaultErrorRenderer = defaultErrorRenderer
     }
 
-    func register(_ routes: [Route.Type], errorRenderer: ErrorRenderer.Type? = nil) {
+    func register(_ routes: [Responder.Type], errorRenderer: ErrorRenderer.Type? = nil) {
         self.add(routes: routes, prefix: "", errorRenderer: errorRenderer)
     }
 
-    func group(prefix: String, _ routes: [Route.Type], errorRenderer: ErrorRenderer.Type? = nil) {
+    func group(prefix: String, _ routes: [Responder.Type], errorRenderer: ErrorRenderer.Type? = nil) {
         self.add(routes: routes, prefix: prefix, errorRenderer: errorRenderer)
     }
 
-    private func add(routes: [Route.Type], prefix: String, errorRenderer: ErrorRenderer.Type?) {
+    private func add(routes: [Responder.Type], prefix: String, errorRenderer: ErrorRenderer.Type?) {
         self.routesByPrefix[prefix, default: RouteGroup()].append(contentsOf: routes)
         if let errorRenderer = errorRenderer {
             self.routesByPrefix[prefix, default: RouteGroup()].customErrorRenderer = errorRenderer
         }
     }
 
-    func route(for header: RequestHeader) -> ((Route.Type, MatchedRoute)?, ErrorRenderer.Type) {
+    func route(for header: RequestHeader) -> ((Responder.Type, MatchedRoute)?, ErrorRenderer.Type) {
         let originalPath = header.path
 
         var header = header

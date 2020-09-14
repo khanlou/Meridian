@@ -10,7 +10,7 @@ import NIO
 import NIOHTTP1
 @testable import Meridian
 
-struct CustomStatusCodeTestRoute: Route {
+struct CustomStatusCodeTestRoute: Responder {
     static let route: RouteMatcher = "/statusCode"
     
     func execute() throws -> Response {

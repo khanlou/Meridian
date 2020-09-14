@@ -17,7 +17,7 @@ struct ServeOptions: ParsableArguments {
 
 struct RouteGroup: ExpressibleByArrayLiteral {
 
-    var routes: [Route.Type]
+    var routes: [Responder.Type]
     var customErrorRenderer: ErrorRenderer.Type?
 
     init() {
@@ -25,16 +25,16 @@ struct RouteGroup: ExpressibleByArrayLiteral {
         self.customErrorRenderer = nil
     }
 
-    init(arrayLiteral elements: Route.Type...) {
+    init(arrayLiteral elements: Responder.Type...) {
         self.routes = elements
         self.customErrorRenderer = nil
     }
 
-    mutating func append(_ route: Route.Type) {
+    mutating func append(_ route: Responder.Type) {
         self.routes.append(route)
     }
 
-    mutating func append(contentsOf routes: [Route.Type]) {
+    mutating func append(contentsOf routes: [Responder.Type]) {
         self.routes.append(contentsOf: routes)
     }
 
@@ -53,13 +53,13 @@ public final class Server {
     }
 
     @discardableResult
-    public func register(_ routes: Route.Type..., errorRenderer: ErrorRenderer.Type? = nil) -> Self {
+    public func register(_ routes: Responder.Type..., errorRenderer: ErrorRenderer.Type? = nil) -> Self {
         self.router.register(routes, errorRenderer: errorRenderer)
         return self
     }
 
     @discardableResult
-    public func group(prefix: String, _ routes: Route.Type..., errorRenderer: ErrorRenderer.Type? = nil) -> Self {
+    public func group(prefix: String, _ routes: Responder.Type..., errorRenderer: ErrorRenderer.Type? = nil) -> Self {
         self.router.group(prefix: prefix, routes, errorRenderer: errorRenderer)
         return self
     }

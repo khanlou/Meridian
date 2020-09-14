@@ -22,7 +22,7 @@ extension EnvironmentValues {
     }
 }
 
-struct OptionsRoute: Route {
+struct OptionsRoute: Responder {
     static var route = RouteMatcher(matches: { header in
         header.method == .OPTIONS ? MatchedRoute() : nil
     })

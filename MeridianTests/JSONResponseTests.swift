@@ -10,7 +10,7 @@ import NIO
 import NIOHTTP1
 @testable import Meridian
 
-struct JSONResponseTestRoute: Route {
+struct JSONResponseTestRoute: Responder {
     static let route: RouteMatcher = "/customJSON"
     
     func execute() throws -> Response {

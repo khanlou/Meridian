@@ -10,7 +10,7 @@ import NIO
 import NIOHTTP1
 @testable import Meridian
 
-struct EmptyResponseTestRoute: Route {
+struct EmptyResponseTestRoute: Responder {
     static let route: RouteMatcher = "/emptyResponse"
     
     func execute() throws -> Response {

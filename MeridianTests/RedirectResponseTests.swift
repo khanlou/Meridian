@@ -10,7 +10,7 @@ import NIO
 import NIOHTTP1
 @testable import Meridian
 
-struct RedirectResponseTestRoute: Route {
+struct RedirectResponseTestRoute: Responder {
     static let route: RouteMatcher = "/redirect"
     
     func execute() throws -> Response {

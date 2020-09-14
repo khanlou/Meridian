@@ -26,7 +26,7 @@ extension EnvironmentValues {
 }
 
 
-struct EnvironmentKeyTestRoute: Route {
+struct EnvironmentKeyTestRoute: Responder {
     static let route: RouteMatcher = "/environmentKey"
     
     @Environment(\.formatter) var formatter
@@ -53,7 +53,7 @@ final class Database {
     }
 }
 
-struct EnvironmentObjectTestRoute: Route {
+struct EnvironmentObjectTestRoute: Responder {
     static let route: RouteMatcher = "/environmentObject"
     
     @EnvironmentObject var database: Database

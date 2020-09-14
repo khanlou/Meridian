@@ -10,7 +10,7 @@ import NIO
 import NIOHTTP1
 @testable import Meridian
 
-struct StringQueryParameterRoute: Route {
+struct StringQueryParameterRoute: Responder {
     static let route: RouteMatcher = "/string"
     
     @QueryParameter("name") var name: String
@@ -20,7 +20,7 @@ struct StringQueryParameterRoute: Route {
     }
 }
 
-struct IntQueryParameterRoute: Route {
+struct IntQueryParameterRoute: Responder {
     static let route: RouteMatcher = "/int"
     
     @QueryParameter("number") var number: Int
@@ -30,7 +30,7 @@ struct IntQueryParameterRoute: Route {
     }
 }
 
-struct LetterQueryParameterRoute: Route {
+struct LetterQueryParameterRoute: Responder {
     static let route: RouteMatcher = "/play"
     
     @QueryParameter("note") var note: MusicNote
@@ -40,7 +40,7 @@ struct LetterQueryParameterRoute: Route {
     }
 }
 
-struct OptionalParameterRoute: Route {
+struct OptionalParameterRoute: Responder {
     static let route: RouteMatcher = "/play_optional"
     
     @QueryParameter("note") var note: MusicNote?
@@ -54,7 +54,7 @@ struct OptionalParameterRoute: Route {
     }
 }
 
-struct MultipleParameterRoute: Route {
+struct MultipleParameterRoute: Responder {
     static let route: RouteMatcher = "/multiple_parameter"
     
     @QueryParameter("note") var note: MusicNote
@@ -65,7 +65,7 @@ struct MultipleParameterRoute: Route {
     }
 }
 
-struct OptionalFlagParameterRoute: Route {
+struct OptionalFlagParameterRoute: Responder {
     static let route: RouteMatcher = "/optional_flag"
     
     @QueryParameter("flag") var flag: Present?
@@ -79,7 +79,7 @@ struct OptionalFlagParameterRoute: Route {
     }
 }
 
-struct RequiredFlagParameterRoute: Route {
+struct RequiredFlagParameterRoute: Responder {
     static let route: RouteMatcher = "/required_flag"
     
     @QueryParameter("flag") var flag: Present

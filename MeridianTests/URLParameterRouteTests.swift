@@ -10,7 +10,7 @@ import NIO
 import NIOHTTP1
 @testable import Meridian
 
-struct NoURLParameterRoute: Route {
+struct NoURLParameterRoute: Responder {
     static let route: RouteMatcher = "/sample"
 
     func execute() throws -> Response {
@@ -18,7 +18,7 @@ struct NoURLParameterRoute: Route {
     }
 }
 
-struct StringURLParameterRoute: Route {
+struct StringURLParameterRoute: Responder {
     static let route: RouteMatcher = "/string/\(\.id)"
 
     @URLParameter(\.id) var id
@@ -28,7 +28,7 @@ struct StringURLParameterRoute: Route {
     }
 }
 
-struct IntURLParameterRoute: Route {
+struct IntURLParameterRoute: Responder {
     static let route: RouteMatcher = "/int/\(\.number)"
 
     @URLParameter(\.number) var id
@@ -38,7 +38,7 @@ struct IntURLParameterRoute: Route {
     }
 }
 
-struct MultipleURLParameterRoute: Route {
+struct MultipleURLParameterRoute: Responder {
     static let route: RouteMatcher = "/int/\(\.number)/letter/\(\.letter)"
 
     @URLParameter(\.number) var id
@@ -49,7 +49,7 @@ struct MultipleURLParameterRoute: Route {
     }
 }
 
-struct LetterURLParameterRoute: Route {
+struct LetterURLParameterRoute: Responder {
     static let route: RouteMatcher = "/letter/\(\.letter)"
 
     @URLParameter(\.letter) var grade
