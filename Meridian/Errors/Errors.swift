@@ -146,14 +146,29 @@ public struct JSONBodyDecodingError: ReportableError {
     }
 }
 
-public struct JSONKeyNotFoundError: Error {
-
-    public let keyPath: String
+public struct JSONKeyNotFoundError: ReportableError {
 
     public let statusCode: StatusCode = .badRequest
 
-    public var message: String {
-        "The endpoint expects a value at the key path \"\(keyPath)\" but one could not be found."
+    public let externallyVisible = true
+
+    public let message: String
+
+    init<Type>(type: Type.Type, keyPath: String) {
+        self.message = "The endpoint expects a JSON body with a value of type \(Type.self) at key path \"\(keyPath)\" but did not find one."
+    }
+}
+
+
+public struct JSONKeyTypeMismatchError: ReportableError {
+    public let statusCode: StatusCode = .badRequest
+
+    public let externallyVisible = true
+
+    public let message: String
+
+    init<Type>(type: Type.Type, keyPath: String) {
+        self.message = "The endpoint expects a JSON body with a value at key path \"\(keyPath)\" with the expected type \(Type.self), but did not find the right type."
     }
 }
 

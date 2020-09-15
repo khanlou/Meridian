@@ -110,7 +110,11 @@ public struct JSONValue<Type: Decodable>: PropertyWrapper {
             if Inner.self == Bool.self {
                 return (string as NSString).boolValue as? Inner
             }
-            return try decodeFragment(Inner.self, from: string)
+            do {
+                return try decodeFragment(Inner.self, from: string)
+            } catch {
+                throw JSONKeyTypeMismatchError(type: Type.self, keyPath: keyPath)
+            }
         }
     }
 
@@ -132,12 +136,21 @@ public struct JSONValue<Type: Decodable>: PropertyWrapper {
 
             let object = try JSONSerialization.jsonObject(with: requestContext.postBody, options: []) as? NSDictionary ?? .init()
 
+            let string: String
             do {
                 let result = try object._value(forKeyPath: keyPath)
-                let string = String(describing: result)
+                string = String(describing: result)
+            } catch {
+                throw JSONKeyNotFoundError(type: Type.self, keyPath: keyPath)
+            }
+
+            do {
+                if Type.self == Bool.self {
+                    return (string as NSString).boolValue as! Type
+                }
                 return try decodeFragment(Type.self, from: string)
             } catch {
-                throw BasicError(externallyVisible: true, statusCode: .badRequest, message: "JSON value could not decode")
+                throw JSONKeyTypeMismatchError(type: Type.self, keyPath: keyPath)
             }
 
         }
