@@ -22,9 +22,9 @@ extension ReportableError {
         "An error occurred."
     }
 
-//    var externallyVisible: Bool {
-//        false
-//    }
+    var externallyVisible: Bool {
+        false
+    }
 }
 
 public struct MissingEnvironmentObject: ReportableError {
