@@ -8,7 +8,16 @@
 import Foundation
 
 public protocol Responder {
+
+    func validate() throws
+
     func execute() throws -> Response
 
     init()
+}
+
+extension Responder {
+    public func validate() throws{
+        
+    }
 }

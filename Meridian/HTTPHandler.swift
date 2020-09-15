@@ -120,6 +120,8 @@ final class HTTPHandler: ChannelInboundHandler {
 
                 }
 
+                try route.validate()
+
                 let response = try route.execute()
 
                 try send(response, head.version, to: channel)
