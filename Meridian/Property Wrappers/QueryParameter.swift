@@ -27,75 +27,82 @@ private struct Holder<Contained: Decodable>: Decodable {
     let value: Contained
 }
 
-@propertyWrapper
-public struct QueryParameter<Type: Decodable> {
-
-    let finalValue: Type?
-
-    public init<Inner>(_ key: String) where Type == Inner? {
-        guard let queryItem = _currentRequest.queryParameters.first(where: { $0.name == key }) else {
-            self.finalValue = .some(.none)
-            return
-        }
-        if Inner.self == Present.self {
-            self.finalValue = Present?.some(Present()) as? Type
-        } else if let value = queryItem.value {
-            if Inner.self == String.self {
-                self.finalValue = String?.some(value) as? Type
-                return
-            }
-            do {
-                let newString = "{\"value\": " + value + " }"
-                let decoder = JSONDecoder()
-                self.finalValue = try decoder.decode(Holder<Inner>.self, from: newString.data(using: .utf8)!).value
-            } catch {
-                do {
-                    let newString = "{\"value\": \"" + value + "\" }"
-                    let decoder = JSONDecoder()
-                    self.finalValue = try decoder.decode(Holder<Type>.self, from: newString.data(using: .utf8)!).value
-                } catch {
-                    self.finalValue = nil
-                    _errors.append(QueryParameterDecodingError(type: Type.self, key: key))
-                }
-            }
-        } else {
-            self.finalValue = nil
-            _errors.append(NoValueQueryParameterError(key: key)) // this is maybe fatal
+private func decode<T: Decodable>(_ type: T.Type, from value: String, for key: String) throws -> T {
+    do {
+        let newString = "{\"value\": " + value + " }"
+        let decoder = JSONDecoder()
+        return try decoder.decode(Holder<T>.self, from: newString.data(using: .utf8)!).value
+    } catch {
+        do {
+            let newString = "{\"value\": \"" + value + "\" }"
+            let decoder = JSONDecoder()
+            return try decoder.decode(Holder<T>.self, from: newString.data(using: .utf8)!).value
+        } catch {
+            throw QueryParameterDecodingError(type: T.self, key: key)
         }
     }
+}
 
-    @_disfavoredOverload
-    public init(_ key: String) {
-        guard let queryItem = _currentRequest.queryParameters.first(where: { $0.name == key }) else {
-            _errors.append(MissingQueryParameterError(key: key))
-            self.finalValue = nil
-            return
-        }
-        if Type.self == Present.self {
-            self.finalValue = Present() as? Type
-        } else if let value = queryItem.value {
+@propertyWrapper
+public struct QueryParameter<Type: Decodable>: PropertyWrapper {
 
-            do {
-                let newString = "{\"value\": " + value + " }"
-                let decoder = JSONDecoder()
-                self.finalValue = try decoder.decode(Holder<Type>.self, from: newString.data(using: .utf8)!).value
-            } catch {
-                do {
-                    let newString = "{\"value\": \"" + value + "\" }"
-                    let decoder = JSONDecoder()
-                    self.finalValue = try decoder.decode(Holder<Type>.self, from: newString.data(using: .utf8)!).value
-                } catch {
-                    self.finalValue = nil
-                    _errors.append(QueryParameterDecodingError(type: Type.self, key: key))
-                }
-            }
-        } else {
-            self.finalValue = nil
-            _errors.append(NoValueQueryParameterError(key: key)) // this is maybe fatal
+    @ParameterBox var finalValue: Type?
+
+    let extractor: (RequestContext) throws -> Type?
+
+    func update(_ requestContext: RequestContext, errors: inout [Error]) {
+        do {
+            self.finalValue = try extractor(requestContext)
+        } catch {
+            errors.append(error)
         }
     }
 
     public var wrappedValue: Type {
         return finalValue!
+    }
+
+    @_disfavoredOverload
+    public init(_ key: String) {
+        self.extractor = { context in
+            guard let item = context.queryParameters.first(where: { $0.name == key }) else {
+                throw MissingQueryParameterError(key: key)
+            }
+            guard let value = item.value else {
+                throw NoValueQueryParameterError(key: key)
+            }
+            return try decode(Type.self, from: value, for: key)
+        }
+    }
+
+    public init<Inner>(_ key: String) where Type == Inner? {
+        self.extractor = { context in
+            guard let value = context.queryParameters.first(where: { $0.name == key })?.value else {
+                return .some(nil)
+            }
+            return try decode(Type.self, from: value, for: key)
+        }
+    }
+}
+
+extension QueryParameter where Type == Present {
+    public init(_ key: String) {
+        self.extractor = { context in
+            guard context.queryParameters.first(where: { $0.name == key }) != nil else {
+                throw MissingQueryParameterError(key: key)
+            }
+            return Present()
+        }
+    }
+}
+
+extension QueryParameter where Type == Present? {
+    public init(_ key: String) {
+        self.extractor = { context in
+            guard context.queryParameters.first(where: { $0.name == key }) != nil else {
+                return .some(nil)
+            }
+            return Present()
+        }
     }
 }

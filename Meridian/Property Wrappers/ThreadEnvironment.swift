@@ -7,18 +7,21 @@
 
 import Foundation
 
-public var _errors: [ReportableError] {
-    get {
-        (Thread.current.threadDictionary[RequestErrorsKey] as? [Any] ?? []).compactMap({ $0 as? ReportableError })
-    }
-    set {
-        Thread.current.threadDictionary[RequestErrorsKey] = newValue
+@propertyWrapper
+class ParameterBox<T> {
+
+    var storage: T?
+
+    var wrappedValue: T? {
+        get {
+            storage
+        }
+        set {
+            storage = newValue
+        }
     }
 }
 
-public var _currentRequest: RequestContext {
-    guard let currentRequest = Thread.current.threadDictionary[CurrentRequestKey] as? RequestContext else {
-        fatalError("There must be a current request in the thread dictionary.")
-    }
-    return currentRequest
+protocol PropertyWrapper {
+    func update(_ requestContext: RequestContext, errors: inout [Error])
 }

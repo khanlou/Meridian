@@ -11,6 +11,6 @@ public typealias URLParameter<SpecificURLParameterKey: URLParameterKey> = Custom
 
 public struct URLParameterExtractor<SpecificURLParameterKey: URLParameterKey>: ParameterizedExtractor {
     public static func extract(from context: RequestContext, parameters: KeyPath<ParameterKeys, SpecificURLParameterKey>) throws -> SpecificURLParameterKey.DecodeType {
-        try _currentRequest.matchedRoute.parameter(for: SpecificURLParameterKey.self)
+        try context.matchedRoute.parameter(for: SpecificURLParameterKey.self)
     }
 }

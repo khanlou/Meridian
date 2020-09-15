@@ -23,18 +23,24 @@ public protocol NonParameterizedExtractor {
 }
 
 @propertyWrapper
-public struct CustomWithParameters<Extractor: ParameterizedExtractor> {
+public struct CustomWithParameters<Extractor: ParameterizedExtractor>: PropertyWrapper {
 
-    let finalValue: Extractor.Output?
+    let parameters: Extractor.Parameters
 
     public init(_ parameters: Extractor.Parameters) {
+        self.parameters = parameters
+    }
+
+    @ParameterBox var finalValue: Extractor.Output?
+
+    func update(_ requestContext: RequestContext, errors: inout [Error]) {
         do {
-            self.finalValue = try Extractor.extract(from: _currentRequest, parameters: parameters)
+            self.finalValue = try Extractor.extract(from: requestContext, parameters: parameters)
         } catch let error as ReportableError {
-            _errors.append(error)
+            errors.append(error)
             self.finalValue = nil
         } catch {
-            _errors.append(BasicError(message: "An unknown error occurred in \(Extractor.self)."))
+            errors.append(BasicError(message: "An unknown error occurred in \(Extractor.self)."))
             self.finalValue = nil
         }
     }
@@ -45,18 +51,20 @@ public struct CustomWithParameters<Extractor: ParameterizedExtractor> {
 }
 
 @propertyWrapper
-public struct Custom<Extractor: NonParameterizedExtractor> {
+public struct Custom<Extractor: NonParameterizedExtractor>: PropertyWrapper {
 
-    let finalValue: Extractor.Output?
+    public init() { }
 
-    public init() {
+    @ParameterBox var finalValue: Extractor.Output?
+
+    func update(_ requestContext: RequestContext, errors: inout [Error]) {
         do {
-            self.finalValue = try Extractor.extract(from: _currentRequest)
+            self.finalValue = try Extractor.extract(from: requestContext)
         } catch let error as ReportableError {
-            _errors.append(error)
+            errors.append(error)
             self.finalValue = nil
         } catch {
-            _errors.append(BasicError(message: "An unknown error occurred in \(Extractor.self)."))
+            errors.append(BasicError(message: "An unknown error occurred in \(Extractor.self)."))
             self.finalValue = nil
         }
     }

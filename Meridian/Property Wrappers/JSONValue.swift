@@ -64,68 +64,68 @@ extension NSObject {
 }
 
 @propertyWrapper
-public struct JSONValue<Type: Decodable> {
+public struct JSONValue<Type: Decodable>: PropertyWrapper {
 
-    let finalValue: Type?
+    @ParameterBox var finalValue: Type?
 
-    public init<Inner>(_ keyPath: String) where Type == Inner? {
+    let extractor: (RequestContext) throws -> Type?
+
+    func update(_ requestContext: RequestContext, errors: inout [Error]) {
         do {
-            guard _currentRequest.header.method != .GET else {
-                throw UnexpectedGETRequestError()
-            }
-
-            guard let contentType = _currentRequest.header.headers["Content-Type"], contentType.contains("application/json") else {
-                throw JSONContentTypeError()
-            }
-
-            guard !_currentRequest.postBody.isEmpty else {
-                self.finalValue = .some(.none)
-                return
-            }
-
-            let object = try JSONSerialization.jsonObject(with: _currentRequest.postBody, options: []) as? NSDictionary ?? .init()
-            let result = try? object._value(forKeyPath: keyPath) as? Inner
-            if let value = result {
-                self.finalValue = value
-            } else {
-                self.finalValue = .some(.none)
-            }
+            self.finalValue = try extractor(requestContext)
         } catch let error as ReportableError {
-            _errors.append(error)
-            self.finalValue = nil
+            errors.append(error)
         } catch {
-            _errors.append(BasicError(message: "An unknown error occurred in \(JSONValue.self)."))
-            self.finalValue = nil
+            errors.append(BasicError(message: "An unknown error occurred in \(JSONValue.self)."))
         }
     }
 
-    @_disfavoredOverload
-    public init(_ keyPath: String) {
-        do {
-            guard _currentRequest.header.method != .GET else {
+    public init<Inner>(_ keyPath: String) where Type == Inner? {
+        self.extractor = { requestContext in
+            guard requestContext.header.method != .GET else {
                 throw UnexpectedGETRequestError()
             }
 
-            guard let contentType = _currentRequest.header.headers["Content-Type"], contentType.contains("application/json") else {
+            guard let contentType = requestContext.header.headers["Content-Type"], contentType.contains("application/json") else {
                 throw JSONContentTypeError()
             }
 
-            guard !_currentRequest.postBody.isEmpty else {
+            guard !requestContext.postBody.isEmpty else {
+                return .some(.none)
+            }
+
+            let object = try JSONSerialization.jsonObject(with: requestContext.postBody, options: []) as? NSDictionary ?? .init()
+            let result = try? object._value(forKeyPath: keyPath) as? Inner
+            if let value = result {
+                return value
+            } else {
+                return .some(.none)
+            }
+        }
+    }
+
+
+    @_disfavoredOverload
+    public init(_ keyPath: String) {
+        self.extractor = { requestContext in
+            guard requestContext.header.method != .GET else {
+                throw UnexpectedGETRequestError()
+            }
+
+            guard let contentType = requestContext.header.headers["Content-Type"], contentType.contains("application/json") else {
+                throw JSONContentTypeError()
+            }
+
+            guard !requestContext.postBody.isEmpty else {
                 throw MissingBodyError()
             }
 
-            let object = try JSONSerialization.jsonObject(with: _currentRequest.postBody, options: []) as? NSDictionary ?? .init()
+            let object = try JSONSerialization.jsonObject(with: requestContext.postBody, options: []) as? NSDictionary ?? .init()
             let result = try object._value(forKeyPath: keyPath) as? Type
             guard let value = result else {
                 throw JSONKeyNotFoundError(keyPath: keyPath)
             }
-            self.finalValue = value
-        } catch let error as ReportableError {
-            _errors.append(error)
-            self.finalValue = nil
-        } catch {
-            _errors.append(BasicError(message: "An unknown error occurred in \(JSONValue.self)."))
-            self.finalValue = nil
+            return value
         }
     }
 
