@@ -31,22 +31,20 @@ public struct CustomWithParameters<Extractor: ParameterizedExtractor>: PropertyW
         self.parameters = parameters
     }
 
-    @ParameterBox var finalValue: Extractor.Output?
+    @ParameterStorage var finalValue: Extractor.Output
 
     func update(_ requestContext: RequestContext, errors: inout [Error]) {
         do {
             self.finalValue = try Extractor.extract(from: requestContext, parameters: parameters)
         } catch let error as ReportableError {
             errors.append(error)
-            self.finalValue = nil
         } catch {
             errors.append(BasicError(message: "An unknown error occurred in \(Extractor.self)."))
-            self.finalValue = nil
         }
     }
 
     public var wrappedValue: Extractor.Output {
-        finalValue!
+        finalValue
     }
 }
 
@@ -55,21 +53,19 @@ public struct Custom<Extractor: NonParameterizedExtractor>: PropertyWrapper {
 
     public init() { }
 
-    @ParameterBox var finalValue: Extractor.Output?
+    @ParameterStorage var finalValue: Extractor.Output
 
     func update(_ requestContext: RequestContext, errors: inout [Error]) {
         do {
             self.finalValue = try Extractor.extract(from: requestContext)
         } catch let error as ReportableError {
             errors.append(error)
-            self.finalValue = nil
         } catch {
             errors.append(BasicError(message: "An unknown error occurred in \(Extractor.self)."))
-            self.finalValue = nil
         }
     }
 
     public var wrappedValue: Extractor.Output {
-        finalValue!
+        finalValue
     }
 }

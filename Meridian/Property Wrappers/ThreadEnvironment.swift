@@ -8,13 +8,16 @@
 import Foundation
 
 @propertyWrapper
-class ParameterBox<T> {
+class ParameterStorage<T> {
 
     var storage: T?
 
-    var wrappedValue: T? {
+    var wrappedValue: T {
         get {
-            storage
+            guard let storage = storage else {
+                fatalError("The property wrapper's value was accessed at an invalid type.")
+            }
+            return storage
         }
         set {
             storage = newValue

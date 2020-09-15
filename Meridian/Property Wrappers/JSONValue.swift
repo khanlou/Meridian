@@ -69,9 +69,9 @@ extension NSObject {
 @propertyWrapper
 public struct JSONValue<Type: Decodable>: PropertyWrapper {
 
-    @ParameterBox var finalValue: Type?
+    @ParameterStorage var finalValue: Type
 
-    let extractor: (RequestContext) throws -> Type?
+    let extractor: (RequestContext) throws -> Type
 
     func update(_ requestContext: RequestContext, errors: inout [Error]) {
         do {
@@ -94,7 +94,7 @@ public struct JSONValue<Type: Decodable>: PropertyWrapper {
             }
 
             guard !requestContext.postBody.isEmpty else {
-                return .some(.none)
+                return nil
             }
 
             let object = try JSONSerialization.jsonObject(with: requestContext.postBody, options: []) as? NSDictionary ?? .init()
@@ -102,7 +102,7 @@ public struct JSONValue<Type: Decodable>: PropertyWrapper {
             if let value = result {
                 return value
             } else {
-                return .some(.none)
+                return nil
             }
         }
     }
@@ -133,7 +133,7 @@ public struct JSONValue<Type: Decodable>: PropertyWrapper {
     }
 
     public var wrappedValue: Type {
-        return finalValue!
+        return finalValue
     }
 }
 

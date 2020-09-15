@@ -10,11 +10,11 @@ import Foundation
 @propertyWrapper
 public struct JSONBody<Type: Decodable>: PropertyWrapper {
 
-    @ParameterBox var finalValue: Type?
+    @ParameterStorage var finalValue: Type
 
     let decoder: JSONDecoder
 
-    let extractor: (RequestContext) throws -> Type?
+    let extractor: (RequestContext) throws -> Type
 
     public init<Inner>(decoder: JSONDecoder = .init()) where Type == Inner? {
         self.decoder = decoder
@@ -28,7 +28,7 @@ public struct JSONBody<Type: Decodable>: PropertyWrapper {
             }
 
             guard !context.postBody.isEmpty else {
-                return .some(.none)
+                return nil
             }
 
             return try decoder.decode(Type.self, from: context.postBody)
@@ -68,7 +68,7 @@ public struct JSONBody<Type: Decodable>: PropertyWrapper {
     }
 
     public var wrappedValue: Type {
-        return finalValue!
+        return finalValue
     }
 }
 

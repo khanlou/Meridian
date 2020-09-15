@@ -46,9 +46,9 @@ private func decode<T: Decodable>(_ type: T.Type, from value: String, for key: S
 @propertyWrapper
 public struct QueryParameter<Type: Decodable>: PropertyWrapper {
 
-    @ParameterBox var finalValue: Type?
+    @ParameterStorage var finalValue: Type
 
-    let extractor: (RequestContext) throws -> Type?
+    let extractor: (RequestContext) throws -> Type
 
     func update(_ requestContext: RequestContext, errors: inout [Error]) {
         do {
@@ -59,7 +59,7 @@ public struct QueryParameter<Type: Decodable>: PropertyWrapper {
     }
 
     public var wrappedValue: Type {
-        return finalValue!
+        return finalValue
     }
 
     @_disfavoredOverload
@@ -78,7 +78,7 @@ public struct QueryParameter<Type: Decodable>: PropertyWrapper {
     public init<Inner>(_ key: String) where Type == Inner? {
         self.extractor = { context in
             guard let value = context.queryParameters.first(where: { $0.name == key })?.value else {
-                return .some(nil)
+                return nil
             }
             return try decode(Type.self, from: value, for: key)
         }
@@ -100,7 +100,7 @@ extension QueryParameter where Type == Present? {
     public init(_ key: String) {
         self.extractor = { context in
             guard context.queryParameters.first(where: { $0.name == key }) != nil else {
-                return .some(nil)
+                return nil
             }
             return Present()
         }
