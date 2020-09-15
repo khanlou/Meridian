@@ -12,14 +12,26 @@ import Meridian
 Backtrace.install()
 
 Server(errorRenderer: BasicErrorRenderer.self)
-    .group(prefix: "/todos",
-           DeleteTodo.self,
-           EditTodo.self,
-           ShowTodo.self,
-           ClearTodos.self,
-           CreateTodo.self,
-           ListTodos.self,
-           errorRenderer: JSONErrorRenderer.self
-    )
+    .group(prefix: "/todos", errorRenderer: JSONErrorRenderer.self) {
+
+        DeleteTodo()
+            .on(.delete("/\(\.id)"))
+
+        EditTodo()
+            .on(.patch("/\(\.id)"))
+
+        ShowTodo()
+            .on(.get("/\(\.id)"))
+
+        ClearTodos()
+            .on(.delete(.root))
+
+        CreateTodo()
+            .on(.post(.root))
+        
+        ListTodos()
+            .on(.get(.root))
+
+    }
     .environmentObject(Database())
     .listen()

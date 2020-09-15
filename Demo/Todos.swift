@@ -23,8 +23,6 @@ extension ParameterKeys {
 
 struct ListTodos: Responder {
 
-    static let route: RouteMatcher = .get(.root)
-
     @EnvironmentObject var database: Database
 
     func execute() throws -> Response {
@@ -35,8 +33,7 @@ struct ListTodos: Responder {
 }
 
 struct ClearTodos: Responder {
-    static let route: RouteMatcher = .delete(.root)
-
+    
     @EnvironmentObject var database: Database
 
     func execute() throws -> Response {
@@ -47,7 +44,6 @@ struct ClearTodos: Responder {
 }
 
 struct CreateTodo: Responder {
-    static let route: RouteMatcher = .post(.root)
 
     @JSONBody var todo: Todo
 
@@ -62,7 +58,6 @@ struct CreateTodo: Responder {
 }
 
 struct ShowTodo: Responder {
-    static let route: RouteMatcher = .get("/\(\.id)")
 
     @URLParameter(\.id) var id
 
@@ -77,7 +72,6 @@ struct ShowTodo: Responder {
 }
 
 struct EditTodo: Responder {
-    static let route: RouteMatcher = .patch("/\(\.id)")
 
     @URLParameter(\.id) var id
 
@@ -105,7 +99,6 @@ struct EditTodo: Responder {
 }
 
 struct DeleteTodo: Responder {
-    static let route: RouteMatcher = .delete("/\(\.id)")
 
     @URLParameter(\.id) var id
 

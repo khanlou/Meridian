@@ -92,7 +92,7 @@ final class HTTPHandler: ChannelInboundHandler {
             let (results, errorRenderer) = router.route(for: header)
 
             do {
-                guard let (routeType, matchedRoute) = results else {
+                guard let (route, matchedRoute) = results else {
                     throw NoRouteFound()
                 }
 
@@ -103,8 +103,6 @@ final class HTTPHandler: ChannelInboundHandler {
                 )
 
                 print("request: \(requestContext.header)")
-
-                let route = routeType.init()
 
                 var errors: [Error] = []
 

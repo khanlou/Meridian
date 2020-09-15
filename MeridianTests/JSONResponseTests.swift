@@ -11,7 +11,6 @@ import NIOHTTP1
 @testable import Meridian
 
 struct JSONResponseTestRoute: Responder {
-    static let route: RouteMatcher = "/customJSON"
     
     func execute() throws -> Response {
         JSON(JSONExample(objects: [JSONExample.InnerObject(thing: 3)]))
@@ -22,7 +21,8 @@ final class JSONResponseRouteTests: XCTestCase {
     
     func makeChannel() throws -> EmbeddedChannel {
         let handler = HTTPHandler(routesByPrefix: ["": [
-            JSONResponseTestRoute.self,
+            JSONResponseTestRoute()
+                .on("/customJSON"),
         ]], errorRenderer: BasicErrorRenderer.self)
         
         let channel = EmbeddedChannel()

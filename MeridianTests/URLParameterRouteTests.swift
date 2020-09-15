@@ -11,7 +11,6 @@ import NIOHTTP1
 @testable import Meridian
 
 struct NoURLParameterRoute: Responder {
-    static let route: RouteMatcher = "/sample"
 
     func execute() throws -> Response {
         "This is a sample request with no url parameters."
@@ -19,7 +18,6 @@ struct NoURLParameterRoute: Responder {
 }
 
 struct StringURLParameterRoute: Responder {
-    static let route: RouteMatcher = "/string/\(\.id)"
 
     @URLParameter(\.id) var id
 
@@ -29,7 +27,6 @@ struct StringURLParameterRoute: Responder {
 }
 
 struct IntURLParameterRoute: Responder {
-    static let route: RouteMatcher = "/int/\(\.number)"
 
     @URLParameter(\.number) var id
 
@@ -39,7 +36,6 @@ struct IntURLParameterRoute: Responder {
 }
 
 struct MultipleURLParameterRoute: Responder {
-    static let route: RouteMatcher = "/int/\(\.number)/letter/\(\.letter)"
 
     @URLParameter(\.number) var id
     @URLParameter(\.letter) var letter
@@ -50,7 +46,6 @@ struct MultipleURLParameterRoute: Responder {
 }
 
 struct LetterURLParameterRoute: Responder {
-    static let route: RouteMatcher = "/letter/\(\.letter)"
 
     @URLParameter(\.letter) var grade
 
@@ -63,11 +58,16 @@ class URLParameterRouteTests: XCTestCase {
 
     func makeChannel() throws -> EmbeddedChannel {
         let handler = HTTPHandler(routesByPrefix: ["": [
-            StringURLParameterRoute.self,
-            IntURLParameterRoute.self,
-            LetterURLParameterRoute.self,
-            MultipleURLParameterRoute.self,
-            NoURLParameterRoute.self,
+            StringURLParameterRoute()
+                .on("/string/\(\.id)"),
+            IntURLParameterRoute()
+                .on("/int/\(\.number)"),
+            LetterURLParameterRoute()
+                .on("/letter/\(\.letter)"),
+            MultipleURLParameterRoute()
+                .on("/int/\(\.number)/letter/\(\.letter)"),
+            NoURLParameterRoute()
+                .on("/sample"),
         ]], errorRenderer: BasicErrorRenderer.self)
 
         let channel = EmbeddedChannel()

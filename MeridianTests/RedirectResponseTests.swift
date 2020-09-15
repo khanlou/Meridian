@@ -11,7 +11,6 @@ import NIOHTTP1
 @testable import Meridian
 
 struct RedirectResponseTestRoute: Responder {
-    static let route: RouteMatcher = "/redirect"
     
     func execute() throws -> Response {
         Redirect.temporary(url: URL(string: "https://example.com")!)
@@ -22,7 +21,8 @@ final class RedirectRouteTests: XCTestCase {
     
     func makeChannel() throws -> EmbeddedChannel {
         let handler = HTTPHandler(routesByPrefix: ["": [
-            RedirectResponseTestRoute.self,
+            RedirectResponseTestRoute()
+                .on("/redirect"),
         ]], errorRenderer: BasicErrorRenderer.self)
         
         let channel = EmbeddedChannel()

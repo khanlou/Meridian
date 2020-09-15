@@ -10,9 +10,7 @@ import NIO
 import NIOHTTP1
 @testable import Meridian
 
-struct EmptyResponseTestRoute: Responder {
-    static let route: RouteMatcher = "/emptyResponse"
-    
+struct EmptyResponseTestRoute: Responder {    
     func execute() throws -> Response {
         EmptyResponse()
     }
@@ -22,7 +20,8 @@ final class EmptyResponseRouteTests: XCTestCase {
     
     func makeChannel() throws -> EmbeddedChannel {
         let handler = HTTPHandler(routesByPrefix: ["": [
-            EmptyResponseTestRoute.self,
+            EmptyResponseTestRoute()
+                .on("/emptyResponse"),
         ]], errorRenderer: BasicErrorRenderer.self)
         
         let channel = EmbeddedChannel()

@@ -11,8 +11,6 @@ import NIOHTTP1
 @testable import Meridian
 
 struct CustomStatusCodeTestRoute: Responder {
-    static let route: RouteMatcher = "/statusCode"
-    
     func execute() throws -> Response {
         "Hello".statusCode(.imATeapot)
     }
@@ -21,8 +19,10 @@ struct CustomStatusCodeTestRoute: Responder {
 final class CustomStatusCodeRouteTests: XCTestCase {
     
     func makeChannel() throws -> EmbeddedChannel {
+
         let handler = HTTPHandler(routesByPrefix: ["": [
-            CustomStatusCodeTestRoute.self,
+            CustomStatusCodeTestRoute()
+                .on("/statusCode"),
         ]], errorRenderer: BasicErrorRenderer.self)
         
         let channel = EmbeddedChannel()

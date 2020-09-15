@@ -11,7 +11,6 @@ import NIOHTTP1
 @testable import Meridian
 
 struct StringQueryParameterRoute: Responder {
-    static let route: RouteMatcher = "/string"
     
     @QueryParameter("name") var name: String
     
@@ -21,8 +20,7 @@ struct StringQueryParameterRoute: Responder {
 }
 
 struct IntQueryParameterRoute: Responder {
-    static let route: RouteMatcher = "/int"
-    
+
     @QueryParameter("number") var number: Int
     
     func execute() throws -> Response {
@@ -30,9 +28,8 @@ struct IntQueryParameterRoute: Responder {
     }
 }
 
-struct LetterQueryParameterRoute: Responder {
-    static let route: RouteMatcher = "/play"
-    
+struct MusicNoteQueryParameterRoute: Responder {
+
     @QueryParameter("note") var note: MusicNote
     
     func execute() throws -> Response {
@@ -41,7 +38,6 @@ struct LetterQueryParameterRoute: Responder {
 }
 
 struct OptionalParameterRoute: Responder {
-    static let route: RouteMatcher = "/play_optional"
     
     @QueryParameter("note") var note: MusicNote?
     
@@ -55,7 +51,6 @@ struct OptionalParameterRoute: Responder {
 }
 
 struct MultipleParameterRoute: Responder {
-    static let route: RouteMatcher = "/multiple_parameter"
     
     @QueryParameter("note") var note: MusicNote
     @QueryParameter("number") var number: Int
@@ -66,7 +61,6 @@ struct MultipleParameterRoute: Responder {
 }
 
 struct OptionalFlagParameterRoute: Responder {
-    static let route: RouteMatcher = "/optional_flag"
     
     @QueryParameter("flag") var flag: Present?
     
@@ -80,7 +74,6 @@ struct OptionalFlagParameterRoute: Responder {
 }
 
 struct RequiredFlagParameterRoute: Responder {
-    static let route: RouteMatcher = "/required_flag"
     
     @QueryParameter("flag") var flag: Present
     
@@ -93,13 +86,20 @@ class QueryParameterRouteTests: XCTestCase {
     
     func makeChannel() throws -> EmbeddedChannel {
         let handler = HTTPHandler(routesByPrefix: ["": [
-            StringQueryParameterRoute.self,
-            IntQueryParameterRoute.self,
-            LetterQueryParameterRoute.self,
-            OptionalParameterRoute.self,
-            MultipleParameterRoute.self,
-            OptionalFlagParameterRoute.self,
-            RequiredFlagParameterRoute.self,
+            StringQueryParameterRoute()
+                .on("/string"),
+            IntQueryParameterRoute()
+                .on("/int"),
+            MusicNoteQueryParameterRoute()
+                .on("/play"),
+            OptionalParameterRoute()
+                .on("/play_optional"),
+            MultipleParameterRoute()
+                .on("/multiple_parameter"),
+            OptionalFlagParameterRoute()
+                .on("/optional_flag"),
+            RequiredFlagParameterRoute()
+                .on("/required_flag"),
         ]], errorRenderer: BasicErrorRenderer.self)
         
         let channel = EmbeddedChannel()

@@ -8,8 +8,6 @@
 import Foundation
 
 public protocol Responder {
-    static var route: RouteMatcher { get }
-
     func execute() throws -> Response
 
     init()

@@ -27,8 +27,7 @@ extension EnvironmentValues {
 
 
 struct EnvironmentKeyTestRoute: Responder {
-    static let route: RouteMatcher = "/environmentKey"
-    
+
     @Environment(\.formatter) var formatter
     
     func execute() throws -> Response {
@@ -54,8 +53,7 @@ final class Database {
 }
 
 struct EnvironmentObjectTestRoute: Responder {
-    static let route: RouteMatcher = "/environmentObject"
-    
+
     @EnvironmentObject var database: Database
     
     func execute() throws -> Response {
@@ -67,8 +65,10 @@ final class EnvironmentTests: XCTestCase {
     
     func makeChannel() throws -> EmbeddedChannel {
         let handler = HTTPHandler(routesByPrefix: ["": [
-            EnvironmentKeyTestRoute.self,
-            EnvironmentObjectTestRoute.self,
+            EnvironmentKeyTestRoute()
+                .on("/environmentKey"),
+            EnvironmentObjectTestRoute()
+                .on("/environmentObject"),
         ]], errorRenderer: BasicErrorRenderer.self)
         
         let channel = EmbeddedChannel()

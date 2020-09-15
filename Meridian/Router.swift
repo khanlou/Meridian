@@ -17,22 +17,15 @@ final class Router {
         self.defaultErrorRenderer = defaultErrorRenderer
     }
 
-    func register(_ routes: [Responder.Type], errorRenderer: ErrorRenderer.Type? = nil) {
-        self.add(routes: routes, prefix: "", errorRenderer: errorRenderer)
-    }
-
-    func group(prefix: String, _ routes: [Responder.Type], errorRenderer: ErrorRenderer.Type? = nil) {
-        self.add(routes: routes, prefix: prefix, errorRenderer: errorRenderer)
-    }
-
-    private func add(routes: [Responder.Type], prefix: String, errorRenderer: ErrorRenderer.Type?) {
-        self.routesByPrefix[prefix, default: RouteGroup()].append(contentsOf: routes)
+    func register(prefix: String, errorRenderer: ErrorRenderer.Type?, _ routes: [Route]) {
+        routesByPrefix[prefix, default: RouteGroup()].append(contentsOf: routes)
         if let errorRenderer = errorRenderer {
             self.routesByPrefix[prefix, default: RouteGroup()].customErrorRenderer = errorRenderer
         }
+
     }
 
-    func route(for header: RequestHeader) -> ((Responder.Type, MatchedRoute)?, ErrorRenderer.Type) {
+    func route(for header: RequestHeader) -> ((Responder, MatchedRoute)?, ErrorRenderer.Type) {
         let originalPath = header.path
 
         var header = header
@@ -45,15 +38,15 @@ final class Router {
                 errorHandlerBestGuess = routeGroup.customErrorRenderer ?? defaultErrorRenderer
                 header.path.removeFirst(prefix.count)
                 for route in routeGroup.routes {
-                    if let matchedRoute = route.route.matches(header) {
-                        return ((route, matchedRoute), errorHandlerBestGuess)
+                    if let matchedRoute = route.matcher.matches(header) {
+                        return ((route.responder, matchedRoute), errorHandlerBestGuess)
                     }
                 }
             }
         }
 
         if header.method == .OPTIONS {
-            return ((OptionsRoute.self, MatchedRoute()), errorHandlerBestGuess)
+            return ((OptionsRoute(), MatchedRoute()), errorHandlerBestGuess)
         }
 
         return (nil, errorHandlerBestGuess)
@@ -68,7 +61,7 @@ final class Router {
                 if header.path.hasPrefix(prefix) {
                     header.path.removeFirst(prefix.count)
                     for route in routeGroup.routes {
-                        if route.route.matches(header) != nil {
+                        if route.matcher.matches(header) != nil {
                             matchingMethods.insert(method)
                         }
                     }

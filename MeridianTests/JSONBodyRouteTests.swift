@@ -19,7 +19,6 @@ struct JSONExample: Codable {
 }
 
 struct JSONBodyTestRoute: Responder {
-    static let route: RouteMatcher = "/json_body"
 
     @JSONBody var content: JSONExample
 
@@ -29,7 +28,6 @@ struct JSONBodyTestRoute: Responder {
 }
 
 struct OptionalJSONBodyTestRoute: Responder {
-    static let route: RouteMatcher = "/optional_json_body"
 
     @JSONBody var content: JSONExample?
 
@@ -46,8 +44,10 @@ final class JSONBodyRouteTests: XCTestCase {
     
     func makeChannel() throws -> EmbeddedChannel {
         let handler = HTTPHandler(routesByPrefix: ["": [
-            JSONBodyTestRoute.self,
-            OptionalJSONBodyTestRoute.self,
+            JSONBodyTestRoute()
+                .on("/json_body"),
+            OptionalJSONBodyTestRoute()
+                .on("/optional_json_body"),
         ]], errorRenderer: BasicErrorRenderer.self)
         
         let channel = EmbeddedChannel()
