@@ -27,19 +27,15 @@ private struct Holder<Contained: Decodable>: Decodable {
     let value: Contained
 }
 
-private func decode<T: Decodable>(_ type: T.Type, from value: String, for key: String) throws -> T {
+func decodeFragment<T: Decodable>(_ type: T.Type, from value: String) throws -> T {
     do {
-        let newString = "{\"value\": " + value + " }"
+        let newString = "{\"value\": \(value) }"
         let decoder = JSONDecoder()
         return try decoder.decode(Holder<T>.self, from: newString.data(using: .utf8)!).value
     } catch {
-        do {
-            let newString = "{\"value\": \"" + value + "\" }"
-            let decoder = JSONDecoder()
-            return try decoder.decode(Holder<T>.self, from: newString.data(using: .utf8)!).value
-        } catch {
-            throw QueryParameterDecodingError(type: T.self, key: key)
-        }
+        let newString = "{\"value\": \"\(value)\" }"
+        let decoder = JSONDecoder()
+        return try decoder.decode(Holder<T>.self, from: newString.data(using: .utf8)!).value
     }
 }
 
@@ -71,7 +67,11 @@ public struct QueryParameter<Type: Decodable>: PropertyWrapper {
             guard let value = item.value else {
                 throw NoValueQueryParameterError(key: key)
             }
-            return try decode(Type.self, from: value, for: key)
+            do {
+                return try decodeFragment(Type.self, from: value)
+            } catch {
+                throw QueryParameterDecodingError(type: Type.self, key: key)
+            }
         }
     }
 
@@ -80,7 +80,11 @@ public struct QueryParameter<Type: Decodable>: PropertyWrapper {
             guard let value = context.queryParameters.first(where: { $0.name == key })?.value else {
                 return nil
             }
-            return try decode(Type.self, from: value, for: key)
+            do {
+                return try decodeFragment(Type.self, from: value)
+            } catch {
+                throw QueryParameterDecodingError(type: Type.self, key: key)
+            }
         }
     }
 }
