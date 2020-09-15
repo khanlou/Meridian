@@ -98,12 +98,16 @@ public struct JSONValue<Type: Decodable>: PropertyWrapper {
             }
 
             let object = try JSONSerialization.jsonObject(with: requestContext.postBody, options: []) as? NSDictionary ?? .init()
-            let result = try? object._value(forKeyPath: keyPath) as? Inner
-            if let value = result {
-                return value
-            } else {
+
+            let string: String
+            do {
+                let result = try object._value(forKeyPath: keyPath)
+                string = String(describing: result)
+            } catch {
                 return nil
             }
+
+            return try decodeFragment(Inner.self, from: string)
         }
     }
 
@@ -124,11 +128,15 @@ public struct JSONValue<Type: Decodable>: PropertyWrapper {
             }
 
             let object = try JSONSerialization.jsonObject(with: requestContext.postBody, options: []) as? NSDictionary ?? .init()
-            let result = try object._value(forKeyPath: keyPath) as? Type
-            guard let value = result else {
-                throw JSONKeyNotFoundError(keyPath: keyPath)
+
+            do {
+                let result = try object._value(forKeyPath: keyPath)
+                let string = String(describing: result)
+                return try decodeFragment(Type.self, from: string)
+            } catch {
+                throw BasicError(externallyVisible: true, statusCode: .badRequest, message: "JSON value could not decode")
             }
-            return value
+
         }
     }
 
