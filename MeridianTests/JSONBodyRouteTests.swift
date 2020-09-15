@@ -20,11 +20,25 @@ struct JSONExample: Codable {
 
 struct JSONBodyTestRoute: Responder {
     static let route: RouteMatcher = "/json_body"
-    
+
     @JSONBody var content: JSONExample
-    
+
     func execute() throws -> Response {
         "The ints are \(content.objects.map({ $0.thing }))"
+    }
+}
+
+struct OptionalJSONBodyTestRoute: Responder {
+    static let route: RouteMatcher = "/optional_json_body"
+
+    @JSONBody var content: JSONExample?
+
+    func execute() throws -> Response {
+        if let content = content {
+            return "The value is present and the ints are \(content.objects.map({ $0.thing }))"
+        } else {
+            return "The value is missing"
+        }
     }
 }
 
@@ -33,6 +47,7 @@ final class JSONBodyRouteTests: XCTestCase {
     func makeChannel() throws -> EmbeddedChannel {
         let handler = HTTPHandler(routesByPrefix: ["": [
             JSONBodyTestRoute.self,
+            OptionalJSONBodyTestRoute.self,
         ]], errorRenderer: BasicErrorRenderer.self)
         
         let channel = EmbeddedChannel()
@@ -158,4 +173,44 @@ final class JSONBodyRouteTests: XCTestCase {
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a JSON body.")
     }
+
+    func testOptionalBodyMissing() throws {
+
+        let channel = try self.makeChannel()
+
+        let request = HTTPRequestBuilder(uri: "/optional_json_body", method: .POST, headers: ["Content-Type": "application/json"], bodyData: Data())
+        try channel.writeInbound(request.head)
+        try channel.writeInbound(request.body)
+        try channel.writeInbound(request.end)
+
+        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        XCTAssertEqual(response.statusCode, .ok)
+        XCTAssertEqual(response.bodyString, "The value is missing")
+    }
+
+    func testOptionalBodyPresent() throws {
+
+        let channel = try self.makeChannel()
+
+        let json = """
+        {
+            "objects": [
+                { "thing": 8 },
+                { "thing": 13 },
+            ]
+        }
+        """
+
+        let data = json.data(using: .utf8) ?? Data()
+
+        let request = HTTPRequestBuilder(uri: "/optional_json_body", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data)
+        try channel.writeInbound(request.head)
+        try channel.writeInbound(request.body)
+        try channel.writeInbound(request.end)
+
+        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        XCTAssertEqual(response.statusCode, .ok)
+        XCTAssertEqual(response.bodyString, "The value is present and the ints are [8, 13]")
+    }
+
 }
