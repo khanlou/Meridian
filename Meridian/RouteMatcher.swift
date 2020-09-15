@@ -7,6 +7,15 @@
 
 import Foundation
 
+private func normalizePath(_ string: String) -> String {
+    let components = NSString(string: string).pathComponents
+    var result = NSString.path(withComponents: components)
+    if !result.starts(with: "/") {
+        result.insert("/", at: result.startIndex)
+    }
+    return result
+}
+
 public struct MatchedRoute {
     let parameters: [String: Substring]
 
@@ -34,8 +43,8 @@ public struct RouteMatcher {
     public let matches: (RequestHeader) -> MatchedRoute?
 
     public static func path(_ string: String) -> RouteMatcher {
-        RouteMatcher(matches: { header in
-            if (header.path == string) {
+        return RouteMatcher(matches: { header in
+            if (normalizePath(header.path) == normalizePath(string)) {
                 return MatchedRoute()
             } else {
                 return nil
@@ -102,10 +111,11 @@ extension RouteMatcher: ExpressibleByStringInterpolation {
     }
 
     public init(stringInterpolation: RegexMatcher) {
-        let regex = try! NSRegularExpression(pattern: "^\(stringInterpolation.regexString)$")
+        let regex = try! NSRegularExpression(pattern: "^\(normalizePath(stringInterpolation.regexString))$")
 
         self.matches = { header in
-            let matches = regex.matches(in: header.path, range: NSRange(location: 0, length: header.path.utf16.count))
+            let path = normalizePath(header.path)
+            let matches = regex.matches(in: path, range: NSRange(location: 0, length: path.utf16.count))
 
             if matches.isEmpty {
                 return nil
@@ -119,8 +129,8 @@ extension RouteMatcher: ExpressibleByStringInterpolation {
                     .map({ match.range(at: $0) })
 
                 zip(stringInterpolation.mapping, ranges).forEach({ urlParameterName, range in
-                    guard let betterRange = Range(range, in: header.path) else { fatalError("Should be able to convert ranges") }
-                    result[urlParameterName] = header.path[betterRange]
+                    guard let betterRange = Range(range, in: path) else { fatalError("Should be able to convert ranges") }
+                    result[urlParameterName] = path[betterRange]
                 })
             }
 

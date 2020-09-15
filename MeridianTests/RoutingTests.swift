@@ -19,13 +19,27 @@ final class RoutingTests: XCTestCase {
     
     func testBasic() {
         let matcher = RouteMatcher.path("/testing")
-        
+
         XCTAssertNotNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing", headers: [])))
         XCTAssertNotNil(matcher.matches(RequestHeader(method: HTTPMethod.primaryMethods.randomElement()!, uri: "/testing", headers: [])))
         XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testin", headers: [])))
         XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testingg", headers: [])))
     }
-    
+
+    func testTrailingSlashes() {
+        let matcher = RouteMatcher.path("/testing/")
+        let matcher2 = RouteMatcher.path("/testing")
+        let matcher3 = RouteMatcher.path("testing")
+
+        XCTAssertNotNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing", headers: [])))
+        XCTAssertNotNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing/", headers: [])))
+        XCTAssertNotNil(matcher2.matches(RequestHeader(method: .GET, uri: "/testing", headers: [])))
+        XCTAssertNotNil(matcher2.matches(RequestHeader(method: .GET, uri: "/testing/", headers: [])))
+        XCTAssertNotNil(matcher3.matches(RequestHeader(method: .GET, uri: "/testing", headers: [])))
+        XCTAssertNotNil(matcher3.matches(RequestHeader(method: .GET, uri: "/testing/", headers: [])))
+        XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testin", headers: [])))
+    }
+
     func testStringLiterals() {
         let matcher: RouteMatcher = "/testing"
         
@@ -90,6 +104,30 @@ final class RoutingTests: XCTestCase {
         XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing/123", headers: [])))
         XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing/123/456", headers: [])))
     }
-    
+
+    func testTwoURLParametersWithNonNormalSlashes() {
+        let matcher: RouteMatcher = "/testing/\(\.tester)/sub/\(\.secondTester)"
+        let matcher2: RouteMatcher = "testing/\(\.tester)/sub/\(\.secondTester)"
+        let matcher3: RouteMatcher = "/testing/\(\.tester)/sub/\(\.secondTester)/"
+        let matcher4: RouteMatcher = "testing/\(\.tester)/sub/\(\.secondTester)/"
+
+        XCTAssertNotNil(matcher.matches(RequestHeader(method: .GET, uri: "testing/123/sub/hello", headers: [])))
+        XCTAssertNotNil(matcher.matches(RequestHeader(method: .GET, uri: "testing/123/sub/hello/", headers: [])))
+        XCTAssertNotNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing/123/sub/hello/", headers: [])))
+        XCTAssertNotNil(matcher2.matches(RequestHeader(method: .GET, uri: "testing/123/sub/hello", headers: [])))
+        XCTAssertNotNil(matcher2.matches(RequestHeader(method: .GET, uri: "testing/123/sub/hello/", headers: [])))
+        XCTAssertNotNil(matcher2.matches(RequestHeader(method: .GET, uri: "/testing/123/sub/hello/", headers: [])))
+        XCTAssertNotNil(matcher3.matches(RequestHeader(method: .GET, uri: "testing/123/sub/hello", headers: [])))
+        XCTAssertNotNil(matcher3.matches(RequestHeader(method: .GET, uri: "testing/123/sub/hello/", headers: [])))
+        XCTAssertNotNil(matcher3.matches(RequestHeader(method: .GET, uri: "/testing/123/sub/hello/", headers: [])))
+        XCTAssertNotNil(matcher4.matches(RequestHeader(method: .GET, uri: "testing/123/sub/hello", headers: [])))
+        XCTAssertNotNil(matcher4.matches(RequestHeader(method: .GET, uri: "testing/123/sub/hello/", headers: [])))
+        XCTAssertNotNil(matcher4.matches(RequestHeader(method: .GET, uri: "/testing/123/sub/hello/", headers: [])))
+
+        XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing/123", headers: [])))
+        XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing/123", headers: [])))
+        XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing/123/456", headers: [])))
+    }
+
     
 }
