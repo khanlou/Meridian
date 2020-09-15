@@ -10,14 +10,14 @@ import Foundation
 final class Router {
     var routesByPrefix: [String: RouteGroup]
 
-    var defaultErrorRenderer: ErrorRenderer.Type
+    var defaultErrorRenderer: ErrorRenderer
 
-    init(routesByPrefix: [String: RouteGroup], defaultErrorRenderer: ErrorRenderer.Type) {
+    init(routesByPrefix: [String: RouteGroup], defaultErrorRenderer: ErrorRenderer) {
         self.routesByPrefix = routesByPrefix
         self.defaultErrorRenderer = defaultErrorRenderer
     }
 
-    func register(prefix: String, errorRenderer: ErrorRenderer.Type?, _ routes: [Route]) {
+    func register(prefix: String, errorRenderer: ErrorRenderer?, _ routes: [Route]) {
         routesByPrefix[prefix, default: RouteGroup()].append(contentsOf: routes)
         if let errorRenderer = errorRenderer {
             self.routesByPrefix[prefix, default: RouteGroup()].customErrorRenderer = errorRenderer
@@ -25,7 +25,7 @@ final class Router {
 
     }
 
-    func route(for header: RequestHeader) -> ((Responder, MatchedRoute)?, ErrorRenderer.Type) {
+    func route(for header: RequestHeader) -> ((Responder, MatchedRoute)?, ErrorRenderer) {
         let originalPath = header.path
 
         var header = header

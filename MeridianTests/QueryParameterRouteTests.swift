@@ -100,7 +100,7 @@ class QueryParameterRouteTests: XCTestCase {
                 .on("/optional_flag"),
             RequiredFlagParameterRoute()
                 .on("/required_flag"),
-        ]], errorRenderer: BasicErrorRenderer.self)
+        ]], errorRenderer: BasicErrorRenderer())
         
         let channel = EmbeddedChannel()
         try channel.pipeline.addHandler(handler).wait()

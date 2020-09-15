@@ -68,7 +68,7 @@ class URLParameterRouteTests: XCTestCase {
                 .on("/int/\(\.number)/letter/\(\.letter)"),
             NoURLParameterRoute()
                 .on("/sample"),
-        ]], errorRenderer: BasicErrorRenderer.self)
+        ]], errorRenderer: BasicErrorRenderer())
 
         let channel = EmbeddedChannel()
         try channel.pipeline.addHandler(handler).wait()

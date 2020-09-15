@@ -48,7 +48,7 @@ final class JSONBodyRouteTests: XCTestCase {
                 .on("/json_body"),
             OptionalJSONBodyTestRoute()
                 .on("/optional_json_body"),
-        ]], errorRenderer: BasicErrorRenderer.self)
+        ]], errorRenderer: BasicErrorRenderer())
         
         let channel = EmbeddedChannel()
         try channel.pipeline.addHandler(handler).wait()

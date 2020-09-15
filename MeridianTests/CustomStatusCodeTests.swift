@@ -23,7 +23,7 @@ final class CustomStatusCodeRouteTests: XCTestCase {
         let handler = HTTPHandler(routesByPrefix: ["": [
             CustomStatusCodeTestRoute()
                 .on("/statusCode"),
-        ]], errorRenderer: BasicErrorRenderer.self)
+        ]], errorRenderer: BasicErrorRenderer())
         
         let channel = EmbeddedChannel()
         try channel.pipeline.addHandler(handler).wait()

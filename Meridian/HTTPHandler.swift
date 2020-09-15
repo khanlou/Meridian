@@ -41,7 +41,7 @@ final class HTTPHandler: ChannelInboundHandler {
 
     var state = State.initial
 
-    convenience init(routesByPrefix: [String: RouteGroup], errorRenderer: ErrorRenderer.Type) {
+    convenience init(routesByPrefix: [String: RouteGroup], errorRenderer: ErrorRenderer) {
         self.init(router: Router(routesByPrefix: routesByPrefix, defaultErrorRenderer: errorRenderer))
     }
 
@@ -125,9 +125,8 @@ final class HTTPHandler: ChannelInboundHandler {
                 try send(response, head.version, to: channel)
 
             } catch {
-                let errorRenderer = errorRenderer.init(error: error)
 
-                let response = try! errorRenderer.render()
+                let response = try! errorRenderer.render(error: error)
 
                 try! send(response, head.version, to: channel)
             }

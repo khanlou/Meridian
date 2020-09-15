@@ -23,7 +23,7 @@ final class RedirectRouteTests: XCTestCase {
         let handler = HTTPHandler(routesByPrefix: ["": [
             RedirectResponseTestRoute()
                 .on("/redirect"),
-        ]], errorRenderer: BasicErrorRenderer.self)
+        ]], errorRenderer: BasicErrorRenderer())
         
         let channel = EmbeddedChannel()
         try channel.pipeline.addHandler(handler).wait()

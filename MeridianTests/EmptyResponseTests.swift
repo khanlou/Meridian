@@ -22,7 +22,7 @@ final class EmptyResponseRouteTests: XCTestCase {
         let handler = HTTPHandler(routesByPrefix: ["": [
             EmptyResponseTestRoute()
                 .on("/emptyResponse"),
-        ]], errorRenderer: BasicErrorRenderer.self)
+        ]], errorRenderer: BasicErrorRenderer())
         
         let channel = EmbeddedChannel()
         try channel.pipeline.addHandler(handler).wait()

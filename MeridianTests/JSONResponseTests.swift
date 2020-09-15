@@ -23,7 +23,7 @@ final class JSONResponseRouteTests: XCTestCase {
         let handler = HTTPHandler(routesByPrefix: ["": [
             JSONResponseTestRoute()
                 .on("/customJSON"),
-        ]], errorRenderer: BasicErrorRenderer.self)
+        ]], errorRenderer: BasicErrorRenderer())
         
         let channel = EmbeddedChannel()
         try channel.pipeline.addHandler(handler).wait()

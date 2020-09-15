@@ -18,7 +18,7 @@ struct ServeOptions: ParsableArguments {
 struct RouteGroup: ExpressibleByArrayLiteral {
 
     var routes: [Route]
-    var customErrorRenderer: ErrorRenderer.Type?
+    var customErrorRenderer: ErrorRenderer?
 
     init() {
         self.routes = []
@@ -48,18 +48,18 @@ public final class Server {
 
     var router: Router
 
-    public init(errorRenderer: ErrorRenderer.Type) {
+    public init(errorRenderer: ErrorRenderer) {
         self.router = Router(routesByPrefix: [:], defaultErrorRenderer: errorRenderer)
     }
 
     @discardableResult
-    public func register(errorRenderer: ErrorRenderer.Type? = nil, @RouteBuilder _ builder: () -> [Route]) -> Self {
+    public func register(errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: () -> [Route]) -> Self {
         self.router.register(prefix: "", errorRenderer: errorRenderer, builder())
         return self
     }
 
     @discardableResult
-    public func group(prefix: String, errorRenderer: ErrorRenderer.Type? = nil, @RouteBuilder _ builder: () -> [Route]) -> Self {
+    public func group(prefix: String, errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: () -> [Route]) -> Self {
         self.router.register(prefix: prefix, errorRenderer: errorRenderer, builder())
         return self
     }

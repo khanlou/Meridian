@@ -9,9 +9,7 @@ import Foundation
 
 public protocol ErrorRenderer {
 
-    init(error: Error)
-
-    func render() throws -> Response
+    func render(error: Error) throws -> Response
 
 }
 
@@ -21,13 +19,9 @@ struct ErrorContainer: Codable {
 
 public struct JSONErrorRenderer: ErrorRenderer {
 
-    public let error: Error
+    public init() { }
 
-    public init(error: Error) {
-        self.error = error
-    }
-
-    public func render() throws -> Response {
+    public func render(error: Error) throws -> Response {
         JSON(ErrorContainer(message: (error as? ErrorWithMessage)?.message ?? "An error occurred"))
             .statusCode( (error as? ErrorWithStatusCode)?.statusCode ?? .badRequest)
     }
@@ -35,13 +29,9 @@ public struct JSONErrorRenderer: ErrorRenderer {
 
 public struct BasicErrorRenderer: ErrorRenderer {
 
-    public let error: Error
+    public init() { }
 
-    public init(error: Error) {
-        self.error = error
-    }
-
-    public func render() throws -> Response {
+    public func render(error: Error) throws -> Response {
         return ((error as? ErrorWithMessage)?.message ?? "An error occurred")
             .statusCode( (error as? ErrorWithStatusCode)?.statusCode ?? .badRequest)
     }

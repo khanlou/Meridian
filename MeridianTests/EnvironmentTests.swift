@@ -69,7 +69,7 @@ final class EnvironmentTests: XCTestCase {
                 .on("/environmentKey"),
             EnvironmentObjectTestRoute()
                 .on("/environmentObject"),
-        ]], errorRenderer: BasicErrorRenderer.self)
+        ]], errorRenderer: BasicErrorRenderer())
         
         let channel = EmbeddedChannel()
         try channel.pipeline.addHandler(handler).wait()

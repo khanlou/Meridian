@@ -11,8 +11,8 @@ import Meridian
 
 Backtrace.install()
 
-Server(errorRenderer: BasicErrorRenderer.self)
-    .group(prefix: "/todos", errorRenderer: JSONErrorRenderer.self) {
+Server(errorRenderer: BasicErrorRenderer())
+    .group(prefix: "/todos", errorRenderer: JSONErrorRenderer()) {
 
         DeleteTodo()
             .on(.delete("/\(\.id)"))
