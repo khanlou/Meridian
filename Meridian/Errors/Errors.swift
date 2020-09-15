@@ -7,17 +7,29 @@
 
 import Foundation
 
-public protocol ErrorWithStatusCode: Error {
+public protocol ReportableError: Error {
     var statusCode: StatusCode { get }
-}
-
-public protocol ErrorWithMessage: Error {
     var message: String { get }
+    var externallyVisible: Bool { get }
 }
 
-public typealias ReportableError = ErrorWithStatusCode & ErrorWithMessage
+extension ReportableError {
+    var statusCode: StatusCode {
+        .internalServerError
+    }
+
+    var message: String {
+        "An error occurred."
+    }
+
+//    var externallyVisible: Bool {
+//        false
+//    }
+}
 
 public struct MissingEnvironmentObject: ReportableError {
+    public var externallyVisible = false
+
     public let statusCode: StatusCode = .badRequest
 
     public let message: String
@@ -28,6 +40,8 @@ public struct MissingEnvironmentObject: ReportableError {
 }
 
 public struct MissingURLParameterError: ReportableError {
+    public var externallyVisible = true
+
     public let statusCode: StatusCode = .badRequest
 
     public let message = "The endpoint expects a url parameter."
@@ -35,6 +49,8 @@ public struct MissingURLParameterError: ReportableError {
 }
 
 public struct URLParameterDecodingError: ReportableError {
+    public var externallyVisible = true
+
     public let statusCode: StatusCode = .badRequest
 
     public let message: String
@@ -46,18 +62,24 @@ public struct URLParameterDecodingError: ReportableError {
 }
 
 public struct UnexpectedGETRequestError: ReportableError {
+    public var externallyVisible = true
+
     public let statusCode: StatusCode = .badRequest
 
     public let message = "The endpoint expects a body and a method of POST. However, it received a GET."
 }
 
 public struct JSONContentTypeError: ReportableError {
+    public var externallyVisible = true
+
     public let statusCode: StatusCode = .badRequest
 
     public let message = "The endpoint requires a JSON body and a \"Content-Type\" of \"application/json\"."
 }
 
 public struct MissingBodyError: ReportableError {
+    public var externallyVisible = true
+
     public let statusCode: StatusCode = .badRequest
 
     public let message = "The endpoint expects a JSON body."
@@ -90,6 +112,8 @@ extension DecodingError.Context {
 }
 
 public struct JSONBodyDecodingError: ReportableError {
+    public var externallyVisible = true
+
     public let statusCode: StatusCode = .badRequest
 
     public let message: String
@@ -134,6 +158,8 @@ public struct JSONKeyNotFoundError: Error {
 }
 
 public struct QueryParameterDecodingError: ReportableError {
+    public var externallyVisible = true
+
     public let statusCode: StatusCode = .badRequest
 
     public let message: String
@@ -145,6 +171,8 @@ public struct QueryParameterDecodingError: ReportableError {
 }
 
 public struct NoValueQueryParameterError: ReportableError {
+    public var externallyVisible = true
+
     public let statusCode: StatusCode = .badRequest
 
     public let key: String
@@ -155,6 +183,7 @@ public struct NoValueQueryParameterError: ReportableError {
 }
 
 public struct MissingQueryParameterError: ReportableError {
+    public var externallyVisible = true
 
     public let key: String
 
@@ -166,15 +195,22 @@ public struct MissingQueryParameterError: ReportableError {
 }
 
 
-struct BasicError: ReportableError {
+public struct BasicError: ReportableError {
+    public var externallyVisible: Bool
 
-    public var statusCode: StatusCode = .badRequest
+    public var statusCode: StatusCode
 
-    public let message: String
+    public var message: String
 
+    init(externallyVisible: Bool = false, statusCode: StatusCode = .internalServerError, message: String = "An error occurred") {
+        self.externallyVisible = externallyVisible
+        self.statusCode = statusCode
+        self.message = message
+    }
 }
 
 public struct NoRouteFound: ReportableError {
+    public var externallyVisible = true
 
     public init() {
 

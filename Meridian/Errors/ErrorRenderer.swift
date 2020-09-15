@@ -22,8 +22,8 @@ public struct JSONErrorRenderer: ErrorRenderer {
     public init() { }
 
     public func render(error: Error) throws -> Response {
-        JSON(ErrorContainer(message: (error as? ErrorWithMessage)?.message ?? "An error occurred"))
-            .statusCode( (error as? ErrorWithStatusCode)?.statusCode ?? .badRequest)
+        JSON(ErrorContainer(message: (error as? ReportableError)?.message ?? "An error occurred."))
+            .statusCode((error as? ReportableError)?.statusCode ?? .internalServerError)
     }
 }
 
@@ -32,8 +32,8 @@ public struct BasicErrorRenderer: ErrorRenderer {
     public init() { }
 
     public func render(error: Error) throws -> Response {
-        return ((error as? ErrorWithMessage)?.message ?? "An error occurred")
-            .statusCode( (error as? ErrorWithStatusCode)?.statusCode ?? .badRequest)
+        return ((error as? ReportableError)?.message ?? "An error occurred")
+            .statusCode((error as? ReportableError)?.statusCode ?? .internalServerError)
     }
 }
 
