@@ -15,6 +15,7 @@ enum KeyPathComponent {
 enum KeyPathError: Error {
     case invalidKeyPath(String)
     case notAnArray(NSObject)
+    case typeError
 }
 
 private func components(from keyPath: String) throws -> Array<KeyPathComponent> {
@@ -45,8 +46,10 @@ extension NSObject {
     }
 
     private func _value(forKeyPath: Array<KeyPathComponent>) throws -> Any {
-        assert(self is NSArray || self is NSDictionary)
         guard let first = forKeyPath.first else { return self }
+        guard self is NSArray || self is NSDictionary else {
+            throw KeyPathError.typeError
+        }
         switch first {
             case .name(let property):
                 guard let object = (self as? NSDictionary)?[property] as? NSObject else {
