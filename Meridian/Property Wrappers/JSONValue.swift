@@ -107,6 +107,9 @@ public struct JSONValue<Type: Decodable>: PropertyWrapper {
                 return nil
             }
 
+            if Inner.self == Bool.self {
+                return (string as NSString).boolValue as? Inner
+            }
             return try decodeFragment(Inner.self, from: string)
         }
     }

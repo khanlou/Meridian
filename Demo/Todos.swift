@@ -76,7 +76,7 @@ struct EditTodo: Responder {
     @URLParameter(\.id) var id
 
     @JSONValue("title") var title: String?
-    @JSONValue("completed") var completed: Int?
+    @JSONValue("completed") var completed: Bool?
     @JSONValue("order") var order: Int?
 
     @EnvironmentObject var database: Database
@@ -89,7 +89,7 @@ struct EditTodo: Responder {
             database.todos[index].title = newTitle
         }
         if let newCompleted = completed {
-            database.todos[index].completed = newCompleted != 0
+            database.todos[index].completed = newCompleted
         }
         if let newOrder = order {
             database.todos[index].order = newOrder
