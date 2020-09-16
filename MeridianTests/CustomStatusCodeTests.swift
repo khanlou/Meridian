@@ -18,29 +18,21 @@ struct CustomStatusCodeTestRoute: Responder {
 
 final class CustomStatusCodeRouteTests: XCTestCase {
     
-    func makeChannel() throws -> EmbeddedChannel {
-
-        let handler = HTTPHandler(routesByPrefix: ["": [
+    func makeWorld() throws -> World {
+        return try World(routes: [
             CustomStatusCodeTestRoute()
                 .on("/statusCode"),
-        ]], errorRenderer: BasicErrorRenderer())
-        
-        let channel = EmbeddedChannel()
-        try channel.pipeline.addHandler(handler).wait()
-        
-        return channel
+        ])
     }
     
     func testBasic() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
-        let request = HTTPRequestBuilder(uri: "/statusCode", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(HTTPRequestBuilder(uri: "/statusCode", method: .GET))
+
+        let response = try world.receive()
+
         XCTAssertEqual(response.statusCode, .imATeapot)
         XCTAssertEqual(response.bodyString, "Hello")
     }

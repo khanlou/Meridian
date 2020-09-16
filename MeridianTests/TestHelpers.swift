@@ -8,7 +8,7 @@
 import Foundation
 import NIOHTTP1
 import NIO
-import Meridian
+@testable import Meridian
 
 let http11 = HTTPVersion.init(major: 1, minor: 1)
 
@@ -126,3 +126,32 @@ extension ParameterKeys {
     var number: NumberParameter { .init() }
 }
 
+final class World {
+
+    let channel: EmbeddedChannel
+
+    init(routes: [Route]) throws {
+        var routeGroup = RouteGroup()
+        routeGroup.append(contentsOf: routes)
+        let handler = HTTPHandler(routesByPrefix: ["": routeGroup], errorRenderer: BasicErrorRenderer())
+
+        let channel = EmbeddedChannel()
+        try channel.pipeline.addHandler(handler).wait()
+
+        self.channel = channel
+    }
+
+    func send(_ request: HTTPRequestBuilder) throws {
+        try channel.writeInbound(request.head)
+        try channel.writeInbound(request.body)
+        try channel.writeInbound(request.end)
+    }
+
+    func receive() throws -> HTTPResponseReader {
+        return try HTTPResponseReader(
+            head: try channel.readOutbound(),
+            body: try channel.readOutbound(),
+            end: try channel.readOutbound()
+        )
+    }
+}

@@ -74,8 +74,8 @@ struct OptionalBoolJSONValueRoute: Responder {
 
 class JSONValueRouteTests: XCTestCase {
     
-    func makeChannel() throws -> EmbeddedChannel {
-        let handler = HTTPHandler(routesByPrefix: ["": [
+    func makeWorld() throws -> World {
+        return try World(routes: [
             JSONValueRoute()
                 .on("/json_value"),
             OptionalJSONValueRoute()
@@ -86,17 +86,12 @@ class JSONValueRouteTests: XCTestCase {
                 .on("/hi"),
             OptionalBoolJSONValueRoute()
                 .on("/optional_bool")
-        ]], errorRenderer: BasicErrorRenderer())
-        
-        let channel = EmbeddedChannel()
-        try channel.pipeline.addHandler(handler).wait()
-        
-        return channel
+        ])
     }
-    
+
     func testString() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let json = """
         {
@@ -106,33 +101,27 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        let request = HTTPRequestBuilder(uri: "/json_value", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/json_value", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The name is hello")
     }
 
     func testBodyMissing() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
-        let request = HTTPRequestBuilder(uri: "/json_value", method: .POST, headers: ["Content-Type": "application/json"])
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/json_value", method: .POST, headers: ["Content-Type": "application/json"]))
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a JSON body.")
     }
 
     func testKeyMissing() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let json = """
         {
@@ -142,19 +131,16 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        let request = HTTPRequestBuilder(uri: "/json_value", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/json_value", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a JSON body with a value of type String at key path \"name\" but did not find one.")
     }
 
     func testMultiple() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let json = """
         {
@@ -167,19 +153,16 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        let request = HTTPRequestBuilder(uri: "/multiple", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/multiple", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note is F and the age+3 is 5")
     }
 
     func testNestedMissing() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let json = """
         {
@@ -192,19 +175,16 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        let request = HTTPRequestBuilder(uri: "/multiple", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/multiple", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a JSON body with a value of type Int at key path \"person.age\" but did not find one.")
     }
 
     func testNestedWrongType() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let json = """
         {
@@ -217,19 +197,16 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        let request = HTTPRequestBuilder(uri: "/multiple", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/multiple", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a JSON body with a value at key path \"person.age\" with the expected type Int, but did not find the right type.")
     }
 
     func testOptionalMissing() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let json = """
         {
@@ -239,19 +216,16 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        let request = HTTPRequestBuilder(uri: "/optional", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/optional", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note was not included")
     }
 
     func testOptionalPresent() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let json = """
         {
@@ -262,19 +236,16 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        let request = HTTPRequestBuilder(uri: "/optional", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/optional", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note was present and is D")
     }
 
     func testOptionalPresentButNotDecoding() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let json = """
         {
@@ -285,19 +256,16 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        let request = HTTPRequestBuilder(uri: "/optional", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/optional", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a JSON body with a value at key path \"note\" with the expected type Optional<MusicNote>, but did not find the right type.")
     }
 
     func testBool() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let json = """
         {
@@ -307,19 +275,16 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        let request = HTTPRequestBuilder(uri: "/hi", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/hi", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "Hi")
     }
 
     func testOptionalBoolTrue() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let json = """
         {
@@ -329,19 +294,16 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        let request = HTTPRequestBuilder(uri: "/optional_bool", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/optional_bool", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "Updating")
     }
 
     func testOptionalBoolFalse() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let json = """
         {
@@ -351,19 +313,16 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        let request = HTTPRequestBuilder(uri: "/optional_bool", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/optional_bool", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "Not updating")
     }
 
     func testOptionalBoolMissing() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let json = """
         {
@@ -373,16 +332,10 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        let request = HTTPRequestBuilder(uri: "/optional_bool", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/optional_bool", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "Not specified")
     }
-
-
-
 }

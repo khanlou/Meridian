@@ -63,51 +63,40 @@ struct EnvironmentObjectTestRoute: Responder {
 
 final class EnvironmentTests: XCTestCase {
     
-    func makeChannel() throws -> EmbeddedChannel {
-        let handler = HTTPHandler(routesByPrefix: ["": [
-            EnvironmentKeyTestRoute()
-                .on("/environmentKey"),
-            EnvironmentObjectTestRoute()
-                .on("/environmentObject"),
-        ]], errorRenderer: BasicErrorRenderer())
-        
-        let channel = EmbeddedChannel()
-        try channel.pipeline.addHandler(handler).wait()
-        
+    func makeWorld() throws -> World {
         let formatter = NumberFormatter()
         formatter.locale = Locale(identifier: "en_US")
         formatter.numberStyle = .spellOut
         EnvironmentValues.shared[NumberFormatterEnvironmentKey.self] = formatter
-        
+
         EnvironmentValues.shared.storage[ObjectIdentifier(Database.self)] = Database()
-        
-        return channel
+
+        return try World(routes: [
+            EnvironmentKeyTestRoute()
+                .on("/environmentKey"),
+            EnvironmentObjectTestRoute()
+                .on("/environmentObject"),
+        ])
     }
-    
+
     func testEnvironmentKeys() throws {
         
-        let channel = try self.makeChannel()
-        
-        let request = HTTPRequestBuilder(uri: "/environmentKey", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let world = try self.makeWorld()
+
+        try world.send(HTTPRequestBuilder(uri: "/environmentKey", method: .GET))
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "three hundred forty-three")
     }
     
     func testEnivironmentObjects() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
-        let request = HTTPRequestBuilder(uri: "/environmentObject", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(HTTPRequestBuilder(uri: "/environmentObject", method: .GET))
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "[{\"label\":\"Finish environment property wrappers\",\"done\":true},{\"label\":\"Implement an endpoint with a \\\"database\\\"\",\"done\":true},{\"label\":\"Profit!\",\"done\":false}]")
     }

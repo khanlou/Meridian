@@ -18,28 +18,20 @@ struct EmptyResponseTestRoute: Responder {
 
 final class EmptyResponseRouteTests: XCTestCase {
     
-    func makeChannel() throws -> EmbeddedChannel {
-        let handler = HTTPHandler(routesByPrefix: ["": [
+    func makeWorld() throws -> World {
+        return try World(routes: [
             EmptyResponseTestRoute()
                 .on("/emptyResponse"),
-        ]], errorRenderer: BasicErrorRenderer())
-        
-        let channel = EmbeddedChannel()
-        try channel.pipeline.addHandler(handler).wait()
-        
-        return channel
+        ])
     }
     
     func testBasic() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
-        let request = HTTPRequestBuilder(uri: "/emptyResponse", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(HTTPRequestBuilder(uri: "/emptyResponse", method: .GET))
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .noContent)
         XCTAssertEqual(response.bodyString, "")
     }

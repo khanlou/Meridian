@@ -56,8 +56,8 @@ struct LetterURLParameterRoute: Responder {
 
 class URLParameterRouteTests: XCTestCase {
 
-    func makeChannel() throws -> EmbeddedChannel {
-        let handler = HTTPHandler(routesByPrefix: ["": [
+    func makeWorld() throws -> World {
+        return try World(routes: [
             StringURLParameterRoute()
                 .on("/string/\(\.id)"),
             IntURLParameterRoute()
@@ -68,135 +68,112 @@ class URLParameterRouteTests: XCTestCase {
                 .on("/int/\(\.number)/letter/\(\.letter)"),
             NoURLParameterRoute()
                 .on("/sample"),
-        ]], errorRenderer: BasicErrorRenderer())
-
-        let channel = EmbeddedChannel()
-        try channel.pipeline.addHandler(handler).wait()
-
-        return channel
+        ])
     }
 
     func testString() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/string/456", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(request)
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The ID is 456")
     }
 
     func testInt() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/int/789", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(request)
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The ID+1 is 790")
     }
 
     func testIntFailing() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/int/456a", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(request)
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a url parameter that can decode to type Int.")
     }
 
     func testCustomType() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/letter/B", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(request)
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The letter grade is B")
     } 
 
     func testCustomTypeFails() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/letter/E", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(request)
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a url parameter that can decode to type LetterGrade.")
     }
 
     func testMultipleParametersSucceeds() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/int/835/letter/D", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(request)
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The ID+2 is 837 and the letter is D")
     }
 
     func testMultipleParametersFails() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/int/835/letter/E", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(request)
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a url parameter that can decode to type LetterGrade.")
     }
 
     func testNoURLParameters() throws {
 
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/sample", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(request)
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "This is a sample request with no url parameters.")
     }
 
     func testNotMatching() throws {
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/not_found", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(request)
 
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .notFound)
         XCTAssertEqual(response.bodyString, "No matching route was found.")
     }

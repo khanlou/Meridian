@@ -19,28 +19,20 @@ struct JSONResponseTestRoute: Responder {
 
 final class JSONResponseRouteTests: XCTestCase {
     
-    func makeChannel() throws -> EmbeddedChannel {
-        let handler = HTTPHandler(routesByPrefix: ["": [
+    func makeWorld() throws -> World {
+        return try World(routes: [
             JSONResponseTestRoute()
                 .on("/customJSON"),
-        ]], errorRenderer: BasicErrorRenderer())
-        
-        let channel = EmbeddedChannel()
-        try channel.pipeline.addHandler(handler).wait()
-        
-        return channel
+        ])
     }
-    
+
     func testBasic() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
-        let request = HTTPRequestBuilder(uri: "/customJSON", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(HTTPRequestBuilder(uri: "/customJSON", method: .GET))
         
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssert(response.headers.contains(where: { $0.name == "Content-Type" && $0.value == "application/json" }))
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "{\"objects\":[{\"thing\":3}]}")

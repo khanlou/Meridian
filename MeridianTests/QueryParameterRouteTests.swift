@@ -84,8 +84,8 @@ struct RequiredFlagParameterRoute: Responder {
 
 class QueryParameterRouteTests: XCTestCase {
     
-    func makeChannel() throws -> EmbeddedChannel {
-        let handler = HTTPHandler(routesByPrefix: ["": [
+    func makeWorld() throws -> World {
+        return try World(routes: [
             StringQueryParameterRoute()
                 .on("/string"),
             IntQueryParameterRoute()
@@ -100,205 +100,172 @@ class QueryParameterRouteTests: XCTestCase {
                 .on("/optional_flag"),
             RequiredFlagParameterRoute()
                 .on("/required_flag"),
-        ]], errorRenderer: BasicErrorRenderer())
-        
-        let channel = EmbeddedChannel()
-        try channel.pipeline.addHandler(handler).wait()
-        
-        return channel
+        ])
     }
-    
+
     func testString() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/string?name=testing", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+        try world.send(request)
         
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The name is testing")
     }
     
     func testInt() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/int?number=451", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(request)
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The number + 1 is 452")
     }
     
     func testIntFailing() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/int?number=456a", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(request)
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a query parameter named \"number\" to decode to type Int.")
     }
     
     func testCustomType() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/play?note=B", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(request)
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note is B")
     }
     
     func testCustomTypeFails() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/play?note=H", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(request)
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a query parameter named \"note\" to decode to type MusicNote.")
     }
     
     func testMultiple() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/multiple_parameter?note=F&number=30", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(request)
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note is F and the number+3 is 33")
     }
     
     func testOptionalMissing() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/play_optional", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(request)
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note was not included")
     }
     
     func testOptionalPresent() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/play_optional?note=A", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(request)
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note was present and is A")
     }
     
     func testOptionalFlagPresent() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/optional_flag?flag", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(request)
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The flag was present")
     }
     
     func testOptionalFlagMissing() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/optional_flag", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(request)
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The flag was missing")
     }
     
     func testRequiredFlagPresent() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/required_flag?flag", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(request)
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The flag is required to get to here")
     }
     
     func testRequiredFlagWithUnneededValue() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/required_flag?flag=this_is_discarded", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(request)
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The flag is required to get to here")
     }
     
     func testRequiredFlagMissing() throws {
         
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/required_flag", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(request)
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a query parameter named \"flag\", but it was missing.")
     }
     
     func testNotMatching() throws {
-        let channel = try self.makeChannel()
+        let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/not_found", method: .GET)
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
-        
-        let response = try HTTPResponseReader(head: try channel.readOutbound(), body: try channel.readOutbound(), end: try channel.readOutbound())
+        try world.send(request)
+
+        let response = try world.receive()
         XCTAssertEqual(response.statusCode, .notFound)
         XCTAssertEqual(response.bodyString, "No matching route was found.")
     }
