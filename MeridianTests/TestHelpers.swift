@@ -126,6 +126,11 @@ extension ParameterKeys {
     var number: NumberParameter { .init() }
 }
 
+var randomString: String {
+    let letters = "abcdefghijklmnopqrstuvwxyz"
+    return String((0..<7).map{ _ in letters.randomElement()! })
+}
+
 final class World {
 
     let channel: EmbeddedChannel

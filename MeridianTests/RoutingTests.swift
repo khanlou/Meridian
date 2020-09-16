@@ -11,12 +11,7 @@ import Meridian
 final class RoutingTests: XCTestCase {
     
     let nonGETMethods = HTTPMethod.primaryMethods.filter({ $0 != .GET })
-    
-    var randomString: String {
-        let letters = "abcdefghijklmnopqrstuvwxyz"
-        return String((0..<7).map{ _ in letters.randomElement()! })
-    }
-    
+        
     func testBasic() {
         let matcher = RouteMatcher.path("/testing")
 
