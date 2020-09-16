@@ -5,13 +5,8 @@ Meridian is a web server written in Swift that lets you write your endpoints in 
 Here is an example endpoint:
 
 ```
-extension URLParameters {
-    static let id = URLParameter()
-}
 
 struct SampleEndpoint: Route {
-  
-    static let path: RouteMatcher = "/api/users/\(\.id))/followers"
   
     @QueryParameter("sort_direction") var sortDirection: SortDirection
   
@@ -24,4 +19,15 @@ struct SampleEndpoint: Route {
     }
   
 }
+
+Server(errorRenderer: BasicErrorRenderer())
+    .register {
+
+        SampleEndpoint()
+            .on("/api/users/\(\.id))/followers")
+
+    }
+    .environmentObject(Database())
+    .listen()
+
 ```
