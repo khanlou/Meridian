@@ -56,7 +56,7 @@ final class RoutingTests: XCTestCase {
     func testAny() {
         let matcher = RouteMatcher.any
         
-        XCTAssertNotNil(matcher.matches(RequestHeader(method: HTTPMethod.primaryMethods.randomElement()!, uri: "/" + randomString, headers: [])))
+        XCTAssertNotNil(matcher.matches(RequestHeader(method: HTTPMethod.primaryMethods.randomElement()!, uri: "/" + makeRandomString(), headers: [])))
     }
     
     func testMultipleMatchers() {
@@ -68,8 +68,8 @@ final class RoutingTests: XCTestCase {
         XCTAssertNotNil(matcher.matches(RequestHeader(method: .GET, uri: "/hello", headers: [])))
         XCTAssertNotNil(matcher.matches(RequestHeader(method: .POST, uri: "/hi", headers: [])))
         
-        XCTAssertNil(matcher.matches(RequestHeader(method: nonGETMethods.randomElement()!, uri: "/" + randomString, headers: [])))
-        XCTAssertNil(matcher.matches(RequestHeader(method: nonGETMethods.randomElement()!, uri: "/" + randomString, headers: [])))
+        XCTAssertNil(matcher.matches(RequestHeader(method: nonGETMethods.randomElement()!, uri: "/" + makeRandomString(), headers: [])))
+        XCTAssertNil(matcher.matches(RequestHeader(method: nonGETMethods.randomElement()!, uri: "/" + makeRandomString(), headers: [])))
     }
     
     func testURLParameters() {

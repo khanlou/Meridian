@@ -126,7 +126,7 @@ extension ParameterKeys {
     var number: NumberParameter { .init() }
 }
 
-var randomString: String {
+func makeRandomString() -> String {
     let letters = "abcdefghijklmnopqrstuvwxyz"
     return String((0..<7).map{ _ in letters.randomElement()! })
 }
