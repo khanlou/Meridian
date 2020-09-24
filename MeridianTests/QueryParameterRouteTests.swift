@@ -38,15 +38,24 @@ struct MusicNoteQueryParameterRoute: Responder {
 }
 
 struct OptionalParameterRoute: Responder {
-    
+
     @QueryParameter("note") var note: MusicNote?
-    
+
     func execute() throws -> Response {
         if let note = note {
             return "The note was present and is \(note)"
         } else {
             return "The note was not included"
         }
+    }
+}
+
+struct OptionalWithDefaultParameterRoute: Responder {
+
+    @QueryParameter("note") var note: MusicNote = .E
+
+    func execute() throws -> Response {
+        return "The note was \(note)"
     }
 }
 
@@ -74,9 +83,9 @@ struct OptionalFlagParameterRoute: Responder {
 }
 
 struct RequiredFlagParameterRoute: Responder {
-    
+
     @QueryParameter("flag") var flag: Present
-    
+
     func execute() throws -> Response {
         "The flag is required to get to here"
     }
@@ -94,6 +103,8 @@ class QueryParameterRouteTests: XCTestCase {
                 .on("/play"),
             OptionalParameterRoute()
                 .on("/play_optional"),
+            OptionalWithDefaultParameterRoute()
+                .on("/optional_with_default"),
             MultipleParameterRoute()
                 .on("/multiple_parameter"),
             OptionalFlagParameterRoute()
@@ -140,9 +151,9 @@ class QueryParameterRouteTests: XCTestCase {
     }
     
     func testCustomType() throws {
-        
+
         let world = try self.makeWorld()
-        
+
         let request = HTTPRequestBuilder(uri: "/play?note=B", method: .GET)
         try world.send(request)
 
@@ -150,7 +161,31 @@ class QueryParameterRouteTests: XCTestCase {
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note is B")
     }
-    
+
+    func testOptionalCustomTypeWithDefaultPresent() throws {
+
+        let world = try self.makeWorld()
+
+        let request = HTTPRequestBuilder(uri: "/optional_with_default?note=B", method: .GET)
+        try world.send(request)
+
+        let response = try world.receive()
+        XCTAssertEqual(response.statusCode, .ok)
+        XCTAssertEqual(response.bodyString, "The note was B")
+    }
+
+    func testOptionalCustomTypeWithDefaultMissing() throws {
+
+        let world = try self.makeWorld()
+
+        let request = HTTPRequestBuilder(uri: "/optional_with_default", method: .GET)
+        try world.send(request)
+
+        let response = try world.receive()
+        XCTAssertEqual(response.statusCode, .ok)
+        XCTAssertEqual(response.bodyString, "The note was E")
+    }
+
     func testCustomTypeFails() throws {
         
         let world = try self.makeWorld()

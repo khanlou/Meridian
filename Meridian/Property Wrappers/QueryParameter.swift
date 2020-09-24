@@ -87,6 +87,19 @@ public struct QueryParameter<Type: Decodable>: PropertyWrapper {
             }
         }
     }
+
+    public init(wrappedValue: Type, _ key: String) {
+        self.extractor = { context in
+            guard let value = context.queryParameters.first(where: { $0.name == key })?.value else {
+                return wrappedValue
+            }
+            do {
+                return try decodeFragment(Type.self, from: value)
+            } catch {
+                throw QueryParameterDecodingError(type: Type.self, key: key)
+            }
+        }
+    }
 }
 
 extension QueryParameter where Type == Present {
