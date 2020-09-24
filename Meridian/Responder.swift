@@ -13,7 +13,6 @@ public protocol Responder {
 
     func execute() throws -> Response
 
-    init()
 }
 
 extension Responder {
