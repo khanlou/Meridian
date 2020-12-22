@@ -42,8 +42,8 @@ public struct MatchedRoute {
 public struct RouteMatcher {
     public let matches: (RequestHeader) -> MatchedRoute?
 
-    public init(matcher: (RequestHeader) -> MatchedRoute?) {
-        self.matches = matcher
+    public init(matches: @escaping (RequestHeader) -> MatchedRoute?) {
+        self.matches = matches
     }
 
     public static func path(_ string: String) -> RouteMatcher {
