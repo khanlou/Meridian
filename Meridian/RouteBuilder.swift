@@ -10,6 +10,11 @@ import Foundation
 public struct Route {
     public let matcher: RouteMatcher
     public let responder: Responder
+
+    public init(matcher: RouteMatcher, responder: Responder) {
+        self.matcher = matcher
+        self.responder = responder
+    }
 }
 
 extension Responder {
