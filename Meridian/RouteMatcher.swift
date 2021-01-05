@@ -8,12 +8,7 @@
 import Foundation
 
 private func normalizePath(_ string: String) -> String {
-    let components = NSString(string: string).pathComponents
-    var result = NSString.path(withComponents: components)
-    if !result.starts(with: "/") {
-        result.insert("/", at: result.startIndex)
-    }
-    return result
+    return string
 }
 
 public struct MatchedRoute {
