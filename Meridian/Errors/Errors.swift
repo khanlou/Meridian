@@ -228,6 +228,19 @@ struct MissingURLBodyParameterError: ReportableError {
     let key: String
 }
 
+public struct URLBodyParameterValueDecodingError: ReportableError {
+    public var externallyVisible = true
+
+    public let statusCode: StatusCode = .badRequest
+
+    public let message: String
+
+    init<Type>(type: Type.Type, key: String) {
+        self.message = "The endpoint expects a URL encoded parameter named \"\(key)\" to decode to type \(Type.self)."
+    }
+
+}
+
 public struct BasicError: ReportableError {
     public var externallyVisible: Bool
 

@@ -85,11 +85,14 @@ public struct URLBodyParameter<Type: Decodable>: PropertyWrapper {
         guard let stringValue = try stringValue(forKey: key, inBody: body) else {
             return nil
         }
-        if let decoded = stringValue.removingPercentEncoding {
-            return try decodeFragment(T.self, from: decoded.replacingOccurrences(of: "+", with: " "))
+        guard let decoded = stringValue.removingPercentEncoding else {
+            return nil
         }
-        return nil
-
+        do {
+            return try decodeFragment(T.self, from: decoded.replacingOccurrences(of: "+", with: " "))
+        } catch {
+            throw URLBodyParameterValueDecodingError(type: Type.self, key: key)
+        }
     }
 }
 
