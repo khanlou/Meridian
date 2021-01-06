@@ -113,10 +113,19 @@ final class HTTPHandler: ChannelInboundHandler {
                     }
                 }
 
-                if !errors.isEmpty {
+                guard errors.isEmpty else {
 
                     let reportables = errors.compactMap({ $0 as? ReportableError })
-                    throw BasicError(statusCode: reportables.first!.statusCode, message: reportables.map({ $0.message }).joined(separator: "\n"))
+
+                    if let first = reportables.first {
+                        if reportables.count == 1 {
+                            throw first
+                        } else {
+                            throw BasicError(statusCode: first.statusCode, message: reportables.map({ $0.message }).joined(separator: "\n"))
+                        }
+                    } else {
+                        throw BasicError(externallyVisible: true)
+                    }
 
                 }
 
