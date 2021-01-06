@@ -28,4 +28,8 @@ public struct Redirect: Response, ResponseDetails {
     public static func permanent(url: URL) -> Redirect {
         Redirect(url: url, statusCode: .permanentRedirect)
     }
+ 
+    public static func seeOther(url: URL) -> Redirect {
+        Redirect(url: url, statusCode: .seeOther)
+    }
 }
