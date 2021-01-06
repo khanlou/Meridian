@@ -209,6 +209,24 @@ public struct MissingQueryParameterError: ReportableError {
     }
 }
 
+struct URLBodyDecodingError: ReportableError {
+    var statusCode: StatusCode = .badRequest
+
+    var message: String = "The endpoint expects a URL-encoded body."
+
+    var externallyVisible: Bool = true
+
+}
+
+struct MissingURLBodyParameterError: ReportableError {
+    var statusCode: StatusCode = .badRequest
+
+    var message: String { "The endpoint expects a URL body parameter named \"\(key)\", but it was missing." }
+
+    var externallyVisible: Bool = true
+
+    let key: String
+}
 
 public struct BasicError: ReportableError {
     public var externallyVisible: Bool

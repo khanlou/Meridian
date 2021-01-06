@@ -23,7 +23,7 @@ extension Optional where Wrapped == Present {
     }
 }
 
-private struct Holder<Contained: Decodable>: Decodable {
+private struct QueryParameterHolder<Contained: Decodable>: Decodable {
     let value: Contained
 }
 
@@ -31,11 +31,11 @@ func decodeFragment<T: Decodable>(_ type: T.Type, from value: String) throws -> 
     do {
         let newString = "{\"value\": \(value) }"
         let decoder = JSONDecoder()
-        return try decoder.decode(Holder<T>.self, from: newString.data(using: .utf8)!).value
+        return try decoder.decode(QueryParameterHolder<T>.self, from: newString.data(using: .utf8)!).value
     } catch {
         let newString = "{\"value\": \"\(value)\" }"
         let decoder = JSONDecoder()
-        return try decoder.decode(Holder<T>.self, from: newString.data(using: .utf8)!).value
+        return try decoder.decode(QueryParameterHolder<T>.self, from: newString.data(using: .utf8)!).value
     }
 }
 
