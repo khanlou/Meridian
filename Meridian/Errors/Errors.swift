@@ -235,7 +235,7 @@ public struct BasicError: ReportableError {
 
     public var message: String
 
-    public init(externallyVisible: Bool = false, statusCode: StatusCode = .internalServerError, message: String = "An error occurred") {
+    public init(externallyVisible: Bool = false, statusCode: StatusCode = .internalServerError, message: String = "An error occurred.") {
         self.externallyVisible = externallyVisible
         self.statusCode = statusCode
         self.message = message

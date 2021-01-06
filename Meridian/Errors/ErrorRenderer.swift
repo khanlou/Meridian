@@ -32,7 +32,7 @@ public struct BasicErrorRenderer: ErrorRenderer {
     public init() { }
 
     public func render(error: Error) throws -> Response {
-        return ((error as? ReportableError)?.message ?? "An error occurred")
+        return ((error as? ReportableError)?.message ?? "An error occurred.")
             .statusCode((error as? ReportableError)?.statusCode ?? .internalServerError)
     }
 }
