@@ -26,6 +26,10 @@ struct AdditionalHeaderResponse: Response, ResponseDetails {
         try wrapping.body()
     }
 
+    var statusCode: StatusCode {
+        (wrapping as? ResponseDetails)?.statusCode ?? .ok
+    }
+
 }
 
 extension Response {
