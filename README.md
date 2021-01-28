@@ -4,7 +4,7 @@ Meridian is a web server written in Swift that lets you write your endpoints in 
 
 Here is an example endpoint:
 
-```
+```swift
 
 struct SampleEndpoint: Route {
   
