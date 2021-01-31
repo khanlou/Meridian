@@ -6,7 +6,7 @@ Here is an example endpoint:
 
 ```swift
 
-struct SampleEndpoint: Route {
+struct SampleEndpoint: Responder {
   
     @QueryParameter("sort_direction") var sortDirection: SortDirection
   
