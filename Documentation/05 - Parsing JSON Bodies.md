@@ -10,7 +10,7 @@ To decode a JSON body, create a codable type and use the `@JSONBody` property wr
         let date: Date
     }
     
-    struct CreateDateRoute: Responder {
+    struct CreateTripRoute: Responder {
         
         @JSONBody var trip: Trip
         
