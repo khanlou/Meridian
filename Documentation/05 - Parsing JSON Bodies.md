@@ -19,7 +19,7 @@ To decode a JSON body, create a codable type and use the `@JSONBody` property wr
         }
     }
 
-Meridian will use the type of the `trip` variable, in this case `Trip` to decode the incoming request's post body. This value can be optional, which will be nil in the case that the post body is empty. However, if the value does not decode, Meridian will respond with an error, even if the type is optional.
+Meridian will use the type of the `trip` variable, in this case `Trip`, to decode the incoming request's post body. This value can be optional, which will be nil in the case that the post body is empty. However, if the value does not decode, Meridian will respond with an error, even if the type is optional.
 
 Using `JSONBody` requires an incoming `Content-Type` of `application/json`. Without this, Meridian will respond with an error.
 

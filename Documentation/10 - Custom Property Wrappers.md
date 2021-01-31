@@ -25,8 +25,10 @@ Next, we can define our extractor, which just needs an `extract` method. This me
                 throw MissingAuth()
             }
             return user
-        }    
+        }
     }
+
+(Extractors can not yet access Meridian's environment.)
 
 You could use this as-is, in a property wrapper:
 

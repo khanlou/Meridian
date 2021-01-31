@@ -13,10 +13,10 @@ URL parameters are slightly more complex than query parameters in Meridian. This
     struct ShowInvoice: Responder {
         public init() { }
     
-        @URLParameter(\.invoiceID) var invoiceID
+        @URLParameter(\.invoiceID) var id
         
         func execute() throws {
-            "Showing invoice with ID \(invoiceID)."
+            "Showing invoice with ID \(id)."
         }
     }
 

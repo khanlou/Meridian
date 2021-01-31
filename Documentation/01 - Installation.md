@@ -1,6 +1,6 @@
 # 01 - Installation
 
-Meridian uses Swift Package manage for installation. 
+Meridian uses Swift Package Manager for installation. 
 
 Add Meridian as a dependency for your package:
 

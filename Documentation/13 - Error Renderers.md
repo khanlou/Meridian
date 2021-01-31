@@ -15,9 +15,9 @@ Different parts of your app may need to render errors in different ways. For exa
 
 With the example, if you go anywhere other than a child of `/api`, you will get the `BasicErrorRenderer`. That will simply render the localized description of the error as a string. If you're in the `/api` subdirectory (or any child) it'll use the `JSONErrorRenderer`, and show a JSON-parseable error.
 
-`BasicErrorRenderer` and `JSONErrorRenderer` are the two error renderers that Meridian ships with. It is likely that you'll want to write your own error renderers, either to match the html style of your site, or to customize the output of the JSON.
+`BasicErrorRenderer` and `JSONErrorRenderer` are the two error renderers that Meridian ships with. It's likely that you'll want to write your own error renderers, either to match the HTML style of your site, or to customize the output of the JSON.
 
-To create a new error renderer, you need to conform to a protocol with only one method:
+To create a new error renderer, you need to conform to the `ErrorRenderer` protocol:
 
     protocol ErrorRenderer {
     

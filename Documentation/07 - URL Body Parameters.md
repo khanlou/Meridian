@@ -1,6 +1,6 @@
-# 07 URL Body Parameters
+# 07 - URL Body Parameters
 
-HTML forms will encode their fields into the body using "URL encoding". This looks like a query parameter string, is encoded into the body.
+HTML forms will encode their fields into the body using URL encoding. This looks like a query parameter string, but is encoded into the body.
 
 Here's how you can extract URL body parameters:
 

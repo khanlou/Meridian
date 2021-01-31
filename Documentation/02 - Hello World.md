@@ -41,11 +41,11 @@ Create your first responder:
 
 A Responder is a unit that responds to a request in one way. You can think of these as logical endpoints. While you can use a Responder to respond to more than one route, it generally corresponds to one route.
     
-Next, create a server with a basic error renderer. You can read more about error renderers in the appropriate section. `BasicErrorRenderer` prints the `localizedDescription` of the error in plain text.
+Next, create a server with a basic error renderer. You can read more about error renderers in the appropriate section. `BasicErrorRenderer` outputs the `localizedDescription` of the error in plain text in the response.
     
     Server(errorRenderer: BasicErrorRenderer())
 
-Register your new route. The `.on` modifier attaches a path to a `Responder`, and lets Meridian know when a specific `Responder` should be used.
+Register your new route. The `.on` modifier attaches a path to a `Responder`, and lets Meridian know when a specific `Responder` should be used when a request comes in.
 
         .register({
             HelloWorld()
@@ -55,3 +55,5 @@ Register your new route. The `.on` modifier attaches a path to a `Responder`, an
 Start your server:
 
         .listen()
+
+Now you can visit [http://localhost:3000](http://localhost:3000) to see your new server in action!

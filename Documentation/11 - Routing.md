@@ -37,7 +37,7 @@ There are two ways to register routes — first, you can use the `register` meth
 
 Every Responder needs to have `.on` called on it with a `RouteMatcher`. Mostly, you won't need to define custom `RouteMatcher` instances, but the ability is there if necessary.
 
-Routes can be represented as a string literal, which is the easiest way to define a route. Leading and trailing slashes are normalized, these are all the same:
+Routes can be represented as a string literal, which is the easiest way to define a route. Leading and trailing slashes are normalized, so these are all the same:
 
     /route/
     /route
