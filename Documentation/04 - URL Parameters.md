@@ -42,3 +42,5 @@ There are several moving parts here:
         .on(.post("/invoices/\(\.invoiceID)/update_state"))
 
 URL parameters don't support optionality. If a Responder can sometimes require a URL parameter, and sometimes not, it might be better expressed as two Responders.
+
+Note: URL parameter keys get their identity from the name of the type. This means that if you try to use two URL parameter keys (even at different keypaths) with the same type (`InvoiceIDParameter`, in the above case), they will collide and only one of them will come through. To avoid this, create a new type conforming to `URLParameterKey`, so that their identities will be different.
