@@ -12,7 +12,9 @@ import NIOHTTP1
 
 struct CustomStatusCodeTestRoute: Responder {
     func execute() throws -> Response {
-        "Hello".statusCode(.imATeapot)
+        "Hello"
+            .statusCode(.conflict)
+            .statusCode(.imATeapot)
     }
 }
 
