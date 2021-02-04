@@ -91,7 +91,7 @@ extension RouteMatcher: ExpressibleByStringInterpolation {
 
         var regexString = ""
 
-        var mapping: [String] = []
+        var mapping: [(String, LosslessStringConvertible.Type)] = []
 
         public init(literalCapacity: Int, interpolationCount: Int) {
 
@@ -105,7 +105,7 @@ extension RouteMatcher: ExpressibleByStringInterpolation {
 
             regexString.append("([^/]+)")
 
-            mapping.append(SpecificKey.stringKey)
+            mapping.append((SpecificKey.stringKey, SpecificKey.DecodeType.self))
         }
     }
 
@@ -131,10 +131,14 @@ extension RouteMatcher: ExpressibleByStringInterpolation {
                     .dropFirst() /*ignore the first match*/
                     .map({ match.range(at: $0) })
 
-                zip(stringInterpolation.mapping, ranges).forEach({ urlParameterName, range in
-                    guard let betterRange = Range(range, in: path) else { fatalError("Should be able to convert ranges") }
-                    result[urlParameterName] = path[betterRange]
-                })
+                for (mapping, range) in zip(stringInterpolation.mapping, ranges) {
+                    let (urlParameterName, type) = mapping
+                    guard let nativeRange = Range(range, in: path) else { fatalError("Should be able to convert ranges") }
+                    let substring = path[nativeRange]
+                    let valueIsConvertible = type.init(String(substring)) != nil
+                    guard valueIsConvertible else { return nil }
+                    result[urlParameterName] = substring
+                }
             }
 
             return MatchedRoute(parameters: result)

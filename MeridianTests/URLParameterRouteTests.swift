@@ -35,6 +35,13 @@ struct IntURLParameterRoute: Responder {
     }
 }
 
+struct IntLikeRoute: Responder {
+
+    func execute() throws -> Response {
+        "This is a different request"
+    }
+}
+
 struct MultipleURLParameterRoute: Responder {
 
     @URLParameter(\.number) var id
@@ -62,6 +69,8 @@ class URLParameterRouteTests: XCTestCase {
                 .on("/string/\(\.id)"),
             IntURLParameterRoute()
                 .on("/int/\(\.number)"),
+            IntLikeRoute()
+                .on("/int/like"),
             LetterURLParameterRoute()
                 .on("/letter/\(\.letter)"),
             MultipleURLParameterRoute()
@@ -95,6 +104,18 @@ class URLParameterRouteTests: XCTestCase {
         XCTAssertEqual(response.bodyString, "The ID+1 is 790")
     }
 
+    func testIntLike() throws {
+
+        let world = try self.makeWorld()
+
+        let request = HTTPRequestBuilder(uri: "/int/like", method: .GET)
+        try world.send(request)
+
+        let response = try world.receive()
+        XCTAssertEqual(response.statusCode, .ok)
+        XCTAssertEqual(response.bodyString, "This is a different request")
+    }
+
     func testIntFailing() throws {
 
         let world = try self.makeWorld()
@@ -103,8 +124,8 @@ class URLParameterRouteTests: XCTestCase {
         try world.send(request)
 
         let response = try world.receive()
-        XCTAssertEqual(response.statusCode, .badRequest)
-        XCTAssertEqual(response.bodyString, "The endpoint expects a url parameter that can decode to type Int.")
+        XCTAssertEqual(response.statusCode, .notFound)
+        XCTAssertEqual(response.bodyString, "No matching route was found.")
     }
 
     func testCustomType() throws {
@@ -127,8 +148,8 @@ class URLParameterRouteTests: XCTestCase {
         try world.send(request)
 
         let response = try world.receive()
-        XCTAssertEqual(response.statusCode, .badRequest)
-        XCTAssertEqual(response.bodyString, "The endpoint expects a url parameter that can decode to type LetterGrade.")
+        XCTAssertEqual(response.statusCode, .notFound)
+        XCTAssertEqual(response.bodyString, "No matching route was found.") // Ideally, this would be a .badRequest with more detail about why it doesn't match
     }
 
     func testMultipleParametersSucceeds() throws {
@@ -151,8 +172,8 @@ class URLParameterRouteTests: XCTestCase {
         try world.send(request)
 
         let response = try world.receive()
-        XCTAssertEqual(response.statusCode, .badRequest)
-        XCTAssertEqual(response.bodyString, "The endpoint expects a url parameter that can decode to type LetterGrade.")
+        XCTAssertEqual(response.statusCode, .notFound)
+        XCTAssertEqual(response.bodyString, "No matching route was found.")
     }
 
     func testNoURLParameters() throws {
