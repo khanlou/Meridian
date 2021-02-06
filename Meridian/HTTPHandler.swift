@@ -9,9 +9,6 @@ import Foundation
 import NIO
 import NIOHTTP1
 
-let CurrentRequestKey = "CurrentRequestContext"
-let RequestErrorsKey = "RequestErrors"
-
 public struct RequestContext {
     public let header: RequestHeader
     public let matchedRoute: MatchedRoute
@@ -172,8 +169,6 @@ final class HTTPHandler: ChannelInboundHandler {
 
         _ = future.and(future2).and(future3)
             .flatMap({ (_) -> EventLoopFuture<Void> in
-                Thread.current.threadDictionary[CurrentRequestKey] = nil
-                Thread.current.threadDictionary[RequestErrorsKey] = nil
 
                 return channel.close()
             })
