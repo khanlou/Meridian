@@ -110,27 +110,20 @@ final class HTTPHandler: ChannelInboundHandler {
                     }
                 }
 
-                guard errors.isEmpty else {
+                if let firstError = errors.first {
 
-                    let reportables = errors.compactMap({ $0 as? ReportableError })
+                    let response = try errorRenderer.render(primaryError: firstError, otherErrors: Array(errors.dropFirst()))
+                    
+                    try send(response, head.version, to: channel)
 
-                    if let first = reportables.first {
-                        if reportables.count == 1 {
-                            throw first
-                        } else {
-                            throw BasicError(statusCode: first.statusCode, message: reportables.map({ $0.message }).joined(separator: "\n"))
-                        }
-                    } else {
-                        throw BasicError(externallyVisible: true)
-                    }
+                } else {
 
+                    try route.validate()
+
+                    let response = try route.execute()
+
+                    try send(response, head.version, to: channel)
                 }
-
-                try route.validate()
-
-                let response = try route.execute()
-
-                try send(response, head.version, to: channel)
 
             } catch {
 

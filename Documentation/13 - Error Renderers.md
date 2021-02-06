@@ -20,27 +20,27 @@ With the example, if you go anywhere other than a child of `/api`, you will get 
 To create a new error renderer, you need to conform to the `ErrorRenderer` protocol:
 
     protocol ErrorRenderer {
-    
-        func render(error: Error) throws -> Response
-    
+
+        func render(primaryError: Error, otherErrors: [Error]) throws -> Response
+
     }
 
-Inside here, you can return any Response — JSON, HTML, plain text, something else — with the content of the error rendered into it.
+Inside here, you can return any Response — JSON, HTML, plain text, something else — with the content of the error rendered into it. Error renderers will always get at least one error, the `primaryError`, but may include `otherErrors` as well. Meridian can find errors in more than one property wrapper simultaneously, and any errors besides the first will be included in `otherErrors`.
 
 As an example, Meridian's `JSONErrorRenderer` looks like this:
 
     struct ErrorContainer: Codable {
         let message: String
     }
-    
-    public struct JSONErrorRenderer: ErrorRenderer {
-    
-        public init() { }
-    
-        public func render(error: Error) throws -> Response {
+
+    struct JSONErrorRenderer: ErrorRenderer {
+
+        func render(primaryError error: Error, otherErrors: [Error]) throws -> Response {
             JSON(ErrorContainer(message: (error as? ReportableError)?.message ?? "An error occurred."))
                 .statusCode((error as? ReportableError)?.statusCode ?? .internalServerError)
         }
     }
+
+In this case, this error renderer considers only the first error, but other error renderers might render more than just the first.
 
 The `render` function can throw, which will close the connection to the peer. This should not be relied on.
