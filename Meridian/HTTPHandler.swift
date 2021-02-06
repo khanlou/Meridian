@@ -112,8 +112,8 @@ final class HTTPHandler: ChannelInboundHandler {
 
                 if let firstError = errors.first {
 
-                    let response = try errorRenderer.render(primaryError: firstError, otherErrors: Array(errors.dropFirst()))
-                    
+                    let response = try errorRenderer.render(primaryError: firstError, context: ErrorsContext(allErrors: errors))
+
                     try send(response, head.version, to: channel)
 
                 } else {
@@ -128,7 +128,7 @@ final class HTTPHandler: ChannelInboundHandler {
             } catch {
 
                 do {
-                    let response = try errorRenderer.render(primaryError: error, otherErrors: [])
+                    let response = try errorRenderer.render(primaryError: error, context: ErrorsContext(error: error))
                     try send(response, head.version, to: channel)
                 } catch {
                     _ = channel.close()
