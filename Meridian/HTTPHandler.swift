@@ -134,9 +134,12 @@ final class HTTPHandler: ChannelInboundHandler {
 
             } catch {
 
-                let response = try! errorRenderer.render(error: error)
-
-                try! send(response, head.version, to: channel)
+                do {
+                    let response = try errorRenderer.render(primaryError: error, otherErrors: [])
+                    try send(response, head.version, to: channel)
+                } catch {
+                    _ = channel.close()
+                }
             }
         }
     }
@@ -169,8 +172,7 @@ final class HTTPHandler: ChannelInboundHandler {
 
         _ = future.and(future2).and(future3)
             .flatMap({ (_) -> EventLoopFuture<Void> in
-
-                return channel.close()
+                channel.close()
             })
     }
 

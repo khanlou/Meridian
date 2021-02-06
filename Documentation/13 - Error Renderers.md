@@ -43,4 +43,4 @@ As an example, Meridian's `JSONErrorRenderer` looks like this:
         }
     }
 
-The `render` function can throw, however Meridian will crash here if something goes wrong. In a future version, it may close the connection to the peer and continue running.
+The `render` function can throw, which will close the connection to the peer. This should not be relied on.
