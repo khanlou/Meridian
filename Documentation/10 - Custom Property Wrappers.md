@@ -6,9 +6,7 @@ To make a custom property wrapper, You need to create an extractor. There are tw
 
 First, let's define an error in case the user isn't logged in.
 
-    struct MissingAuth: ReportableError {
-        var externallyVisible = true
-    
+    struct MissingAuth: ReportableError {    
         var statusCode: StatusCode = .forbidden
         
         var message: String = "This request requires an auth token."

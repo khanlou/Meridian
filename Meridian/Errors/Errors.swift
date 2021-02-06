@@ -10,7 +10,6 @@ import Foundation
 public protocol ReportableError: Error {
     var statusCode: StatusCode { get }
     var message: String { get }
-    var externallyVisible: Bool { get }
 }
 
 extension ReportableError {
@@ -22,14 +21,9 @@ extension ReportableError {
         "An error occurred."
     }
 
-    var externallyVisible: Bool {
-        false
-    }
 }
 
-public struct MissingEnvironmentObject: ReportableError {
-    public var externallyVisible = false
-
+public struct MissingEnvironmentObject: Error {
     public let statusCode: StatusCode = .badRequest
 
     public let message: String
@@ -40,7 +34,6 @@ public struct MissingEnvironmentObject: ReportableError {
 }
 
 public struct MissingURLParameterError: ReportableError {
-    public var externallyVisible = true
 
     public let statusCode: StatusCode = .badRequest
 
@@ -49,7 +42,6 @@ public struct MissingURLParameterError: ReportableError {
 }
 
 public struct URLParameterDecodingError: ReportableError {
-    public var externallyVisible = true
 
     public let statusCode: StatusCode = .badRequest
 
@@ -62,7 +54,6 @@ public struct URLParameterDecodingError: ReportableError {
 }
 
 public struct UnexpectedGETRequestError: ReportableError {
-    public var externallyVisible = true
 
     public let statusCode: StatusCode = .badRequest
 
@@ -70,7 +61,6 @@ public struct UnexpectedGETRequestError: ReportableError {
 }
 
 public struct JSONContentTypeError: ReportableError {
-    public var externallyVisible = true
 
     public let statusCode: StatusCode = .badRequest
 
@@ -78,7 +68,6 @@ public struct JSONContentTypeError: ReportableError {
 }
 
 public struct MissingBodyError: ReportableError {
-    public var externallyVisible = true
 
     public let statusCode: StatusCode = .badRequest
 
@@ -112,7 +101,6 @@ extension DecodingError.Context {
 }
 
 public struct JSONBodyDecodingError: ReportableError {
-    public var externallyVisible = true
 
     public let statusCode: StatusCode = .badRequest
 
@@ -150,8 +138,6 @@ public struct JSONKeyNotFoundError: ReportableError {
 
     public let statusCode: StatusCode = .badRequest
 
-    public let externallyVisible = true
-
     public let message: String
 
     init<Type>(type: Type.Type, keyPath: String) {
@@ -163,8 +149,6 @@ public struct JSONKeyNotFoundError: ReportableError {
 public struct JSONKeyTypeMismatchError: ReportableError {
     public let statusCode: StatusCode = .badRequest
 
-    public let externallyVisible = true
-
     public let message: String
 
     init<Type>(type: Type.Type, keyPath: String) {
@@ -173,7 +157,6 @@ public struct JSONKeyTypeMismatchError: ReportableError {
 }
 
 public struct QueryParameterDecodingError: ReportableError {
-    public var externallyVisible = true
 
     public let statusCode: StatusCode = .badRequest
 
@@ -186,7 +169,6 @@ public struct QueryParameterDecodingError: ReportableError {
 }
 
 public struct NoValueQueryParameterError: ReportableError {
-    public var externallyVisible = true
 
     public let statusCode: StatusCode = .badRequest
 
@@ -198,7 +180,6 @@ public struct NoValueQueryParameterError: ReportableError {
 }
 
 public struct MissingQueryParameterError: ReportableError {
-    public var externallyVisible = true
 
     public let key: String
 
@@ -214,8 +195,6 @@ struct URLBodyDecodingError: ReportableError {
 
     var message: String = "The endpoint expects a URL-encoded body."
 
-    var externallyVisible: Bool = true
-
 }
 
 struct MissingURLBodyParameterError: ReportableError {
@@ -223,13 +202,10 @@ struct MissingURLBodyParameterError: ReportableError {
 
     var message: String { "The endpoint expects a URL body parameter named \"\(key)\", but it was missing." }
 
-    var externallyVisible: Bool = true
-
     let key: String
 }
 
 public struct URLBodyParameterValueDecodingError: ReportableError {
-    public var externallyVisible = true
 
     public let statusCode: StatusCode = .badRequest
 
@@ -242,22 +218,18 @@ public struct URLBodyParameterValueDecodingError: ReportableError {
 }
 
 public struct BasicError: ReportableError {
-    public var externallyVisible: Bool
 
     public var statusCode: StatusCode
 
     public var message: String
 
-    public init(externallyVisible: Bool = false, statusCode: StatusCode = .internalServerError, message: String = "An error occurred.") {
-        self.externallyVisible = externallyVisible
+    public init(statusCode: StatusCode = .internalServerError, message: String = "An error occurred.") {
         self.statusCode = statusCode
         self.message = message
     }
 }
 
 public struct NoRouteFound: ReportableError {
-    public var externallyVisible = true
-
     public init() {
 
     }
