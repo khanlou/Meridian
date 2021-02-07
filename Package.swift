@@ -13,11 +13,13 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.3.0"),
     ],
     targets: [
-        .target(name: "Demo", dependencies: ["Meridian"], path: "Demo"),
+        .target(name: "Demo", dependencies: [
+            .product(name: "Meridian", package: "Meridian"),
+            .product(name: "Backtrace", package: "swift-backtrace"),
+        ], path: "Demo"),
         .target(name: "Meridian", dependencies: [
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
-            .product(name: "Backtrace", package: "swift-backtrace"),
             .product(name: "ArgumentParser", package: "swift-argument-parser"),
         ], path: "Meridian"),
         .testTarget(name: "MeridianTests", dependencies: ["Meridian"], path: "MeridianTests"),
