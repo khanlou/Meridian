@@ -14,7 +14,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "Demo", dependencies: [
-            .product(name: "Meridian", package: "Meridian"),
+            .target(name: "Meridian"),
             .product(name: "Backtrace", package: "swift-backtrace"),
         ], path: "Demo"),
         .target(name: "Meridian", dependencies: [
