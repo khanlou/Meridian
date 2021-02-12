@@ -25,12 +25,12 @@ If you haven't used Swift Package Manager much, here's a complete Package.swift:
             .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.2.0"),
         ],
         targets: [
-            .target(name: "App", dependencies: ["MyFirstApp"], path: "App"),
+            .target(name: "App", dependencies: ["MyFirstApp"]),
             .target(name: "MyFirstApp", dependencies: [
                 .product(name: "Meridian", package: "Meridian"),
                 .product(name: "Backtrace", package: "swift-backtrace"),
-            ], path: "MyFirstApp"),
-        .testTarget(name: "MyFirstAppTests", dependencies: ["MyFirstApp"], path: "MyFirstAppTests"),
+            ]),
+        .testTarget(name: "MyFirstAppTests", dependencies: ["MyFirstApp"]),
         ]
     )
 
