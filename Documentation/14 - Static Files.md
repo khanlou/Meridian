@@ -5,11 +5,13 @@ Your app may need to serve static files, like JavaScript, CSS, or images. Meridi
 To enable this, you need to tell your Package.swift that you have static resources to include include in your final bundle. You can do this by updating your App target (not your library target) with 
 
         targets: [
-            .target(name: "App", dependencies: ["MyFirstApp"], resources: [.copy("Static")]), // => files in the Static folder will be included in the bundle
+            .target(name: "App", dependencies: ["MyFirstApp"], resources: [.process("Static")]), // => files in the Static folder will be included in the bundle
             .target(name: "MyFirstApp", dependencies: [
                 .product(name: "Meridian", package: "Meridian"),
                 .product(name: "Backtrace", package: "swift-backtrace"),
             ]),
+
+(Note: using `.copy` instead of `.process` will not work.)
 
 Now, you can place your static files in the Static folder. Your directory structure should look like this:
 
@@ -43,6 +45,6 @@ Once that's done, the `BundledFiles` route can be included in your Path.
         })
         .listen()
 
-(You need to explicitly pass the bundle the files are in so that Meridian looks for them files in the correct place.)
+(You need to explicitly pass the bundle the files are in so that Meridian looks for the files in the correct place.)
 
 The URL `http://localhost:3000/styles.css` should now deliver your CSS file.
