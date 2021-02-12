@@ -24,8 +24,8 @@ Now, you can place your static files in the Static folder. Your directory struct
                 📁 Static
                     📄 styles.css
                     📄 index.js
-                📁 MyFirstApp
-                    📄 HelloWorld.swift
+            📁 MyFirstApp
+                📄 HelloWorld.swift
 
 Once that's done, the `BundledFiles` route can be included in your Path.
 
