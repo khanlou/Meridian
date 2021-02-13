@@ -33,6 +33,8 @@ public struct URLBodyParameter<Type: Decodable>: PropertyWrapper {
     @_disfavoredOverload
     public init(_ key: String) {
         self.extractor = { context in
+            try Self.checkHeader(context)
+
             if let value: Type = try Self.value(forKey: key, inBody: context.postBody) {
                 return value
             } else {
@@ -43,6 +45,8 @@ public struct URLBodyParameter<Type: Decodable>: PropertyWrapper {
 
     public init<Inner>(_ key: String) where Type == Inner? {
         self.extractor = { context in
+            try Self.checkHeader(context)
+
             if let value: Type = try Self.value(forKey: key, inBody: context.postBody) {
                 return value
             } else {
@@ -53,6 +57,8 @@ public struct URLBodyParameter<Type: Decodable>: PropertyWrapper {
 
     public init(wrappedValue: Type, _ key: String) {
         self.extractor = { context in
+            try Self.checkHeader(context)
+
             if let value: Type = try Self.value(forKey: key, inBody: context.postBody) {
                 return value
             } else {
@@ -94,11 +100,19 @@ public struct URLBodyParameter<Type: Decodable>: PropertyWrapper {
             throw URLBodyParameterValueDecodingError(type: Type.self, key: key)
         }
     }
+
+    static func checkHeader(_ context: RequestContext) throws {
+        guard let contentType = context.header.headers["Content-Type"], contentType.contains("application/x-www-form-urlencoded") else {
+            throw URLBodyDecodingError()
+        }
+    }
 }
 
 extension URLBodyParameter where Type == Present {
     public init(_ key: String) {
         self.extractor = { context in
+            try Self.checkHeader(context)
+
             if try Self.stringValue(forKey: key, inBody: context.postBody) != nil {
                 return Present()
             } else {
@@ -111,6 +125,8 @@ extension URLBodyParameter where Type == Present {
 extension URLBodyParameter where Type == Present? {
     public init(_ key: String) {
         self.extractor = { context in
+            try Self.checkHeader(context)
+            
             if try Self.stringValue(forKey: key, inBody: context.postBody) != nil {
                 return Present()
             } else {

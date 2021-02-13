@@ -191,9 +191,9 @@ public struct MissingQueryParameterError: ReportableError {
 }
 
 struct URLBodyDecodingError: ReportableError {
-    var statusCode: StatusCode = .badRequest
+    let statusCode: StatusCode = .badRequest
 
-    var message: String = "The endpoint expects a URL-encoded body."
+    let message = "The endpoint requires a URL-encoded body and a \"Content-Type\" of \"application/x-www-form-urlencoded\"."
 
 }
 

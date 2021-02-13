@@ -13,7 +13,7 @@ Here's how you can extract URL body parameters:
         }
     }
 
-This does not currently require a specific `Content-Type`, but may in the future.
+Using this property wrapper requires a `Content-Type` of `application/x-www-form-urlencoded`.
 
 ### Optionality
 
