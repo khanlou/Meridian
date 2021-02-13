@@ -11,3 +11,5 @@ Deploying Meridian apps to Heroku is very similar to other Swift on the server f
 3. Ensure your database URL is being accessed by the environment variable named `DATABASE_URL`. You can access this in Swift like so:
 
         ProcessInfo.processInfo.environment["DATABASE_URL"]
+
+Lastly, if you are using `swift-backtrace` to log any crashes, you should set the `SWIFT_BUILD_FLAGS` config variable (on Heroku) to `-Xswiftc -g`. This will ensure that debug symbols are emitted in the binary and can be read by Backtrace.
