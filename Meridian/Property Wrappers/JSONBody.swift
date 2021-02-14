@@ -19,13 +19,9 @@ public struct JSONBody<Type: Decodable>: PropertyWrapper {
     public init<Inner>(decoder: JSONDecoder = .init()) where Type == Inner? {
         self.decoder = decoder
         self.extractor = { context in
-            guard context.header.method != .GET else {
-                throw UnexpectedGETRequestError()
-            }
+            try Self.checkMethod(context)
 
-            guard let contentType = context.header.headers["Content-Type"], contentType.contains("application/json") else {
-                throw JSONContentTypeError()
-            }
+            try Self.checkHeader(context)
 
             guard !context.postBody.isEmpty else {
                 return nil
@@ -39,13 +35,9 @@ public struct JSONBody<Type: Decodable>: PropertyWrapper {
     public init(decoder: JSONDecoder = .init()) {
         self.decoder = decoder
         self.extractor = { context in
-            guard context.header.method != .GET else {
-                throw UnexpectedGETRequestError()
-            }
+            try Self.checkMethod(context)
 
-            guard let contentType = context.header.headers["Content-Type"], contentType.contains("application/json") else {
-                throw JSONContentTypeError()
-            }
+            try Self.checkHeader(context)
 
             guard !context.postBody.isEmpty else {
                 throw MissingBodyError()
@@ -70,5 +62,18 @@ public struct JSONBody<Type: Decodable>: PropertyWrapper {
     public var wrappedValue: Type {
         return finalValue
     }
+
+    static func checkHeader(_ context: RequestContext) throws {
+        guard let contentType = context.header.headers["Content-Type"], contentType.contains("application/json") else {
+            throw JSONContentTypeError()
+        }
+    }
+
+    static func checkMethod(_ context: RequestContext) throws {
+        guard context.header.method != .GET else {
+            throw UnexpectedGETRequestError()
+        }
+    }
+
 }
 
