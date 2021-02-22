@@ -83,6 +83,8 @@ final class HTTPHandler: ChannelInboundHandler {
             var errorRenderer = router.defaultErrorRenderer
 
             do {
+                print("Request: \(head.method.rawValue) \(head.uri)")
+
                 let header = try RequestHeader(
                     method: HTTPMethod(name: head.method.rawValue),
                     uri: head.uri,
@@ -101,8 +103,6 @@ final class HTTPHandler: ChannelInboundHandler {
                     matchedRoute: matchedRoute,
                     postBody: body
                 )
-
-                print("request: \(requestContext.header)")
 
                 var errors: [Error] = []
 
