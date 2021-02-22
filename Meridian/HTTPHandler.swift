@@ -9,6 +9,20 @@ import Foundation
 import NIO
 import NIOHTTP1
 
+struct ImmediateStandardOutput: TextOutputStream {
+    mutating func write(_ string: String) {
+        fputs(string, stdout)
+        fflush(stdout)
+    }
+}
+
+var output = ImmediateStandardOutput()
+
+func print(_ items: Any..., separator: String = "", terminator: String = "\n") {
+    let message = items.map({ String(describing: $0) }).joined(separator: separator)
+    Swift.print(message, terminator: terminator, to: &output)
+}
+
 public struct RequestContext {
     public let header: RequestHeader
     public let matchedRoute: MatchedRoute
