@@ -11,7 +11,8 @@ import NIOHTTP1
 import ArgumentParser
 
 func enableLineBufferedLogging() {
-    assert(setvbuf(stdout, nil, _IOLBF, 16 * 1024) != 0)
+    let result = setvbuf(stdout, nil, _IOLBF, 16 * 1024)
+    precondition(result == 0)
 }
 
 struct ServeOptions: ParsableArguments {
