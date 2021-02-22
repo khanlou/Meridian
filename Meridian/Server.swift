@@ -10,6 +10,10 @@ import NIO
 import NIOHTTP1
 import ArgumentParser
 
+func enableLineBufferedLogging() {
+    assert(setvbuf(stdout, nil, _IOLBF, 16 * 1024) != 0)
+}
+
 struct ServeOptions: ParsableArguments {
     @Option var port: Int = 3000
     @Option var host: String = "localhost"
@@ -49,6 +53,7 @@ public final class Server {
     var router: Router
 
     public init(errorRenderer: ErrorRenderer) {
+        enableLineBufferedLogging()
         self.router = Router(routesByPrefix: [:], defaultErrorRenderer: errorRenderer)
     }
 
