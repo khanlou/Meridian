@@ -52,12 +52,12 @@ final class Router {
         return (nil, errorHandlerBestGuess)
     }
 
-    func methods(for path: String) -> Set<HTTPMethod> {
+    func methods(for path: String) throws -> Set<HTTPMethod> {
         var matchingMethods = Set<HTTPMethod>()
 
         for (prefix, routeGroup) in routesByPrefix {
             for method in HTTPMethod.primaryMethods {
-                var header = RequestHeader(method: method, uri: path, headers: [])
+                var header = try RequestHeader(method: method, uri: path, headers: [])
                 if header.path.hasPrefix(prefix) {
                     header.path.removeFirst(prefix.count)
                     for route in routeGroup.routes {

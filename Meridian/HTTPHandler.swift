@@ -80,15 +80,18 @@ final class HTTPHandler: ChannelInboundHandler {
 
             let channel = context.channel
 
-            let header = RequestHeader(
-                method: HTTPMethod(name: head.method.rawValue),
-                uri: head.uri,
-                headers: head.headers.map({ ($0, $1) })
-            )
-
-            let (results, errorRenderer) = router.route(for: header)
+            var errorRenderer = router.defaultErrorRenderer
 
             do {
+                let header = try RequestHeader(
+                    method: HTTPMethod(name: head.method.rawValue),
+                    uri: head.uri,
+                    headers: head.headers.map({ ($0, $1) })
+                )
+
+                let results: (Responder, MatchedRoute)?
+                (results, errorRenderer) = router.route(for: header)
+
                 guard let (route, matchedRoute) = results else {
                     throw NoRouteFound()
                 }

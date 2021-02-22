@@ -30,7 +30,7 @@ struct OptionsRoute: Responder {
 
     func execute() throws -> Response {
 
-        let matchingMethods = self.router.methods(for: path)
+        let matchingMethods = try self.router.methods(for: path)
 
         return EmptyResponse()
             .additionalHeaders([

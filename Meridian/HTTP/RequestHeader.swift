@@ -7,16 +7,25 @@
 
 import Foundation
 
+public struct UnparseableRequest: ReportableError {
+    public let message = "This request was unprocessable."
+
+    public let statusCode: StatusCode = .badRequest
+}
+
 public struct RequestHeader: CustomStringConvertible {
     public let method: HTTPMethod
     public let headers: Headers
 
     private var urlComponents: URLComponents
 
-    public init(method: HTTPMethod, uri: String, headers: [(String, String)]) {
+    public init(method: HTTPMethod, uri: String, headers: [(String, String)]) throws {
         self.method = method
         self.headers = Headers(storage: headers)
-        self.urlComponents = URLComponents(string: uri)!
+        guard let components = URLComponents(string: uri) else {
+            throw UnparseableRequest()
+        }
+        self.urlComponents = components
     }
 
     internal(set) public var path: String {
