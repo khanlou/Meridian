@@ -47,6 +47,8 @@ Once that's done, the `BundledFiles` route can be included in your Path.
 
 (You need to explicitly pass the bundle the files are in so that Meridian looks for the files in the correct place.)
 
+If `Bundle.module` is not available, SPM isn't able to find your resources and didn't generate the `module` static variable.
+
 The URL `http://localhost:3000/styles.css` should now deliver your CSS file.
 
 When it comes to deployment, the [default Heroku buildpack](https://github.com/vapor-community/heroku-buildpack) should copy the resources into the right place.
