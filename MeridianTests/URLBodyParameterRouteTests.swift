@@ -69,28 +69,6 @@ struct MultipleBodyParameterRoute: Responder {
     }
 }
 
-struct OptionalFlagBodyParameterRoute: Responder {
-    
-    @URLBodyParameter("flag") var flag: Present?
-    
-    func execute() throws -> Response {
-        if flag.isPresent {
-            return "The flag was present"
-        } else {
-            return "The flag was missing"
-        }
-    }
-}
-
-struct RequiredFlagBodyParameterRoute: Responder {
-
-    @URLBodyParameter("flag") var flag: Present
-
-    func execute() throws -> Response {
-        "The flag is required to get to here"
-    }
-}
-
 class URLBodyParameterRouteTests: XCTestCase {
 
     let headers = ["Content-Type": "application/x-www-form-urlencoded"]
@@ -109,10 +87,6 @@ class URLBodyParameterRouteTests: XCTestCase {
                 .on("/optional_with_default"),
             MultipleBodyParameterRoute()
                 .on("/multiple_parameter"),
-            OptionalFlagBodyParameterRoute()
-                .on("/optional_flag"),
-            RequiredFlagBodyParameterRoute()
-                .on("/required_flag"),
         ])
     }
 
@@ -221,7 +195,7 @@ class URLBodyParameterRouteTests: XCTestCase {
 
         let response = try world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
-        XCTAssertEqual(response.bodyString, "The endpoint expects a query parameter named \"note\" to decode to type MusicNote.")
+        XCTAssertEqual(response.bodyString, "The endpoint expects a URL encoded parameter named \"note\" to decode to type MusicNote.")
     }
     
     func testMultiple() throws {
@@ -258,54 +232,6 @@ class URLBodyParameterRouteTests: XCTestCase {
         let response = try world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note was present and is A")
-    }
-    
-    func testOptionalFlagPresent() throws {
-        
-        let world = try self.makeWorld()
-        
-        let request = HTTPRequestBuilder(uri: "/optional_flag", method: .GET, headers: headers, bodyString: "flag")
-        try world.send(request)
-
-        let response = try world.receive()
-        XCTAssertEqual(response.statusCode, .ok)
-        XCTAssertEqual(response.bodyString, "The flag was present")
-    }
-    
-    func testOptionalFlagMissing() throws {
-        
-        let world = try self.makeWorld()
-        
-        let request = HTTPRequestBuilder(uri: "/optional_flag", method: .GET, headers: headers, bodyString: "")
-        try world.send(request)
-
-        let response = try world.receive()
-        XCTAssertEqual(response.statusCode, .ok)
-        XCTAssertEqual(response.bodyString, "The flag was missing")
-    }
-
-    func testRequiredFlagWithUnneededValue() throws {
-        
-        let world = try self.makeWorld()
-        
-        let request = HTTPRequestBuilder(uri: "/required_flag", method: .GET, headers: headers, bodyString: "flag=this_is_discarded")
-        try world.send(request)
-
-        let response = try world.receive()
-        XCTAssertEqual(response.statusCode, .ok)
-        XCTAssertEqual(response.bodyString, "The flag is required to get to here")
-    }
-    
-    func testRequiredFlagMissing() throws {
-        
-        let world = try self.makeWorld()
-        
-        let request = HTTPRequestBuilder(uri: "/required_flag", method: .GET, headers: headers, bodyString: "")
-        try world.send(request)
-
-        let response = try world.receive()
-        XCTAssertEqual(response.statusCode, .badRequest)
-        XCTAssertEqual(response.bodyString, "The endpoint expects a URL body parameter named \"flag\", but it was missing.")
     }
     
     func testNotMatching() throws {
