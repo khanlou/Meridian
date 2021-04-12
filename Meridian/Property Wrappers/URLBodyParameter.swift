@@ -74,7 +74,7 @@ public struct URLBodyParameter<Type: Decodable>: PropertyWrapper {
 
         let kvPairs = body.split(separator: "&")
         for kv in kvPairs {
-            let pair = kv.split(separator: "=", maxSplits: 1)
+            let pair = kv.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false)
             if pair.count == 2 {
                 let innerKey = pair[0]
                 let value = pair[1]

@@ -17,6 +17,12 @@ struct HTTPRequestBuilder {
     let method: NIOHTTP1.HTTPMethod
     let headers: [String: String]
     let bodyData: Data
+
+    init(uri: String, method: NIOHTTP1.HTTPMethod, headers: [String: String] = [:], bodyString: String) {
+        let data = bodyString.data(using: .utf8) ?? Data()
+        self.init(uri: uri, method: method, headers: headers, bodyData: data)
+    }
+
     
     init(uri: String, method: NIOHTTP1.HTTPMethod, headers: [String: String] = [:], bodyData: Data = Data()) {
         self.uri = uri
