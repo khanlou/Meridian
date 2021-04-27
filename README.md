@@ -11,7 +11,7 @@ struct SampleEndpoint: Responder {
   
     @URLParameter(\.id) var userID
     
-    @EnivronmentObject var database: Database
+    @EnvironmentObject var database: Database
     
     func body() throws {
         JSON(database.fetchFollowers(of: userID, sortDirection: sortDirection))
@@ -21,7 +21,6 @@ struct SampleEndpoint: Responder {
 
 Server(errorRenderer: BasicErrorRenderer())
     .register {
-
         SampleEndpoint()
             .on("/api/users/\(\.id))/followers")
 
