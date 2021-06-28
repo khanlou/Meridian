@@ -17,7 +17,7 @@ final class Router {
         self.defaultErrorRenderer = defaultErrorRenderer
     }
 
-    func register(prefix: String, errorRenderer: ErrorRenderer?, _ routes: [Route]) {
+    func register(prefix: String, errorRenderer: ErrorRenderer?, _ routes: @escaping () -> [Route]) {
         routesByPrefix[prefix, default: RouteGroup()].append(contentsOf: routes)
         if let errorRenderer = errorRenderer {
             self.routesByPrefix[prefix, default: RouteGroup()].customErrorRenderer = errorRenderer
@@ -37,7 +37,7 @@ final class Router {
             if header.path.hasPrefix(prefix) {
                 errorHandlerBestGuess = routeGroup.customErrorRenderer ?? defaultErrorRenderer
                 header.path.removeFirst(prefix.count)
-                for route in routeGroup.routes {
+                for route in routeGroup.makeAllRoutes() {
                     if let matchedRoute = route.matcher.matches(header) {
                         return ((route.responder, matchedRoute), errorHandlerBestGuess)
                     }
@@ -60,7 +60,7 @@ final class Router {
                 var header = try RequestHeader(method: method, uri: path, headers: [])
                 if header.path.hasPrefix(prefix) {
                     header.path.removeFirst(prefix.count)
-                    for route in routeGroup.routes {
+                    for route in routeGroup.makeAllRoutes() {
                         if route.matcher.matches(header) != nil {
                             matchingMethods.insert(method)
                         }

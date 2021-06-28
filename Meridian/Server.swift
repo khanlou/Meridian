@@ -22,7 +22,7 @@ struct ServeOptions: ParsableArguments {
 
 struct RouteGroup: ExpressibleByArrayLiteral {
 
-    var routes: [Route]
+    var routes: [() -> [Route]]
     var customErrorRenderer: ErrorRenderer?
 
     init() {
@@ -31,18 +31,21 @@ struct RouteGroup: ExpressibleByArrayLiteral {
     }
 
     init(arrayLiteral elements: Route...) {
-        self.routes = elements
+        self.routes = [{ elements }]
         self.customErrorRenderer = nil
     }
 
     mutating func append(_ route: Route) {
-        self.routes.append(route)
+        self.routes.append({ [route] })
     }
 
-    mutating func append(contentsOf routes: [Route]) {
-        self.routes.append(contentsOf: routes)
+    mutating func append(contentsOf routes: @escaping () -> [Route]) {
+        self.routes.append(routes)
     }
 
+    func makeAllRoutes() -> [Route] {
+        routes.flatMap({ $0() })
+    }
 }
 
 public final class Server {
@@ -59,14 +62,14 @@ public final class Server {
     }
 
     @discardableResult
-    public func register(errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: () -> [Route]) -> Self {
-        self.router.register(prefix: "", errorRenderer: errorRenderer, builder())
+    public func register(errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [Route]) -> Self {
+        self.router.register(prefix: "", errorRenderer: errorRenderer, builder)
         return self
     }
 
     @discardableResult
-    public func group(prefix: String, errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: () -> [Route]) -> Self {
-        self.router.register(prefix: prefix, errorRenderer: errorRenderer, builder())
+    public func group(prefix: String, errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [Route]) -> Self {
+        self.router.register(prefix: prefix, errorRenderer: errorRenderer, builder)
         return self
     }
 

@@ -143,7 +143,7 @@ final class World {
 
     init(routes: [Route]) throws {
         var routeGroup = RouteGroup()
-        routeGroup.append(contentsOf: routes)
+        routeGroup.append(contentsOf: { routes })
         let handler = HTTPHandler(routesByPrefix: ["": routeGroup], errorRenderer: BasicErrorRenderer())
 
         let channel = EmbeddedChannel()
