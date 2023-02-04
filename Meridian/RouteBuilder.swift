@@ -23,7 +23,7 @@ extension Responder {
     }
 }
 
-@_functionBuilder
+@resultBuilder
 public struct RouteBuilder {
     public static func buildBlock(_ routes: Route...) -> [Route] {
         return routes
