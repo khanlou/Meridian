@@ -1,4 +1,4 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.7
 import PackageDescription
 
 let package = Package(
@@ -13,7 +13,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.3.0"),
     ],
     targets: [
-        .target(name: "Demo", dependencies: [
+        .executableTarget(name: "Demo", dependencies: [
             .target(name: "Meridian"),
             .product(name: "Backtrace", package: "swift-backtrace"),
         ], path: "Demo"),
