@@ -30,4 +30,9 @@ public final class EnvironmentValues {
             storage[ObjectIdentifier(key)] = newValue
         }
     }
+
+    public func object<MyType>(ofType: MyType.Type) -> MyType? {
+        storage[ObjectIdentifier(MyType.self)] as? MyType
+    }
+
 }

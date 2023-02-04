@@ -13,11 +13,13 @@ public struct RequestContext {
     public let header: RequestHeader
     public let matchedRoute: MatchedRoute
     public let postBody: Data
+    public let environment: EnvironmentValues
 
     public init(header: RequestHeader, matchedRoute: MatchedRoute, postBody: Data = Data()) {
         self.header = header
         self.matchedRoute = matchedRoute
         self.postBody = postBody
+        self.environment = EnvironmentValues.shared
     }
 
     public var queryParameters: [URLQueryItem] {
