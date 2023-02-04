@@ -51,7 +51,7 @@ final class JSONBodyRouteTests: XCTestCase {
         ])
     }
 
-    func testBasic() throws {
+    func testBasic() async throws {
         
         let world = try self.makeWorld()
 
@@ -69,12 +69,12 @@ final class JSONBodyRouteTests: XCTestCase {
         
         try world.send(HTTPRequestBuilder(uri: "/json_body", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The ints are [3, 8, 13]")
     }
     
-    func testMissingHeader() throws {
+    func testMissingHeader() async throws {
         
         let world = try self.makeWorld()
 
@@ -92,12 +92,12 @@ final class JSONBodyRouteTests: XCTestCase {
         
         try world.send(HTTPRequestBuilder(uri: "/json_body", method: .POST, headers: [:], bodyData: data))
         
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint requires a JSON body and a \"Content-Type\" of \"application/json\".")
     }
     
-    func testBadMethod() throws {
+    func testBadMethod() async throws {
         
         let world = try self.makeWorld()
 
@@ -115,12 +115,12 @@ final class JSONBodyRouteTests: XCTestCase {
         
         try world.send(HTTPRequestBuilder(uri: "/json_body", method: .GET, headers: ["Content-Type": "application/json"], bodyData: data))
         
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a body and a method of POST. However, it received a GET.")
     }
     
-    func testBadJSON() throws {
+    func testBadJSON() async throws {
         
         let world = try self.makeWorld()
 
@@ -138,34 +138,34 @@ final class JSONBodyRouteTests: XCTestCase {
         
         try world.send(HTTPRequestBuilder(uri: "/json_body", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
         
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects JSON with a value at the objects[0].thing, but it was missing.")
     }
     
-    func testMissingBody() throws {
+    func testMissingBody() async throws {
         
         let world = try self.makeWorld()
 
         try world.send(HTTPRequestBuilder(uri: "/json_body", method: .POST, headers: ["Content-Type": "application/json"], bodyData: Data()))
         
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a JSON body.")
     }
 
-    func testOptionalBodyMissing() throws {
+    func testOptionalBodyMissing() async throws {
 
         let world = try self.makeWorld()
 
         try world.send(HTTPRequestBuilder(uri: "/optional_json_body", method: .POST, headers: ["Content-Type": "application/json"], bodyData: Data()))
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The value is missing")
     }
 
-    func testOptionalBodyPresent() throws {
+    func testOptionalBodyPresent() async throws {
 
         let world = try self.makeWorld()
 
@@ -182,7 +182,7 @@ final class JSONBodyRouteTests: XCTestCase {
 
         try world.send(HTTPRequestBuilder(uri: "/optional_json_body", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The value is present and the ints are [8, 13]")
     }

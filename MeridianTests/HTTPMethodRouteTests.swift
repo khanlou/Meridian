@@ -28,7 +28,7 @@ final class HTTPMethodRouteTests: XCTestCase {
         ])
     }
 
-    func testRandomly() throws {
+    func testRandomly() async throws {
 
         let world = try self.makeWorld()
 
@@ -36,7 +36,7 @@ final class HTTPMethodRouteTests: XCTestCase {
 
         try world.send(HTTPRequestBuilder(uri: "/method", method: NIOHTTP1.HTTPMethod(rawValue: method.name)))
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The method was \(method)")
     }

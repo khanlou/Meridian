@@ -79,68 +79,68 @@ final class HTTPHandler: ChannelInboundHandler {
             }
 
             let channel = context.channel
-
-            var errorRenderer = router.defaultErrorRenderer
-
-            do {
+            Task {
+                var errorRenderer = self.router.defaultErrorRenderer
                 print("Request: \(head.method.rawValue) \(head.uri)")
-
-                let header = try RequestHeader(
-                    method: HTTPMethod(name: head.method.rawValue),
-                    uri: head.uri,
-                    headers: head.headers.map({ ($0, $1) })
-                )
-
-                let results: (Responder, MatchedRoute)?
-                (results, errorRenderer) = router.route(for: header)
-
-                guard let (route, matchedRoute) = results else {
-                    throw NoRouteFound()
-                }
-
-                let requestContext = RequestContext(
-                    header: header,
-                    matchedRoute: matchedRoute,
-                    postBody: body
-                )
-
-                var errors: [Error] = []
-
-                let m = Mirror(reflecting: route)
-                for (_, child) in m.children {
-                    if let prop = child as? PropertyWrapper {
-                        prop.update(requestContext, errors: &errors)
-                    }
-                }
-
-                if let firstError = errors.first {
-
-                    let response = try errorRenderer.render(primaryError: firstError, context: ErrorsContext(allErrors: errors))
-
-                    try send(response, head.version, to: channel)
-
-                } else {
-
-                    try route.validate()
-
-                    let response = try route.execute()
-
-                    try send(response, head.version, to: channel)
-                }
-
-            } catch {
-
                 do {
-                    let response = try errorRenderer.render(primaryError: error, context: ErrorsContext(error: error))
-                    try send(response, head.version, to: channel)
+                    
+                    let header = try RequestHeader(
+                        method: HTTPMethod(name: head.method.rawValue),
+                        uri: head.uri,
+                        headers: head.headers.map({ ($0, $1) })
+                    )
+                    
+                    let results: (Responder, MatchedRoute)?
+                    (results, errorRenderer) = router.route(for: header)
+                    
+                    guard let (route, matchedRoute) = results else {
+                        throw NoRouteFound()
+                    }
+                    
+                    let requestContext = RequestContext(
+                        header: header,
+                        matchedRoute: matchedRoute,
+                        postBody: body
+                    )
+                    
+                    var errors: [Error] = []
+                    
+                    let m = Mirror(reflecting: route)
+                    for (_, child) in m.children {
+                        if let prop = child as? PropertyWrapper {
+                            await prop.update(requestContext, errors: &errors)
+                        }
+                    }
+                    
+                    if let firstError = errors.first {
+                        
+                        let response = try await errorRenderer.render(primaryError: firstError, context: ErrorsContext(allErrors: errors))
+                        
+                        try await send(response, head.version, to: channel)
+                        
+                    } else {
+                        
+                        try await route.validate()
+                        
+                        let response = try await route.execute()
+                        
+                        try await send(response, head.version, to: channel)
+                    }
+                    
                 } catch {
-                    _ = channel.close()
+                    
+                    do {
+                        let response = try await errorRenderer.render(primaryError: error, context: ErrorsContext(error: error))
+                        try await send(response, head.version, to: channel)
+                    } catch {
+                        _ = try await channel.close()
+                    }
                 }
             }
         }
     }
 
-    fileprivate func send(_ response: Response, _ version: HTTPVersion, to channel: Channel) throws {
+    fileprivate func send(_ response: Response, _ version: HTTPVersion, to channel: Channel) async throws {
         var statusCode = StatusCode.ok
         var additionalHeaders: [String: String] = [:]
         if let responseWithDetails = response as? ResponseDetails {
@@ -155,21 +155,19 @@ final class HTTPHandler: ChannelInboundHandler {
 
         let part = HTTPServerResponsePart.head(head)
 
-        let future = channel.write(part)
+        _ = channel.write(part)
 
         var buffer = channel.allocator.buffer(capacity: 100)
         buffer.writeBytes(try response.body())
 
         let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
-        let future2 = channel.write(bodyPart)
+        _ = channel.write(bodyPart)
 
         let endPart = HTTPServerResponsePart.end(nil)
-        let future3 = channel.writeAndFlush(endPart)
+        _ = try await channel.writeAndFlush(endPart)
 
-        _ = future.and(future2).and(future3)
-            .flatMap({ (_) -> EventLoopFuture<Void> in
-                channel.close()
-            })
+        try await channel.close()
+        print("done!")
     }
 
 }

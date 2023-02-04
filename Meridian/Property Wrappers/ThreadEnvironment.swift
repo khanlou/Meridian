@@ -26,5 +26,5 @@ class ParameterStorage<T> {
 }
 
 protocol PropertyWrapper {
-    func update(_ requestContext: RequestContext, errors: inout [Error])
+    func update(_ requestContext: RequestContext, errors: inout [Error]) async
 }
