@@ -16,7 +16,7 @@ public protocol Responder {
 }
 
 extension Responder {
-    public func validate() throws{
-        
+    public func validate() throws {
+
     }
 }
