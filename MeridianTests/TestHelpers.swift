@@ -165,7 +165,7 @@ final class World {
 //        }
 //        try await channel.closeFuture.get()
 
-        try await Task.sleep(nanoseconds: 200_000) // one microsecond?
+        try await Task.sleep(nanoseconds: 200_000) // 0.2ms
 
         return try HTTPResponseReader(
             head: try channel.readOutbound(),
