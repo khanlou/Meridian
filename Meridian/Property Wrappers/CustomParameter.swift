@@ -11,14 +11,14 @@ public protocol ParameterizedExtractor {
     associatedtype Output
     associatedtype Parameters
 
-    static func extract(from context: RequestContext, parameters: Parameters) throws -> Output
+    static func extract(from context: RequestContext, parameters: Parameters) async throws -> Output
 
 }
 
 public protocol NonParameterizedExtractor {
     associatedtype Output
 
-    static func extract(from context: RequestContext) throws -> Output
+    static func extract(from context: RequestContext) async throws -> Output
 
 }
 
@@ -33,9 +33,9 @@ public struct CustomWithParameters<Extractor: ParameterizedExtractor>: PropertyW
 
     @ParameterStorage var finalValue: Extractor.Output
 
-    func update(_ requestContext: RequestContext, errors: inout [Error]) {
+    func update(_ requestContext: RequestContext, errors: inout [Error]) async {
         do {
-            self.finalValue = try Extractor.extract(from: requestContext, parameters: parameters)
+            self.finalValue = try await Extractor.extract(from: requestContext, parameters: parameters)
         } catch let error as ReportableError {
             errors.append(error)
         } catch {
@@ -55,9 +55,9 @@ public struct Custom<Extractor: NonParameterizedExtractor>: PropertyWrapper {
 
     @ParameterStorage var finalValue: Extractor.Output
 
-    func update(_ requestContext: RequestContext, errors: inout [Error]) {
+    func update(_ requestContext: RequestContext, errors: inout [Error]) async {
         do {
-            self.finalValue = try Extractor.extract(from: requestContext)
+            self.finalValue = try await Extractor.extract(from: requestContext)
         } catch let error as ReportableError {
             errors.append(error)
         } catch {

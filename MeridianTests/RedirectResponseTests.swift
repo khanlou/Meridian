@@ -26,14 +26,14 @@ final class RedirectRouteTests: XCTestCase {
         ])
     }
 
-    func testBasic() throws {
+    func testBasic() async throws {
         
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/redirect", method: .GET)
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssert(response.headers.contains(where: { $0.name == "Location" && $0.value == "https://example.com" }))
         XCTAssertEqual(response.statusCode, .temporaryRedirect)
         XCTAssertEqual(response.bodyString, "")

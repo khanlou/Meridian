@@ -90,157 +90,157 @@ class URLBodyParameterRouteTests: XCTestCase {
         ])
     }
 
-    func testString() throws {
+    func testString() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/string", method: .GET, headers: headers, bodyString: "name=testing")
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The name is testing")
     }
 
-    func testEmptyStringIsValidValue() throws {
+    func testEmptyStringIsValidValue() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/string", method: .GET, headers: headers, bodyString: "name=")
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The name is ")
     }
 
-    func testMissingHeaders() throws {
+    func testMissingHeaders() async throws {
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/string", method: .GET, bodyString: "name=testing")
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint requires a URL-encoded body and a \"Content-Type\" of \"application/x-www-form-urlencoded\".")
 
     }
     
-    func testInt() throws {
+    func testInt() async throws {
         
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/int", method: .GET, headers: headers, bodyString: "number=451")
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The number + 1 is 452")
     }
     
-    func testIntFailing() throws {
+    func testIntFailing() async throws {
         
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/int", method: .GET, headers: headers, bodyString: "number=456a")
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a URL encoded parameter named \"number\" to decode to type Int.")
     }
     
-    func testCustomType() throws {
+    func testCustomType() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/play", method: .GET, headers: headers, bodyString: "note=B")
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note is B")
     }
 
-    func testOptionalCustomTypeWithDefaultPresent() throws {
+    func testOptionalCustomTypeWithDefaultPresent() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/optional_with_default", method: .GET, headers: headers, bodyString: "note=B")
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note was B")
     }
 
-    func testOptionalCustomTypeWithDefaultMissing() throws {
+    func testOptionalCustomTypeWithDefaultMissing() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/optional_with_default", method: .GET, headers: headers, bodyString: "")
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note was E")
     }
 
-    func testCustomTypeFails() throws {
+    func testCustomTypeFails() async throws {
         
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/play", method: .GET, headers: headers, bodyString: "note=H")
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a URL encoded parameter named \"note\" to decode to type MusicNote.")
     }
     
-    func testMultiple() throws {
+    func testMultiple() async throws {
         
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/multiple_parameter", method: .GET, headers: headers, bodyString: "note=F&number=30")
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note is F and the number+3 is 33")
     }
     
-    func testOptionalMissing() throws {
+    func testOptionalMissing() async throws {
         
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/play_optional", method: .GET, headers: headers, bodyString: "")
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note was not included")
     }
     
-    func testOptionalPresent() throws {
+    func testOptionalPresent() async throws {
         
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/play_optional", method: .GET, headers: headers, bodyString: "note=A")
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The note was present and is A")
     }
     
-    func testNotMatching() throws {
+    func testNotMatching() async throws {
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/not_found", method: .GET, headers: headers, bodyString: "")
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .notFound)
         XCTAssertEqual(response.bodyString, "No matching route was found.")
     }

@@ -9,14 +9,14 @@ import Foundation
 
 public protocol Responder {
 
-    func validate() throws
+    func validate() async throws
 
-    func execute() throws -> Response
+    func execute() async throws -> Response
 
 }
 
 extension Responder {
-    public func validate() throws {
+    public func validate() async throws {
 
     }
 }

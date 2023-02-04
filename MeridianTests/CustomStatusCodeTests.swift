@@ -27,13 +27,13 @@ final class CustomStatusCodeRouteTests: XCTestCase {
         ])
     }
     
-    func testBasic() throws {
+    func testBasic() async throws {
         
         let world = try self.makeWorld()
         
         try world.send(HTTPRequestBuilder(uri: "/statusCode", method: .GET))
 
-        let response = try world.receive()
+        let response = try await world.receive()
 
         XCTAssertEqual(response.statusCode, .imATeapot)
         XCTAssertEqual(response.bodyString, "Hello")

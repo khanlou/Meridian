@@ -27,13 +27,13 @@ final class CustomResponseHeaderTests: XCTestCase {
         ])
     }
     
-    func testBasic() throws {
+    func testBasic() async throws {
         
         let world = try self.makeWorld()
         
         try world.send(HTTPRequestBuilder(uri: "/customHeader", method: .GET))
 
-        let response = try world.receive()
+        let response = try await world.receive()
 
         XCTAssertEqual(response.headers.first(where: { name, value in name == "X-Custom-Header"})?.value, "testing2", "The last header in the stack should win.")
         XCTAssertEqual(response.bodyString, "Hello")

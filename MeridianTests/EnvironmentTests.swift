@@ -79,24 +79,24 @@ final class EnvironmentTests: XCTestCase {
         ])
     }
 
-    func testEnvironmentKeys() throws {
+    func testEnvironmentKeys() async throws {
         
         let world = try self.makeWorld()
 
         try world.send(HTTPRequestBuilder(uri: "/environmentKey", method: .GET))
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "three hundred forty-three")
     }
     
-    func testEnivironmentObjects() throws {
+    func testEnivironmentObjects() async throws {
         
         let world = try self.makeWorld()
         
         try world.send(HTTPRequestBuilder(uri: "/environmentObject", method: .GET))
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "[{\"label\":\"Finish environment property wrappers\",\"done\":true},{\"label\":\"Implement an endpoint with a \\\"database\\\"\",\"done\":true},{\"label\":\"Profit!\",\"done\":false}]")
     }

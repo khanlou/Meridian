@@ -26,13 +26,13 @@ final class JSONResponseRouteTests: XCTestCase {
         ])
     }
 
-    func testBasic() throws {
+    func testBasic() async throws {
         
         let world = try self.makeWorld()
         
         try world.send(HTTPRequestBuilder(uri: "/customJSON", method: .GET))
         
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssert(response.headers.contains(where: { $0.name == "Content-Type" && $0.value == "application/json" }))
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "{\"objects\":[{\"thing\":3}]}")

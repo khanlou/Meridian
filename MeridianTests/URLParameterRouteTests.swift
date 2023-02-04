@@ -80,121 +80,121 @@ class URLParameterRouteTests: XCTestCase {
         ])
     }
 
-    func testString() throws {
+    func testString() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/string/456", method: .GET)
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The ID is 456")
     }
 
-    func testInt() throws {
+    func testInt() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/int/789", method: .GET)
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The ID+1 is 790")
     }
 
-    func testIntLike() throws {
+    func testIntLike() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/int/like", method: .GET)
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "This is a different request")
     }
 
-    func testIntFailing() throws {
+    func testIntFailing() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/int/456a", method: .GET)
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .notFound)
         XCTAssertEqual(response.bodyString, "No matching route was found.")
     }
 
-    func testCustomType() throws {
+    func testCustomType() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/letter/B", method: .GET)
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The letter grade is B")
     } 
 
-    func testCustomTypeFails() throws {
+    func testCustomTypeFails() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/letter/E", method: .GET)
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .notFound)
         XCTAssertEqual(response.bodyString, "No matching route was found.") // Ideally, this would be a .badRequest with more detail about why it doesn't match
     }
 
-    func testMultipleParametersSucceeds() throws {
+    func testMultipleParametersSucceeds() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/int/835/letter/D", method: .GET)
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The ID+2 is 837 and the letter is D")
     }
 
-    func testMultipleParametersFails() throws {
+    func testMultipleParametersFails() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/int/835/letter/E", method: .GET)
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .notFound)
         XCTAssertEqual(response.bodyString, "No matching route was found.")
     }
 
-    func testNoURLParameters() throws {
+    func testNoURLParameters() async throws {
 
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/sample", method: .GET)
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "This is a sample request with no url parameters.")
     }
 
-    func testNotMatching() throws {
+    func testNotMatching() async throws {
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/not_found", method: .GET)
         try world.send(request)
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .notFound)
         XCTAssertEqual(response.bodyString, "No matching route was found.")
     }

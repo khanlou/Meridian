@@ -28,14 +28,14 @@ final class HeaderRouteTests: XCTestCase {
         ])
     }
 
-    func testRandomly() throws {
+    func testRandomly() async throws {
 
         let world = try self.makeWorld()
 
         let string = makeRandomString()
         try world.send(HTTPRequestBuilder(uri: "/header", method: .GET, headers: ["X-Custom-Header": string]))
 
-        let response = try world.receive()
+        let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
         XCTAssertEqual(response.bodyString, "The header was \(string)")
     }

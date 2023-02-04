@@ -12,7 +12,7 @@ final class RoutingTests: XCTestCase {
     
     let nonGETMethods = HTTPMethod.primaryMethods.filter({ $0 != .GET })
         
-    func testBasic() throws {
+    func testBasic() async throws {
         let matcher = RouteMatcher.path("/testing")
 
         try XCTAssertNotNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing", headers: [])))
@@ -21,7 +21,7 @@ final class RoutingTests: XCTestCase {
         try XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testingg", headers: [])))
     }
 
-    func testTrailingSlashes() throws{
+    func testTrailingSlashes() async throws{
         let matcher = RouteMatcher.path("/testing/")
         let matcher2 = RouteMatcher.path("/testing")
         let matcher3 = RouteMatcher.path("testing")
@@ -35,7 +35,7 @@ final class RoutingTests: XCTestCase {
         try XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testin", headers: [])))
     }
 
-    func testStringLiterals() throws {
+    func testStringLiterals() async throws {
         let matcher: RouteMatcher = "/testing"
         
         try XCTAssertNotNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing", headers: [])))
@@ -44,7 +44,7 @@ final class RoutingTests: XCTestCase {
         try XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testingg", headers: [])))
     }
     
-    func testSpecificMatcher() throws {
+    func testSpecificMatcher() async throws {
         let matcher = RouteMatcher.get(.path("/testing"))
         
         try XCTAssertNotNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing", headers: [])))
@@ -53,13 +53,13 @@ final class RoutingTests: XCTestCase {
         try XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testingg", headers: [])))
     }
     
-    func testAny() throws {
+    func testAny() async throws {
         let matcher = RouteMatcher.any
         
         try XCTAssertNotNil(matcher.matches(RequestHeader(method: HTTPMethod.primaryMethods.randomElement()!, uri: "/" + makeRandomString(), headers: [])))
     }
     
-    func testMultipleMatchers() throws {
+    func testMultipleMatchers() async throws {
         let matcher: RouteMatcher = [
             .get("/hello"),
             .post("/hi"),
@@ -72,7 +72,7 @@ final class RoutingTests: XCTestCase {
         try XCTAssertNil(matcher.matches(RequestHeader(method: nonGETMethods.randomElement()!, uri: "/" + makeRandomString(), headers: [])))
     }
     
-    func testURLParameters() throws {
+    func testURLParameters() async throws {
         let matcher: RouteMatcher = "/testing/\(\.tester)"
         
         let matchedRoute = try matcher.matches(RequestHeader(method: .GET, uri: "/testing/123", headers: []))
@@ -85,7 +85,7 @@ final class RoutingTests: XCTestCase {
         try XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing/123/456", headers: [])))
     }
     
-    func testTwoURLParameters() throws {
+    func testTwoURLParameters() async throws {
         let matcher: RouteMatcher = "/testing/\(\.tester)/sub/\(\.secondTester)"
         
         let matchedRoute = try matcher.matches(RequestHeader(method: .GET, uri: "/testing/123/sub/hello", headers: []))
@@ -100,7 +100,7 @@ final class RoutingTests: XCTestCase {
         try XCTAssertNil(matcher.matches(RequestHeader(method: .GET, uri: "/testing/123/456", headers: [])))
     }
 
-    func testTwoURLParametersWithNonNormalSlashes() throws {
+    func testTwoURLParametersWithNonNormalSlashes() async throws {
         let matcher: RouteMatcher = "/testing/\(\.tester)/sub/\(\.secondTester)"
         let matcher2: RouteMatcher = "testing/\(\.tester)/sub/\(\.secondTester)"
         let matcher3: RouteMatcher = "/testing/\(\.tester)/sub/\(\.secondTester)/"

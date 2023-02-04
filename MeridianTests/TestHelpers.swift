@@ -158,7 +158,15 @@ final class World {
         try channel.writeInbound(request.end)
     }
 
-    func receive() throws -> HTTPResponseReader {
+    func receive() async throws -> HTTPResponseReader {
+//        while channel.isWritable {
+//            try await Task.sleep(nanoseconds: 1_000) // one microsecond?
+//            channel.embeddedEventLoop.run()
+//        }
+//        try await channel.closeFuture.get()
+
+        try await Task.sleep(nanoseconds: 200_000) // 0.2ms
+
         return try HTTPResponseReader(
             head: try channel.readOutbound(),
             body: try channel.readOutbound(),

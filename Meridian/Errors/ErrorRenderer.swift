@@ -44,7 +44,7 @@ public struct ErrorsContext {
 
 public protocol ErrorRenderer {
 
-    func render(primaryError: Error, context: ErrorsContext) throws -> Response
+    func render(primaryError: Error, context: ErrorsContext) async throws -> Response
 
 }
 
