@@ -167,7 +167,6 @@ final class HTTPHandler: ChannelInboundHandler {
         _ = try await channel.writeAndFlush(endPart)
 
         try await channel.close()
-        print("done!")
     }
 
 }
