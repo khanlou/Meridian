@@ -21,7 +21,7 @@ To create a new error renderer, you need to conform to the `ErrorRenderer` proto
 
     protocol ErrorRenderer {
 
-        func render(primaryError: Error, context: ErrorsContext) throws -> Response
+        func render(primaryError: Error, context: ErrorsContext) async throws -> Response
 
     }
 
@@ -37,7 +37,7 @@ As an example, Meridian's `JSONErrorRenderer` looks like this:
 
     struct JSONErrorRenderer: ErrorRenderer {
 
-        func render(primaryError error: Error, context: ErrorsContext) throws -> Response {
+        func render(primaryError error: Error, context: ErrorsContext) async throws -> Response {
             return JSON(ErrorContainer(errors: context.errorMessages))
                 .statusCode(context.statusCode)
         }

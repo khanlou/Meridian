@@ -8,7 +8,7 @@ Here's how you can extract URL body parameters:
     
         @URLBodyParameter("name") var name: String
     
-        func execute() throws -> Response {
+        func execute() async throws -> Response {
             "Hello, \(name)!"
         }
     }
@@ -55,7 +55,7 @@ Using a non-optional value here means the flag must be present for the request t
 
 If it is optional, two helpers are available, `isPresent` and `isNotPresent`:
 
-    func execute() throws -> Response {
+    func execute() async throws -> Response {
         if favorited.isPresent {
             return "Showing favorites!"
         } else {

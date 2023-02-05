@@ -14,7 +14,7 @@ To decode a JSON body, create a codable type and use the `@JSONBody` property wr
         
         @JSONBody var trip: Trip
         
-        public func execute() throws -> Response {
+        public func execute() async throws -> Response {
             "Flying from \(trip.departure) to \(trip.destination)!"
         }
     }

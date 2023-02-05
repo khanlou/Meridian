@@ -70,7 +70,7 @@ Now, you can use your database in a Responder:
         
         @EnvironmentObject var database: Database
     
-        public func execute() throws -> Response {
+        public func execute() async throws -> Response {
             return try JSON(database.fetchAllUsers())
         }
     }

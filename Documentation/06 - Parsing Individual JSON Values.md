@@ -8,7 +8,7 @@ If you want to parse the whole post body at once, `@JSONBody` is the property wr
         @JSONValue("completed") var completed: Bool?
         @JSONValue("order") var order: Int?
         
-        func execute() throws -> Response {
+        func execute() async throws -> Response {
             if let newTitle = title {
                 // update title
             }

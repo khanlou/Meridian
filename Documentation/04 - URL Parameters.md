@@ -15,7 +15,7 @@ URL parameters are slightly more complex than query parameters in Meridian. This
     
         @URLParameter(\.invoiceID) var id
         
-        func execute() throws {
+        func execute() async throws {
             "Showing invoice with ID \(id)."
         }
     }

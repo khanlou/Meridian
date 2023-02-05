@@ -8,7 +8,7 @@ Here is a minimal Meridian server.
     Backtrace.install()
     
     struct HelloWorld: Responder {
-        func execute() throws -> Response {
+        func execute() async throws -> Response {
             "Hello, world!"
         }
     }
@@ -34,7 +34,7 @@ Install Backtrace. This will ensure that any crashes will be logged.
 Create your first responder:
 
     struct HelloWorld: Responder {
-        func execute() throws -> Response {
+        func execute() async throws -> Response {
             "Hello, world!"
         }
     }

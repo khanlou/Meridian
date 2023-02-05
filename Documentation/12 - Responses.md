@@ -12,7 +12,7 @@ To render JSON, simply wrap your codable value in the `JSON` response:
     
         @EnvironmentObject var database: Database
     
-        func execute() throws -> Response {
+        func execute() async throws -> Response {
             try JSON(database.listTodos())
         }
     }
@@ -29,7 +29,7 @@ Some requests should return an empty body with a status code of 204 No Content. 
     
         @EnvironmentObject var database: Database
     
-        func execute() throws -> Response {
+        func execute() async throws -> Response {
             database.removeTodo(withID: id)
             return EmptyResponse()
         }
@@ -53,7 +53,7 @@ Sometimes it can be convenient to return a simple string for a response. Swift's
 
 If you need to change the status code or add additional headers, you can use SwiftUI-style modifiers to attach them.
 
-    func execute() throws -> Response {
+    func execute() async throws -> Response {
         try JSON(database.listTodos())
             .statusCode(.imATeapot)
             .additionalHeaders(["Access-Control-Allow-Origin": "*"])

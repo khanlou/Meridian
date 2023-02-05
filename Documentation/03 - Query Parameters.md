@@ -8,7 +8,7 @@ Here's how you can extract query parameters:
     
         @QueryParameter("name") var name: String
     
-        func execute() throws -> Response {
+        func execute() async throws -> Response {
             "Hello, \(name)!"
         }
     }
@@ -29,7 +29,7 @@ If the query parameter is not required, you can change its type to be an optiona
 
 You will have to handle this optionality in your `execute()` function:
 
-    func execute() throws -> Response {
+    func execute() async throws -> Response {
         "Hello, \(name ?? "world")!"
     }
 
@@ -71,7 +71,7 @@ Using a non-optional value here means the flag must be present for the request t
 
 If it is optional, two helpers are available, `isPresent` and `isNotPresent`:
 
-    func execute() throws -> Response {
+    func execute() async throws -> Response {
         if favorited.isPresent {
             return "Showing favorites!"
         } else {
