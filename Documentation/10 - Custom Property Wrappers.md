@@ -16,7 +16,7 @@ For a simple example, we'll take a look at an API version, passed in via a heade
     }
     
     struct APIVersionExtractor: NonParameterizedExtractor {
-        static func extract(from context: RequestContext) throws -> User {
+        static func extract(from context: RequestContext) throws -> APIVersion? {
             let apiVersion = context.header.headers["X-API-Version"] else {
                 return nil
             }
@@ -26,7 +26,7 @@ For a simple example, we'll take a look at an API version, passed in via a heade
 
 You could use this as-is, in a property wrapper:
 
-    @Custom<APIVersionExtractor> var apiVersion // => will have type `APIVersion`
+    @Custom<APIVersionExtractor> var apiVersion // => will have type `APIVersion?`
 
 But we can make it a little nicer to use with a quick typealias:
 
@@ -34,7 +34,7 @@ But we can make it a little nicer to use with a quick typealias:
 
 And then boom:
 
-    @APIVersion var apiVersion // => will have type `APIVersion`
+    @APIVersion var apiVersion // => will have type `APIVersion?`
 
 A first-class property wrapper.
 
