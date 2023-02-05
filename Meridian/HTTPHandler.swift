@@ -88,6 +88,7 @@ final class HTTPHandler: ChannelInboundHandler {
                     
                     let header = try RequestHeader(
                         method: HTTPMethod(name: head.method.rawValue),
+                        httpVersion: head.version,
                         uri: head.uri,
                         headers: head.headers.map({ ($0, $1) })
                     )
@@ -118,7 +119,7 @@ final class HTTPHandler: ChannelInboundHandler {
 
                         let response = try await errorRenderer.render(primaryError: firstError, context: ErrorsContext(allErrors: errors))
 
-                        try await send(response, head.version, to: channel)
+                        try await send(response, requestContext.header.httpVersion, to: channel)
 
                     } else {
 
@@ -126,7 +127,7 @@ final class HTTPHandler: ChannelInboundHandler {
 
                         let response = try await route.execute()
 
-                        try await send(response, head.version, to: channel)
+                        try await send(response, requestContext.header.httpVersion, to: channel)
                     }
 
                 } catch {

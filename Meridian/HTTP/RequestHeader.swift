@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NIOHTTP1
 
 public struct UnparseableRequest: ReportableError {
     public let message = "This request was unprocessable."
@@ -15,12 +16,14 @@ public struct UnparseableRequest: ReportableError {
 
 public struct RequestHeader: CustomStringConvertible {
     public let method: HTTPMethod
+    public let httpVersion: HTTPVersion
     public let headers: Headers
 
     private var urlComponents: URLComponents
 
-    public init(method: HTTPMethod, uri: String, headers: [(String, String)]) throws {
+    public init(method: HTTPMethod, httpVersion: HTTPVersion = .http1_1, uri: String, headers: [(String, String)]) throws {
         self.method = method
+        self.httpVersion = httpVersion
         self.headers = Headers(storage: headers)
         guard let components = URLComponents(string: uri) else {
             throw UnparseableRequest()
