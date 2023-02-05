@@ -91,44 +91,44 @@ final class HTTPHandler: ChannelInboundHandler {
                         uri: head.uri,
                         headers: head.headers.map({ ($0, $1) })
                     )
-                    
+
                     let results: (Responder, MatchedRoute)?
                     (results, errorRenderer) = router.route(for: header)
-                    
+
                     guard let (route, matchedRoute) = results else {
                         throw NoRouteFound()
                     }
-                    
+
                     let requestContext = RequestContext(
                         header: header,
                         matchedRoute: matchedRoute,
                         postBody: body
                     )
-                    
+
                     var errors: [Error] = []
-                    
+
                     let m = Mirror(reflecting: route)
                     for (_, child) in m.children {
                         if let prop = child as? PropertyWrapper {
                             await prop.update(requestContext, errors: &errors)
                         }
                     }
-                    
+
                     if let firstError = errors.first {
-                        
+
                         let response = try await errorRenderer.render(primaryError: firstError, context: ErrorsContext(allErrors: errors))
-                        
+
                         try await send(response, head.version, to: channel)
-                        
+
                     } else {
-                        
+
                         try await route.validate()
-                        
+
                         let response = try await route.execute()
-                        
+
                         try await send(response, head.version, to: channel)
                     }
-                    
+
                 } catch {
                     
                     do {
