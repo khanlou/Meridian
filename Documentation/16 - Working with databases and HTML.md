@@ -54,7 +54,7 @@ Then, to make a database, make a new class, like so:
     
         let connection = try! Connection(connInfo: ProcessInfo.processInfo.environment["DATABASE_URL"] ?? "")
         
-        func fetchAllUsers() throws -> [PostedInvoice] {
+        func fetchAllUsers() throws -> [User] {
             return try connection.execute("SELECT * FROM users")
                 .decode(User.self)
         }

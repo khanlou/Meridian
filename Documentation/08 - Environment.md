@@ -19,7 +19,7 @@ You can add this to your `Server`.
     Server(errorRenderer: BasicErrorRenderer())
         .register({
             LogInRoute()
-                .on(.get("/login"))        
+                .on(.get("/login"))
         })
         .environmentObject(Database())
         .listen()

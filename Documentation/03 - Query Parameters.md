@@ -53,6 +53,8 @@ It can also support your own custom `Codable` types:
     
     @QueryParameter("sortDirection") var sortDirection: SortDirection = .ascending
 
+The above example also shows providing a default, which will use that value if the `sortDirection` is not provided.
+
 ### Presence
 
 HTTP allows query parameters with no value. These are intended to be treated as flags. For example, this is valid path and query string:
