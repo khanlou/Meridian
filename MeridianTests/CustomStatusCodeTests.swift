@@ -31,7 +31,7 @@ final class CustomStatusCodeRouteTests: XCTestCase {
         
         let world = try self.makeWorld()
         
-        try world.send(HTTPRequestBuilder(uri: "/statusCode", method: .GET))
+        try await world.send(HTTPRequestBuilder(uri: "/statusCode", method: .GET))
 
         let response = try await world.receive()
 

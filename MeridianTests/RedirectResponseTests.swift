@@ -31,7 +31,7 @@ final class RedirectRouteTests: XCTestCase {
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/redirect", method: .GET)
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssert(response.headers.contains(where: { $0.name == "Location" && $0.value == "https://example.com" }))

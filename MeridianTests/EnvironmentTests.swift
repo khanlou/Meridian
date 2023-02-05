@@ -83,7 +83,7 @@ final class EnvironmentTests: XCTestCase {
         
         let world = try self.makeWorld()
 
-        try world.send(HTTPRequestBuilder(uri: "/environmentKey", method: .GET))
+        try await world.send(HTTPRequestBuilder(uri: "/environmentKey", method: .GET))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -94,7 +94,7 @@ final class EnvironmentTests: XCTestCase {
         
         let world = try self.makeWorld()
         
-        try world.send(HTTPRequestBuilder(uri: "/environmentObject", method: .GET))
+        try await world.send(HTTPRequestBuilder(uri: "/environmentObject", method: .GET))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)

@@ -95,7 +95,7 @@ class URLBodyParameterRouteTests: XCTestCase {
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/string", method: .GET, headers: headers, bodyString: "name=testing")
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -107,7 +107,7 @@ class URLBodyParameterRouteTests: XCTestCase {
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/string", method: .GET, headers: headers, bodyString: "name=")
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -118,7 +118,7 @@ class URLBodyParameterRouteTests: XCTestCase {
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/string", method: .GET, bodyString: "name=testing")
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
@@ -131,7 +131,7 @@ class URLBodyParameterRouteTests: XCTestCase {
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/int", method: .GET, headers: headers, bodyString: "number=451")
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -143,7 +143,7 @@ class URLBodyParameterRouteTests: XCTestCase {
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/int", method: .GET, headers: headers, bodyString: "number=456a")
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
@@ -155,7 +155,7 @@ class URLBodyParameterRouteTests: XCTestCase {
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/play", method: .GET, headers: headers, bodyString: "note=B")
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -167,7 +167,7 @@ class URLBodyParameterRouteTests: XCTestCase {
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/optional_with_default", method: .GET, headers: headers, bodyString: "note=B")
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -179,7 +179,7 @@ class URLBodyParameterRouteTests: XCTestCase {
         let world = try self.makeWorld()
 
         let request = HTTPRequestBuilder(uri: "/optional_with_default", method: .GET, headers: headers, bodyString: "")
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -191,7 +191,7 @@ class URLBodyParameterRouteTests: XCTestCase {
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/play", method: .GET, headers: headers, bodyString: "note=H")
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
@@ -203,7 +203,7 @@ class URLBodyParameterRouteTests: XCTestCase {
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/multiple_parameter", method: .GET, headers: headers, bodyString: "note=F&number=30")
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -215,7 +215,7 @@ class URLBodyParameterRouteTests: XCTestCase {
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/play_optional", method: .GET, headers: headers, bodyString: "")
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -227,7 +227,7 @@ class URLBodyParameterRouteTests: XCTestCase {
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/play_optional", method: .GET, headers: headers, bodyString: "note=A")
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -238,7 +238,7 @@ class URLBodyParameterRouteTests: XCTestCase {
         let world = try self.makeWorld()
         
         let request = HTTPRequestBuilder(uri: "/not_found", method: .GET, headers: headers, bodyString: "")
-        try world.send(request)
+        try await world.send(request)
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .notFound)

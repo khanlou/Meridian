@@ -139,38 +139,30 @@ func makeRandomString() -> String {
 
 final class World {
 
-    let channel: EmbeddedChannel
+    let channel: NIOAsyncTestingChannel
 
     init(routes: [Route]) throws {
         var routeGroup = RouteGroup()
         routeGroup.append(contentsOf: { routes })
         let handler = HTTPHandler(routesByPrefix: ["": routeGroup], errorRenderer: BasicErrorRenderer())
 
-        let channel = EmbeddedChannel()
+        let channel = NIOAsyncTestingChannel()
         try channel.pipeline.addHandler(handler).wait()
 
         self.channel = channel
     }
 
-    func send(_ request: HTTPRequestBuilder) throws {
-        try channel.writeInbound(request.head)
-        try channel.writeInbound(request.body)
-        try channel.writeInbound(request.end)
+    func send(_ request: HTTPRequestBuilder) async throws {
+        try await channel.writeInbound(request.head)
+        try await channel.writeInbound(request.body)
+        try await channel.writeInbound(request.end)
     }
 
     func receive() async throws -> HTTPResponseReader {
-//        while channel.isWritable {
-//            try await Task.sleep(nanoseconds: 1_000) // one microsecond?
-//            channel.embeddedEventLoop.run()
-//        }
-//        try await channel.closeFuture.get()
-
-        try await Task.sleep(nanoseconds: 200_000) // 0.2ms
-
-        return try HTTPResponseReader(
-            head: try channel.readOutbound(),
-            body: try channel.readOutbound(),
-            end: try channel.readOutbound()
+        return try await HTTPResponseReader(
+            head: channel.waitForOutboundWrite(),
+            body: channel.waitForOutboundWrite(),
+            end: channel.waitForOutboundWrite()
         )
     }
 }

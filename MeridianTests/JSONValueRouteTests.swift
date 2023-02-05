@@ -101,7 +101,7 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        try world.send(HTTPRequestBuilder(uri: "/json_value", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+        try await world.send(HTTPRequestBuilder(uri: "/json_value", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -112,7 +112,7 @@ class JSONValueRouteTests: XCTestCase {
 
         let world = try self.makeWorld()
 
-        try world.send(HTTPRequestBuilder(uri: "/json_value", method: .POST, headers: ["Content-Type": "application/json"]))
+        try await world.send(HTTPRequestBuilder(uri: "/json_value", method: .POST, headers: ["Content-Type": "application/json"]))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
@@ -131,7 +131,7 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        try world.send(HTTPRequestBuilder(uri: "/json_value", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+        try await world.send(HTTPRequestBuilder(uri: "/json_value", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
@@ -153,7 +153,7 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        try world.send(HTTPRequestBuilder(uri: "/multiple", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+        try await world.send(HTTPRequestBuilder(uri: "/multiple", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -175,7 +175,7 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        try world.send(HTTPRequestBuilder(uri: "/multiple", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+        try await world.send(HTTPRequestBuilder(uri: "/multiple", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
@@ -197,7 +197,7 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        try world.send(HTTPRequestBuilder(uri: "/multiple", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+        try await world.send(HTTPRequestBuilder(uri: "/multiple", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
@@ -216,7 +216,7 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        try world.send(HTTPRequestBuilder(uri: "/optional", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+        try await world.send(HTTPRequestBuilder(uri: "/optional", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -236,7 +236,7 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        try world.send(HTTPRequestBuilder(uri: "/optional", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+        try await world.send(HTTPRequestBuilder(uri: "/optional", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -256,7 +256,7 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        try world.send(HTTPRequestBuilder(uri: "/optional", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+        try await world.send(HTTPRequestBuilder(uri: "/optional", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
@@ -275,7 +275,7 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        try world.send(HTTPRequestBuilder(uri: "/hi", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+        try await world.send(HTTPRequestBuilder(uri: "/hi", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -294,7 +294,7 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        try world.send(HTTPRequestBuilder(uri: "/optional_bool", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+        try await world.send(HTTPRequestBuilder(uri: "/optional_bool", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -313,7 +313,7 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        try world.send(HTTPRequestBuilder(uri: "/optional_bool", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+        try await world.send(HTTPRequestBuilder(uri: "/optional_bool", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
@@ -332,7 +332,7 @@ class JSONValueRouteTests: XCTestCase {
 
         let data = json.data(using: .utf8) ?? Data()
 
-        try world.send(HTTPRequestBuilder(uri: "/optional_bool", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+        try await world.send(HTTPRequestBuilder(uri: "/optional_bool", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)

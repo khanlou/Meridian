@@ -31,7 +31,7 @@ final class CustomResponseHeaderTests: XCTestCase {
         
         let world = try self.makeWorld()
         
-        try world.send(HTTPRequestBuilder(uri: "/customHeader", method: .GET))
+        try await world.send(HTTPRequestBuilder(uri: "/customHeader", method: .GET))
 
         let response = try await world.receive()
 

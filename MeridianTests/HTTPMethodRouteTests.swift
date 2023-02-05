@@ -34,7 +34,7 @@ final class HTTPMethodRouteTests: XCTestCase {
 
         let method = Meridian.HTTPMethod.primaryMethods.randomElement()!
 
-        try world.send(HTTPRequestBuilder(uri: "/method", method: NIOHTTP1.HTTPMethod(rawValue: method.name)))
+        try await world.send(HTTPRequestBuilder(uri: "/method", method: NIOHTTP1.HTTPMethod(rawValue: method.name)))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)

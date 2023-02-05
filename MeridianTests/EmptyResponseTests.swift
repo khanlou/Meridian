@@ -29,7 +29,7 @@ final class EmptyResponseRouteTests: XCTestCase {
         
         let world = try self.makeWorld()
         
-        try world.send(HTTPRequestBuilder(uri: "/emptyResponse", method: .GET))
+        try await world.send(HTTPRequestBuilder(uri: "/emptyResponse", method: .GET))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .noContent)

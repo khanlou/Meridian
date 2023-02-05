@@ -33,7 +33,7 @@ final class HeaderRouteTests: XCTestCase {
         let world = try self.makeWorld()
 
         let string = makeRandomString()
-        try world.send(HTTPRequestBuilder(uri: "/header", method: .GET, headers: ["X-Custom-Header": string]))
+        try await world.send(HTTPRequestBuilder(uri: "/header", method: .GET, headers: ["X-Custom-Header": string]))
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
