@@ -86,7 +86,7 @@ final class HTTPHandler: ChannelInboundHandler {
             let channel = context.channel
             Task {
                 var errorRenderer = self.router.defaultErrorRenderer
-                print("Request: \(head.method.rawValue) \(head.uri)")
+
                 do {
                     
                     let header = try RequestHeader(
