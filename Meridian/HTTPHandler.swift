@@ -38,14 +38,17 @@ final class HTTPHandler: ChannelInboundHandler {
 
     let router: Router
 
+    let middlewareProducers: [() -> Middleware]
+
     var state = State.initial
 
-    convenience init(routesByPrefix: [String: RouteGroup], errorRenderer: ErrorRenderer) {
-        self.init(router: Router(routesByPrefix: routesByPrefix, defaultErrorRenderer: errorRenderer))
+    convenience init(routesByPrefix: [String: RouteGroup], errorRenderer: ErrorRenderer, middlewareProducers: [() -> Middleware] = []) {
+        self.init(router: Router(routesByPrefix: routesByPrefix, defaultErrorRenderer: errorRenderer), middlewareProducers: middlewareProducers)
     }
 
-    init(router: Router) {
+    init(router: Router, middlewareProducers: [() -> Middleware]) {
         self.router = router
+        self.middlewareProducers = middlewareProducers
     }
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -108,12 +111,25 @@ final class HTTPHandler: ChannelInboundHandler {
 
                     var errors: [Error] = []
 
+                    let middlewares = self.middlewareProducers.map({ $0() })
+
+                    for middleware in middlewares {
+                        let m = Mirror(reflecting: middleware)
+                        for (_, child) in m.children {
+                            if let prop = child as? PropertyWrapper {
+                                await prop.update(requestContext, errors: &errors)
+                            }
+                        }
+                    }
+
                     let m = Mirror(reflecting: route)
                     for (_, child) in m.children {
                         if let prop = child as? PropertyWrapper {
                             await prop.update(requestContext, errors: &errors)
                         }
                     }
+
+                    let middleware = MiddlewareGroup(middlewares: middlewares)
 
                     if let firstError = errors.first {
 
@@ -125,7 +141,7 @@ final class HTTPHandler: ChannelInboundHandler {
 
                         try await route.validate()
 
-                        let response = try await route.execute()
+                        let response = try await middleware.execute(next: route)
 
                         try await send(response, requestContext.header.httpVersion, to: channel)
                     }
