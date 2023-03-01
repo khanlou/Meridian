@@ -33,5 +33,7 @@ Server(errorRenderer: BasicErrorRenderer())
             .on(.get(.root))
 
     }
+    .middleware(LoggingMiddleware())
+    .middleware(TimingMiddleware())
     .environmentObject(Database())
     .listen()

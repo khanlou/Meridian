@@ -56,6 +56,8 @@ public final class Server {
 
     var router: Router
 
+    var middlewareProducers: [() -> Middleware] = []
+
     public init(errorRenderer: ErrorRenderer) {
         enableLineBufferedLogging()
         self.router = Router(routesByPrefix: [:], defaultErrorRenderer: errorRenderer)
@@ -85,7 +87,7 @@ public final class Server {
             .childChannelInitializer({ channel in
                 channel.pipeline.configureHTTPServerPipeline()
                     .flatMap({
-                        channel.pipeline.addHandler(HTTPHandler(router: self.router))
+                        channel.pipeline.addHandler(HTTPHandler(router: self.router, middlewareProducers: self.middlewareProducers))
                     })
             })
             .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
@@ -114,6 +116,13 @@ extension Server {
 
     public func environment<Key: EnvironmentKey>(_ key: Key, _ value: Key.Value) -> Self {
         EnvironmentValues.shared[Key.self] = value
+        return self
+    }
+}
+
+extension Server {
+    public func middleware(_ middleware: @autoclosure @escaping () -> Middleware) -> Self {
+        self.middlewareProducers.append(middleware)
         return self
     }
 }
