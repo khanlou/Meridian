@@ -90,3 +90,9 @@ extension StatusCode {
     public static let notExtended = StatusCode(code: 510, name: "Not Extended")
     public static let networkAuthenticationRequired = StatusCode(code: 511, name: "Network Authentication Required")
 }
+
+extension StatusCode: CaseIterable {
+    static public var allCases: [StatusCode] = [
+        .`continue`, .switchingProtocols, .processing, .earlyHints,  .ok, .created, .accepted, .nonAuthoritativeInformation, .noContent, .resetContent, .partialContent, .multiStatus, .alreadyReported, .imUsed,  .multipleChoices, .movedPermanently, .found, .seeOther, .notModified, .useProxy, .temporaryRedirect, .permanentRedirect,  .badRequest, .unauthorized, .paymentRequired, .forbidden, .notFound, .methodNotAllowed, .notAcceptable, .proxyAuthenticationRequired, .requestTimeout, .conflict, .gone, .lengthRequired, .preconditionFailed, .payloadTooLarge, .uriTooLong, .unsupportedMediaType, .rangeNotSatisfiable, .expectationFailed, .imATeapot, .misdirectedRequest, .unprocessableEntity, .locked, .failedDependency, .tooEarly, .upgradeRequired, .preconditionRequired, .tooManyRequests, .requestHeaderFieldsTooLarge, .unavailableForLegalReasons,  .internalServerError, .notImplemented, .badGateway, .serviceUnavailable, .gatewayTimeout, .httpVersionNotSupported, .variantAlsoNegotiates, .insufficientStorage, .loopDetected, .notExtended, .networkAuthenticationRequired,
+     ]
+}
