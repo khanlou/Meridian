@@ -7,10 +7,10 @@
 
 import Foundation
 
-typealias Body = Custom<BodyExtractor>
+public typealias Body = Custom<BodyExtractor>
 
-struct BodyExtractor: NonParameterizedExtractor {
-    static func extract(from context: RequestContext) async throws -> Data {
+public struct BodyExtractor: NonParameterizedExtractor {
+    public static func extract(from context: RequestContext) async throws -> Data {
         return context.postBody
     }
 }
