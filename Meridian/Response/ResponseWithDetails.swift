@@ -24,3 +24,19 @@ extension ResponseDetails {
         .ok
     }
 }
+
+public func _statusCode(_ response: Response) -> StatusCode {
+    if let responseWithDetails = response as? ResponseDetails {
+        return responseWithDetails.statusCode
+    } else {
+        return .ok
+    }
+}
+
+public func _additionalHeaders(_ response: Response) -> [String: String] {
+    if let responseWithDetails = response as? ResponseDetails {
+        return responseWithDetails.additionalHeaders
+    } else {
+        return [:]
+    }
+}

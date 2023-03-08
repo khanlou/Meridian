@@ -160,12 +160,8 @@ final class HTTPHandler: ChannelInboundHandler {
     }
 
     fileprivate func send(_ response: Response, _ version: HTTPVersion, to channel: Channel) async throws {
-        var statusCode = StatusCode.ok
-        var additionalHeaders: [String: String] = [:]
-        if let responseWithDetails = response as? ResponseDetails {
-            statusCode = responseWithDetails.statusCode
-            additionalHeaders = responseWithDetails.additionalHeaders
-        }
+        let statusCode = _statusCode(response)
+        let additionalHeaders = _additionalHeaders(response)
         var head = HTTPResponseHead(version: version, status: HTTPResponseStatus(statusCode: statusCode.code))
 
         for (name, value) in additionalHeaders {
