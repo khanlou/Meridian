@@ -182,7 +182,7 @@ final class HTTPHandler: ChannelInboundHandler {
         let statusCode = _statusCode(response)
         let additionalHeaders = _additionalHeaders(response)
         let body = try response.body()
-        do {
+
             var head = HTTPResponseHead(version: version, status: HTTPResponseStatus(statusCode: statusCode.code))
 
             for (name, value) in additionalHeaders {
@@ -193,7 +193,7 @@ final class HTTPHandler: ChannelInboundHandler {
 
             _ = channel.write(part)
 
-            var buffer = channel.allocator.buffer(capacity: 100)
+        var buffer = channel.allocator.buffer(capacity: body.count)
             buffer.writeBytes(body)
 
             let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
@@ -201,14 +201,9 @@ final class HTTPHandler: ChannelInboundHandler {
 
             let endPart = HTTPServerResponsePart.end(nil)
 
+        do {
             _ = try await channel.writeAndFlush(endPart)
-
-            try await channel.close()
-
-        } catch ChannelError.alreadyClosed {
-            // ignore this, it's spurious as far as i can tell
         } catch {
-            // do not throw, since we don't want this to bubble up to the error renderer
             try? await channel.close()
         }
     }
