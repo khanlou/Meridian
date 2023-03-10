@@ -33,6 +33,7 @@ final class HTTPHandler: ChannelInboundHandler {
     enum State {
         case initial
         case headerReceived(HTTPRequestHead)
+        case inProgress(HTTPRequestHead, Data)
         case complete(HTTPRequestHead, Data)
     }
 
@@ -51,7 +52,7 @@ final class HTTPHandler: ChannelInboundHandler {
         self.middlewareProducers = middlewareProducers
     }
 
-    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+    func updateState(with data: NIOAny) {
         let part = unwrapInboundIn(data)
 
         switch part {
@@ -62,98 +63,116 @@ final class HTTPHandler: ChannelInboundHandler {
             case .initial:
                 fatalError("Unexpected state: \(self.state)")
             case let .headerReceived(head):
-                // what's the content length? can .body come twice?
-                self.state = .complete(head, Data(byteBuffer.readableBytesView))
-            case let .complete(head, body):
+                self.state = .inProgress(head, Data(byteBuffer.readableBytesView))
+            case let .inProgress(head, body):
                 var body = body
                 body.append(contentsOf: byteBuffer.readableBytesView)
-                self.state = .complete(head, body)
+                self.state = .inProgress(head, body)
+            case .complete:
+                return
             }
-        case .end:
-            let head: HTTPRequestHead
-            let body: Data
+        case .end(_):
             switch state {
-            case let .complete(header2, body2):
-                head = header2
-                body = body2
-            case let .headerReceived(header2):
-                head = header2
-                body = Data()
             case .initial:
                 fatalError("Unexpected state: \(self.state)")
+            case let .headerReceived(head):
+                // what's the content length? can .body come twice?
+                self.state = .complete(head, Data())
+            case let .inProgress(head, body):
+                self.state = .complete(head, body)
+            case .complete:
+                return
             }
+        }
+    }
 
-            let channel = context.channel
-            Task {
-                var errorRenderer = self.router.defaultErrorRenderer
+    func dataIfReady() -> (HTTPRequestHead, Data)? {
+        if case let .complete(head, data) = state {
+            return (head, data)
+        } else {
+            return nil
+        }
+    }
 
-                do {
-                    
-                    let header = try RequestHeader(
-                        method: HTTPMethod(name: head.method.rawValue),
-                        httpVersion: head.version,
-                        uri: head.uri,
-                        headers: head.headers.map({ ($0, $1) })
-                    )
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
 
-                    let results: (Responder, MatchedRoute)?
-                    (results, errorRenderer) = router.route(for: header)
+        let channel = context.channel
 
-                    guard let (route, matchedRoute) = results else {
-                        throw NoRouteFound()
-                    }
+        self.updateState(with: data)
 
-                    let requestContext = RequestContext(
-                        header: header,
-                        matchedRoute: matchedRoute,
-                        postBody: body
-                    )
+        guard let (head, body) = dataIfReady() else {
+            return
+        }
 
-                    var errors: [Error] = []
+        Task {
+            var errorRenderer = self.router.defaultErrorRenderer
 
-                    let middlewares = self.middlewareProducers.map({ $0() })
+            do {
 
-                    for middleware in middlewares {
-                        let m = Mirror(reflecting: middleware)
-                        for (_, child) in m.children {
-                            if let prop = child as? PropertyWrapper {
-                                await prop.update(requestContext, errors: &errors)
-                            }
-                        }
-                    }
+                let header = try RequestHeader(
+                    method: HTTPMethod(name: head.method.rawValue),
+                    httpVersion: head.version,
+                    uri: head.uri,
+                    headers: head.headers.map({ ($0, $1) })
+                )
 
-                    let m = Mirror(reflecting: route)
+                let results: (Responder, MatchedRoute)?
+                (results, errorRenderer) = router.route(for: header)
+
+                guard let (route, matchedRoute) = results else {
+                    throw NoRouteFound()
+                }
+
+                let requestContext = RequestContext(
+                    header: header,
+                    matchedRoute: matchedRoute,
+                    postBody: body
+                )
+
+                var errors: [Error] = []
+
+                let middlewares = self.middlewareProducers.map({ $0() })
+
+                for middleware in middlewares {
+                    let m = Mirror(reflecting: middleware)
                     for (_, child) in m.children {
                         if let prop = child as? PropertyWrapper {
                             await prop.update(requestContext, errors: &errors)
                         }
                     }
+                }
 
-                    let middleware = MiddlewareGroup(middlewares: middlewares)
-
-                    if let firstError = errors.first {
-
-                        let response = try await errorRenderer.render(primaryError: firstError, context: ErrorsContext(allErrors: errors))
-
-                        try await send(response, requestContext.header.httpVersion, to: channel)
-
-                    } else {
-
-                        try await route.validate()
-
-                        let response = try await middleware.execute(next: route)
-
-                        try await send(response, requestContext.header.httpVersion, to: channel)
+                let m = Mirror(reflecting: route)
+                for (_, child) in m.children {
+                    if let prop = child as? PropertyWrapper {
+                        await prop.update(requestContext, errors: &errors)
                     }
+                }
 
+                let middleware = MiddlewareGroup(middlewares: middlewares)
+
+                if let firstError = errors.first {
+
+                    let response = try await errorRenderer.render(primaryError: firstError, context: ErrorsContext(allErrors: errors))
+
+                    try await send(response, requestContext.header.httpVersion, to: channel)
+
+                } else {
+
+                    try await route.validate()
+
+                    let response = try await middleware.execute(next: route)
+
+                    try await send(response, requestContext.header.httpVersion, to: channel)
+                }
+
+            } catch {
+
+                do {
+                    let response = try await errorRenderer.render(primaryError: error, context: ErrorsContext(error: error))
+                    try await send(response, head.version, to: channel)
                 } catch {
-                    
-                    do {
-                        let response = try await errorRenderer.render(primaryError: error, context: ErrorsContext(error: error))
-                        try await send(response, head.version, to: channel)
-                    } catch {
-                        _ = try await channel.close()
-                    }
+                    _ = try await channel.close()
                 }
             }
         }
@@ -162,26 +181,36 @@ final class HTTPHandler: ChannelInboundHandler {
     fileprivate func send(_ response: Response, _ version: HTTPVersion, to channel: Channel) async throws {
         let statusCode = _statusCode(response)
         let additionalHeaders = _additionalHeaders(response)
-        var head = HTTPResponseHead(version: version, status: HTTPResponseStatus(statusCode: statusCode.code))
+        let body = try response.body()
+        do {
+            var head = HTTPResponseHead(version: version, status: HTTPResponseStatus(statusCode: statusCode.code))
 
-        for (name, value) in additionalHeaders {
-            head.headers.add(name: name, value: value)
+            for (name, value) in additionalHeaders {
+                head.headers.add(name: name, value: value)
+            }
+
+            let part = HTTPServerResponsePart.head(head)
+
+            _ = channel.write(part)
+
+            var buffer = channel.allocator.buffer(capacity: 100)
+            buffer.writeBytes(body)
+
+            let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
+            _ = channel.write(bodyPart)
+
+            let endPart = HTTPServerResponsePart.end(nil)
+
+            _ = try await channel.writeAndFlush(endPart)
+
+            try await channel.close()
+
+        } catch ChannelError.alreadyClosed {
+            // ignore this, it's spurious as far as i can tell
+        } catch {
+            // do not throw, since we don't want this to bubble up to the error renderer
+            try? await channel.close()
         }
-
-        let part = HTTPServerResponsePart.head(head)
-
-        _ = channel.write(part)
-
-        var buffer = channel.allocator.buffer(capacity: 100)
-        buffer.writeBytes(try response.body())
-
-        let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
-        _ = channel.write(bodyPart)
-
-        let endPart = HTTPServerResponsePart.end(nil)
-        _ = try await channel.writeAndFlush(endPart)
-
-        try await channel.close()
     }
 
 }
