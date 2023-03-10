@@ -183,23 +183,23 @@ final class HTTPHandler: ChannelInboundHandler {
         let additionalHeaders = _additionalHeaders(response)
         let body = try response.body()
 
-            var head = HTTPResponseHead(version: version, status: HTTPResponseStatus(statusCode: statusCode.code))
+        var head = HTTPResponseHead(version: version, status: HTTPResponseStatus(statusCode: statusCode.code))
 
-            for (name, value) in additionalHeaders {
-                head.headers.add(name: name, value: value)
-            }
+        for (name, value) in additionalHeaders {
+            head.headers.add(name: name, value: value)
+        }
 
-            let part = HTTPServerResponsePart.head(head)
+        let part = HTTPServerResponsePart.head(head)
 
-            _ = channel.write(part)
+        _ = channel.write(part)
 
         var buffer = channel.allocator.buffer(capacity: body.count)
-            buffer.writeBytes(body)
+        buffer.writeBytes(body)
 
-            let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
-            _ = channel.write(bodyPart)
+        let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
+        _ = channel.write(bodyPart)
 
-            let endPart = HTTPServerResponsePart.end(nil)
+        let endPart = HTTPServerResponsePart.end(nil)
 
         do {
             _ = try await channel.writeAndFlush(endPart)
