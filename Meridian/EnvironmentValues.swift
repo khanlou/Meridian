@@ -43,7 +43,7 @@ struct LoopGroupEnvironmentKey: EnvironmentKey {
 }
 
 extension EnvironmentValues {
-    var loopGroup: EventLoopGroup {
+    public var loopGroup: EventLoopGroup {
         get {
             self[LoopGroupEnvironmentKey.self]
         }
