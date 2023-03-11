@@ -31,7 +31,7 @@ final class HTTPHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
 
     enum State {
-        case initial
+        case idle
         case headerReceived(HTTPRequestHead)
         case inProgress(HTTPRequestHead, Data)
         case complete(HTTPRequestHead, Data)
@@ -41,7 +41,7 @@ final class HTTPHandler: ChannelInboundHandler {
 
     let middlewareProducers: [() -> Middleware]
 
-    var state = State.initial
+    var state = State.idle
 
     convenience init(routesByPrefix: [String: RouteGroup], errorRenderer: ErrorRenderer, middlewareProducers: [() -> Middleware] = []) {
         self.init(router: Router(routesByPrefix: routesByPrefix, defaultErrorRenderer: errorRenderer), middlewareProducers: middlewareProducers)
@@ -60,7 +60,7 @@ final class HTTPHandler: ChannelInboundHandler {
             self.state = .headerReceived(head)
         case let .body(byteBuffer):
             switch state {
-            case .initial:
+            case .idle:
                 fatalError("Unexpected state: \(self.state)")
             case let .headerReceived(head):
                 self.state = .inProgress(head, Data(byteBuffer.readableBytesView))
@@ -73,7 +73,7 @@ final class HTTPHandler: ChannelInboundHandler {
             }
         case .end(_):
             switch state {
-            case .initial:
+            case .idle:
                 fatalError("Unexpected state: \(self.state)")
             case let .headerReceived(head):
                 // what's the content length? can .body come twice?
@@ -203,6 +203,7 @@ final class HTTPHandler: ChannelInboundHandler {
 
         do {
             _ = try await channel.writeAndFlush(endPart)
+            self.state = .idle
         } catch {
             try? await channel.close()
         }
