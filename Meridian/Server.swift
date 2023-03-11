@@ -114,7 +114,7 @@ extension Server {
         return self
     }
 
-    func environmentObject<T: AnyObject>(with constructor: (EnvironmentValues) -> T) -> Self {
+    public func environmentObject<T: AnyObject>(with constructor: (EnvironmentValues) -> T) -> Self {
         let object = constructor(EnvironmentValues.shared)
         EnvironmentValues.shared.storage[ObjectIdentifier(T.self)] = object
         return self
