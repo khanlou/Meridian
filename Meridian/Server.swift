@@ -61,7 +61,9 @@ public final class Server {
     public init(errorRenderer: ErrorRenderer) {
         enableLineBufferedLogging()
         self.router = Router(routesByPrefix: [:], defaultErrorRenderer: errorRenderer)
-    }
+        EnvironmentValues.shared[RouterEnvironmentKey.self] = self.router
+        EnvironmentValues.shared.loopGroup = self.loopGroup
+   }
 
     @discardableResult
     public func register(errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [Route]) -> Self {
@@ -77,8 +79,6 @@ public final class Server {
 
     public func listen() {
 
-        EnvironmentValues.shared[RouterEnvironmentKey.self] = self.router
-        
         let reuseAddrOpt = ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR)
 
         let bootstrap = ServerBootstrap(group: loopGroup)
@@ -110,6 +110,12 @@ public final class Server {
 
 extension Server {
     public func environmentObject<T: AnyObject>(_ object: T) -> Self {
+        EnvironmentValues.shared.storage[ObjectIdentifier(T.self)] = object
+        return self
+    }
+
+    public func environmentObject<T: AnyObject>(with constructor: (EnvironmentValues) -> T) -> Self {
+        let object = constructor(EnvironmentValues.shared)
         EnvironmentValues.shared.storage[ObjectIdentifier(T.self)] = object
         return self
     }
