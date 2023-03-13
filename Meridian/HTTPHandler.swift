@@ -57,31 +57,32 @@ final class HTTPHandler: ChannelInboundHandler {
 
         switch part {
         case let .head(head):
-            self.state = .headerReceived(head)
-        case let .body(byteBuffer):
             switch state {
             case .idle:
-                fatalError("Unexpected state: \(self.state)")
+                self.state = .headerReceived(head)
+            default:
+                assertionFailure("Unexpected state: \(self.state)")
+            }
+        case let .body(byteBuffer):
+            switch state {
             case let .headerReceived(head):
                 self.state = .inProgress(head, Data(byteBuffer.readableBytesView))
             case let .inProgress(head, body):
                 var body = body
                 body.append(contentsOf: byteBuffer.readableBytesView)
                 self.state = .inProgress(head, body)
-            case .complete:
-                return
+            default:
+                assertionFailure("Unexpected state: \(self.state)")
             }
         case .end(_):
             switch state {
-            case .idle:
-                fatalError("Unexpected state: \(self.state)")
             case let .headerReceived(head):
                 // what's the content length? can .body come twice?
                 self.state = .complete(head, Data())
             case let .inProgress(head, body):
                 self.state = .complete(head, body)
-            case .complete:
-                return
+            default:
+                assertionFailure("Unexpected state: \(self.state)")
             }
         }
     }
