@@ -115,6 +115,7 @@ final class HTTPHandler: ChannelInboundHandler {
         } catch {
             assertionFailure(error.localizedDescription)
             try? channel.close().wait()
+            return
         }
 
         guard let (head, body) = dataIfReady() else {
