@@ -27,6 +27,17 @@ public struct RequestContext {
     }
 }
 
+enum HTTPHandlerUnrecoverableError: LocalizedError {
+    case unexpectedPart(HTTPHandler.State, HTTPServerRequestPart)
+
+    var errorDescription: String? {
+        switch self {
+        case .unexpectedPart(let state, let httpServerRequestPart):
+            return "A part of \(httpServerRequestPart) was received while in the \(state) state."
+        }
+    }
+}
+
 final class HTTPHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
 
@@ -52,7 +63,7 @@ final class HTTPHandler: ChannelInboundHandler {
         self.middlewareProducers = middlewareProducers
     }
 
-    func updateState(with data: NIOAny) {
+    func updateState(with data: NIOAny) throws {
         let part = unwrapInboundIn(data)
 
         switch part {
@@ -61,7 +72,7 @@ final class HTTPHandler: ChannelInboundHandler {
             case .idle:
                 self.state = .headerReceived(head)
             default:
-                assertionFailure("Unexpected state: \(self.state)")
+                throw HTTPHandlerUnrecoverableError.unexpectedPart(state, part)
             }
         case let .body(byteBuffer):
             switch state {
@@ -72,7 +83,7 @@ final class HTTPHandler: ChannelInboundHandler {
                 body.append(contentsOf: byteBuffer.readableBytesView)
                 self.state = .inProgress(head, body)
             default:
-                assertionFailure("Unexpected state: \(self.state)")
+                throw HTTPHandlerUnrecoverableError.unexpectedPart(state, part)
             }
         case .end(_):
             switch state {
@@ -82,7 +93,7 @@ final class HTTPHandler: ChannelInboundHandler {
             case let .inProgress(head, body):
                 self.state = .complete(head, body)
             default:
-                assertionFailure("Unexpected state: \(self.state)")
+                throw HTTPHandlerUnrecoverableError.unexpectedPart(state, part)
             }
         }
     }
@@ -99,7 +110,12 @@ final class HTTPHandler: ChannelInboundHandler {
 
         let channel = context.channel
 
-        self.updateState(with: data)
+        do {
+            try self.updateState(with: data)
+        } catch {
+            assertionFailure(error.localizedDescription)
+            try? channel.close().wait()
+        }
 
         guard let (head, body) = dataIfReady() else {
             return
