@@ -18,7 +18,7 @@ public protocol EnvironmentKey {
 
 public final class EnvironmentValues {
 
-    static let shared = EnvironmentValues()
+    static var shared = EnvironmentValues()
 
     var storage: [ObjectIdentifier: Any] = [:]
 

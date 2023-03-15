@@ -120,8 +120,8 @@ extension Server {
         return self
     }
 
-    public func environment<Key: EnvironmentKey>(_ key: Key, _ value: Key.Value) -> Self {
-        EnvironmentValues.shared[Key.self] = value
+    public func environment<Value>(_ keyPath: WritableKeyPath<EnvironmentValues, Value>, _ value: Value) -> Self {
+        EnvironmentValues.shared[keyPath: keyPath] = value
         return self
     }
 }
