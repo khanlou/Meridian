@@ -152,20 +152,10 @@ final class HTTPHandler: ChannelInboundHandler {
                 let middlewares = self.middlewareProducers.map({ $0() })
 
                 for middleware in middlewares {
-                    let m = Mirror(reflecting: middleware)
-                    for (_, child) in m.children {
-                        if let prop = child as? PropertyWrapper {
-                            await prop.update(requestContext, errors: &errors)
-                        }
-                    }
+                    try await hydratePropertyWrappers(on: middleware, context: requestContext, errors: &errors)
                 }
 
-                let m = Mirror(reflecting: route)
-                for (_, child) in m.children {
-                    if let prop = child as? PropertyWrapper {
-                        await prop.update(requestContext, errors: &errors)
-                    }
-                }
+                try await hydratePropertyWrappers(on: route, context: requestContext, errors: &errors)
 
                 let middleware = MiddlewareGroup(middlewares: middlewares)
 
@@ -227,4 +217,12 @@ final class HTTPHandler: ChannelInboundHandler {
         }
     }
 
+    func hydratePropertyWrappers(on object: Any, context: RequestContext, errors: inout [Error]) async throws {
+        let m = Mirror(reflecting: object)
+        for (_, child) in m.children {
+            if let prop = child as? PropertyWrapper {
+                await prop.update(context, errors: &errors)
+            }
+        }
+    }
 }
