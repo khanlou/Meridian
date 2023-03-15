@@ -12,12 +12,9 @@ public struct JSONBody<Type: Decodable>: PropertyWrapper {
 
     @ParameterStorage var finalValue: Type
 
-    let decoder: JSONDecoder
-
     let extractor: (RequestContext) throws -> Type
 
-    public init<Inner>(decoder: JSONDecoder = .init()) where Type == Inner? {
-        self.decoder = decoder
+    public init<Inner>(decoder: JSONDecoder? = nil) where Type == Inner? {
         self.extractor = { context in
             try Self.checkMethod(context)
 
@@ -27,13 +24,13 @@ public struct JSONBody<Type: Decodable>: PropertyWrapper {
                 return nil
             }
 
-            return try decoder.decode(Type.self, from: context.postBody)
+            return try (decoder ?? context.environment.jsonDecoder)
+                .decode(Type.self, from: context.postBody)
         }
     }
 
     @_disfavoredOverload
-    public init(decoder: JSONDecoder = .init()) {
-        self.decoder = decoder
+    public init(decoder: JSONDecoder? = nil) {
         self.extractor = { context in
             try Self.checkMethod(context)
 
@@ -43,7 +40,8 @@ public struct JSONBody<Type: Decodable>: PropertyWrapper {
                 throw MissingBodyError()
             }
 
-            return try decoder.decode(Type.self, from: context.postBody)
+            return try (decoder ?? context.environment.jsonDecoder)
+                .decode(Type.self, from: context.postBody)
         }
     }
 
