@@ -163,7 +163,18 @@ final class HTTPHandler: ChannelInboundHandler {
 
                     let response = try await errorRenderer.render(primaryError: firstError, context: ErrorsContext(allErrors: errors))
 
-                    try await send(response, requestContext.header.httpVersion, to: channel)
+                    let statusCode = response.statusCode
+                    let headers = response.additionalHeaders
+
+                    let body = try response.body()
+
+                    try await send(
+                        statusCode: statusCode,
+                        headers: headers,
+                        body: body,
+                        version: head.version,
+                        to: channel
+                    )
 
                 } else {
 
@@ -171,14 +182,34 @@ final class HTTPHandler: ChannelInboundHandler {
 
                     let response = try await middleware.execute(next: route)
 
-                    try await send(response, requestContext.header.httpVersion, to: channel)
+                    let statusCode = response.statusCode
+                    let headers = response.additionalHeaders
+                    let body = try response.body()
+
+                    try await send(
+                        statusCode: statusCode,
+                        headers: headers,
+                        body: body,
+                        version: head.version,
+                        to: channel
+                    )
                 }
 
             } catch {
 
                 do {
                     let response = try await errorRenderer.render(primaryError: error, context: ErrorsContext(error: error))
-                    try await send(response, head.version, to: channel)
+                    let statusCode = response.statusCode
+                    let headers = response.additionalHeaders
+                    let body = try response.body()
+
+                    try await send(
+                        statusCode: statusCode,
+                        headers: headers,
+                        body: body,
+                        version: head.version,
+                        to: channel
+                    )
                 } catch {
                     _ = try await channel.close()
                 }
@@ -186,14 +217,11 @@ final class HTTPHandler: ChannelInboundHandler {
         }
     }
 
-    fileprivate func send(_ response: Response, _ version: HTTPVersion, to channel: Channel) async throws {
-        let statusCode = response.statusCode
-        let additionalHeaders = response.additionalHeaders
-        let body = try response.body()
+    fileprivate func send(statusCode: StatusCode, headers: [String: String], body: Data, version: HTTPVersion, to channel: Channel) async throws {
 
         var head = HTTPResponseHead(version: version, status: HTTPResponseStatus(statusCode: statusCode.code))
 
-        for (name, value) in additionalHeaders {
+        for (name, value) in headers {
             head.headers.add(name: name, value: value)
         }
 
