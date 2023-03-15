@@ -7,14 +7,14 @@
 
 import Foundation
 
-struct StatusCodeResponse: Response, ResponseDetails {
+struct StatusCodeResponse: Response {
 
     let statusCode: StatusCode
 
     let wrapping: Response
 
     var additionalHeaders: [String : String] {
-        (wrapping as? ResponseDetails)?.additionalHeaders ?? [:]
+        wrapping.additionalHeaders
     }
 
     func body() throws -> Data {

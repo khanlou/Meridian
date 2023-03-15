@@ -7,13 +7,13 @@
 
 import Foundation
 
-public struct Redirect: Response, ResponseDetails {
+public struct Redirect: Response {
 
     public let url: URL
 
     public let statusCode: StatusCode
 
-    var additionalHeaders: [String : String] {
+    public var additionalHeaders: [String : String] {
         ["Location": url.absoluteString]
     }
 

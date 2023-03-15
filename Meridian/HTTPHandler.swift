@@ -187,8 +187,8 @@ final class HTTPHandler: ChannelInboundHandler {
     }
 
     fileprivate func send(_ response: Response, _ version: HTTPVersion, to channel: Channel) async throws {
-        let statusCode = _statusCode(response)
-        let additionalHeaders = _additionalHeaders(response)
+        let statusCode = response.statusCode
+        let additionalHeaders = response.additionalHeaders
         let body = try response.body()
 
         var head = HTTPResponseHead(version: version, status: HTTPResponseStatus(statusCode: statusCode.code))

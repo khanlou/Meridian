@@ -8,5 +8,20 @@
 import Foundation
 
 public protocol Response {
+
+    var statusCode: StatusCode  { get }
+
+    var additionalHeaders: [String: String] { get }
+
     func body() throws -> Data
+}
+
+public extension Response {
+    var additionalHeaders: [String : String] {
+        [:]
+    }
+
+    var statusCode: StatusCode {
+        .ok
+    }
 }

@@ -7,13 +7,13 @@
 
 import Foundation
 
-public struct EmptyResponse: Response, ResponseDetails {
+public struct EmptyResponse: Response {
 
     public init() {
 
     }
 
-    var statusCode: StatusCode {
+    public var statusCode: StatusCode {
         .noContent
     }
 

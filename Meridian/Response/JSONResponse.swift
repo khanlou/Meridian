@@ -15,7 +15,7 @@ struct AnyEncodable: Encodable {
     }
 }
 
-public struct JSON: Response, ResponseDetails {
+public struct JSON: Response {
 
     let encodable: AnyEncodable
 
@@ -26,7 +26,7 @@ public struct JSON: Response, ResponseDetails {
         self.encoder = encoder
     }
 
-    var additionalHeaders: [String : String] {
+    public var additionalHeaders: [String : String] {
         ["Content-Type": "application/json"]
     }
 
