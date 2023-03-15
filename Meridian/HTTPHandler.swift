@@ -27,12 +27,24 @@ public struct RequestContext {
     }
 }
 
+enum HTTPHandlerUnrecoverableError: LocalizedError {
+    case unexpectedPart(HTTPHandler.State, HTTPServerRequestPart)
+
+    var errorDescription: String? {
+        switch self {
+        case .unexpectedPart(let state, let httpServerRequestPart):
+            return "A part of \(httpServerRequestPart) was received while in the \(state) state."
+        }
+    }
+}
+
 final class HTTPHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
 
     enum State {
-        case initial
+        case idle
         case headerReceived(HTTPRequestHead)
+        case inProgress(HTTPRequestHead, Data)
         case complete(HTTPRequestHead, Data)
     }
 
@@ -40,7 +52,7 @@ final class HTTPHandler: ChannelInboundHandler {
 
     let middlewareProducers: [() -> Middleware]
 
-    var state = State.initial
+    var state = State.idle
 
     convenience init(routesByPrefix: [String: RouteGroup], errorRenderer: ErrorRenderer, middlewareProducers: [() -> Middleware] = []) {
         self.init(router: Router(routesByPrefix: routesByPrefix, defaultErrorRenderer: errorRenderer), middlewareProducers: middlewareProducers)
@@ -51,109 +63,134 @@ final class HTTPHandler: ChannelInboundHandler {
         self.middlewareProducers = middlewareProducers
     }
 
-    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+    func updateState(with data: NIOAny) throws {
         let part = unwrapInboundIn(data)
 
         switch part {
         case let .head(head):
-            self.state = .headerReceived(head)
+            switch state {
+            case .idle:
+                self.state = .headerReceived(head)
+            default:
+                throw HTTPHandlerUnrecoverableError.unexpectedPart(state, part)
+            }
         case let .body(byteBuffer):
             switch state {
-            case .initial:
-                fatalError("Unexpected state: \(self.state)")
             case let .headerReceived(head):
-                // what's the content length? can .body come twice?
-                self.state = .complete(head, Data(byteBuffer.readableBytesView))
-            case let .complete(head, body):
+                self.state = .inProgress(head, Data(byteBuffer.readableBytesView))
+            case let .inProgress(head, body):
                 var body = body
                 body.append(contentsOf: byteBuffer.readableBytesView)
-                self.state = .complete(head, body)
+                self.state = .inProgress(head, body)
+            default:
+                throw HTTPHandlerUnrecoverableError.unexpectedPart(state, part)
             }
-        case .end:
-            let head: HTTPRequestHead
-            let body: Data
+        case .end(_):
             switch state {
-            case let .complete(header2, body2):
-                head = header2
-                body = body2
-            case let .headerReceived(header2):
-                head = header2
-                body = Data()
-            case .initial:
-                fatalError("Unexpected state: \(self.state)")
+            case let .headerReceived(head):
+                // what's the content length? can .body come twice?
+                self.state = .complete(head, Data())
+            case let .inProgress(head, body):
+                self.state = .complete(head, body)
+            default:
+                throw HTTPHandlerUnrecoverableError.unexpectedPart(state, part)
             }
+        }
+    }
 
-            let channel = context.channel
-            Task {
-                var errorRenderer = self.router.defaultErrorRenderer
+    func dataIfReady() -> (HTTPRequestHead, Data)? {
+        if case let .complete(head, data) = state {
+            return (head, data)
+        } else {
+            return nil
+        }
+    }
 
-                do {
-                    
-                    let header = try RequestHeader(
-                        method: HTTPMethod(name: head.method.rawValue),
-                        httpVersion: head.version,
-                        uri: head.uri,
-                        headers: head.headers.map({ ($0, $1) })
-                    )
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
 
-                    let results: (Responder, MatchedRoute)?
-                    (results, errorRenderer) = router.route(for: header)
+        let channel = context.channel
 
-                    guard let (route, matchedRoute) = results else {
-                        throw NoRouteFound()
-                    }
+        do {
+            try self.updateState(with: data)
+        } catch {
+            assertionFailure(error.localizedDescription)
+            try? channel.close().wait()
+            return
+        }
 
-                    let requestContext = RequestContext(
-                        header: header,
-                        matchedRoute: matchedRoute,
-                        postBody: body
-                    )
+        guard let (head, body) = dataIfReady() else {
+            return
+        }
 
-                    var errors: [Error] = []
+        Task {
+            var errorRenderer = self.router.defaultErrorRenderer
 
-                    let middlewares = self.middlewareProducers.map({ $0() })
+            do {
 
-                    for middleware in middlewares {
-                        let m = Mirror(reflecting: middleware)
-                        for (_, child) in m.children {
-                            if let prop = child as? PropertyWrapper {
-                                await prop.update(requestContext, errors: &errors)
-                            }
-                        }
-                    }
+                let header = try RequestHeader(
+                    method: HTTPMethod(name: head.method.rawValue),
+                    httpVersion: head.version,
+                    uri: head.uri,
+                    headers: head.headers.map({ ($0, $1) })
+                )
 
-                    let m = Mirror(reflecting: route)
+                let results: (Responder, MatchedRoute)?
+                (results, errorRenderer) = router.route(for: header)
+
+                guard let (route, matchedRoute) = results else {
+                    throw NoRouteFound()
+                }
+
+                let requestContext = RequestContext(
+                    header: header,
+                    matchedRoute: matchedRoute,
+                    postBody: body
+                )
+
+                var errors: [Error] = []
+
+                let middlewares = self.middlewareProducers.map({ $0() })
+
+                for middleware in middlewares {
+                    let m = Mirror(reflecting: middleware)
                     for (_, child) in m.children {
                         if let prop = child as? PropertyWrapper {
                             await prop.update(requestContext, errors: &errors)
                         }
                     }
+                }
 
-                    let middleware = MiddlewareGroup(middlewares: middlewares)
-
-                    if let firstError = errors.first {
-
-                        let response = try await errorRenderer.render(primaryError: firstError, context: ErrorsContext(allErrors: errors))
-
-                        try await send(response, requestContext.header.httpVersion, to: channel)
-
-                    } else {
-
-                        try await route.validate()
-
-                        let response = try await middleware.execute(next: route)
-
-                        try await send(response, requestContext.header.httpVersion, to: channel)
+                let m = Mirror(reflecting: route)
+                for (_, child) in m.children {
+                    if let prop = child as? PropertyWrapper {
+                        await prop.update(requestContext, errors: &errors)
                     }
+                }
 
+                let middleware = MiddlewareGroup(middlewares: middlewares)
+
+                if let firstError = errors.first {
+
+                    let response = try await errorRenderer.render(primaryError: firstError, context: ErrorsContext(allErrors: errors))
+
+                    try await send(response, requestContext.header.httpVersion, to: channel)
+
+                } else {
+
+                    try await route.validate()
+
+                    let response = try await middleware.execute(next: route)
+
+                    try await send(response, requestContext.header.httpVersion, to: channel)
+                }
+
+            } catch {
+
+                do {
+                    let response = try await errorRenderer.render(primaryError: error, context: ErrorsContext(error: error))
+                    try await send(response, head.version, to: channel)
                 } catch {
-                    
-                    do {
-                        let response = try await errorRenderer.render(primaryError: error, context: ErrorsContext(error: error))
-                        try await send(response, head.version, to: channel)
-                    } catch {
-                        _ = try await channel.close()
-                    }
+                    _ = try await channel.close()
                 }
             }
         }
@@ -162,6 +199,8 @@ final class HTTPHandler: ChannelInboundHandler {
     fileprivate func send(_ response: Response, _ version: HTTPVersion, to channel: Channel) async throws {
         let statusCode = _statusCode(response)
         let additionalHeaders = _additionalHeaders(response)
+        let body = try response.body()
+
         var head = HTTPResponseHead(version: version, status: HTTPResponseStatus(statusCode: statusCode.code))
 
         for (name, value) in additionalHeaders {
@@ -172,16 +211,20 @@ final class HTTPHandler: ChannelInboundHandler {
 
         _ = channel.write(part)
 
-        var buffer = channel.allocator.buffer(capacity: 100)
-        buffer.writeBytes(try response.body())
+        var buffer = channel.allocator.buffer(capacity: body.count)
+        buffer.writeBytes(body)
 
         let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
         _ = channel.write(bodyPart)
 
         let endPart = HTTPServerResponsePart.end(nil)
-        _ = try await channel.writeAndFlush(endPart)
 
-        try await channel.close()
+        do {
+            _ = try await channel.writeAndFlush(endPart)
+            self.state = .idle
+        } catch {
+            try? await channel.close()
+        }
     }
 
 }
