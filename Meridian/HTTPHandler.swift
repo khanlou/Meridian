@@ -126,37 +126,37 @@ final class HTTPHandler: ChannelInboundHandler {
 
             do {
 
-                let hydration = try Hydration(context: .init(
-                    header: .init(
-                        method: HTTPMethod(name: head.method.rawValue),
-                        httpVersion: head.version,
-                        uri: head.uri,
-                        headers: head.headers.map({ ($0, $1) })
-                    ),
-                    matchedRoute: nil,
-                    postBody: body
-                ))
+            let hydration = try Hydration(context: .init(
+                header: .init(
+                    method: HTTPMethod(name: head.method.rawValue),
+                    httpVersion: head.version,
+                    uri: head.uri,
+                    headers: head.headers.map({ ($0, $1) })
+                ),
+                matchedRoute: nil,
+                postBody: body
+            ))
 
-                let routing = RoutingMiddleware(router: self.router, hydration: hydration)
+            let routing = RoutingMiddleware(router: self.router, hydration: hydration)
 
-                hydration.context.matchedRoute = routing.matchedRoute
+            hydration.context.matchedRoute = routing.matchedRoute
 
-                let errorRenderer = routing.errorRenderer
+            let errorRenderer = routing.errorRenderer
 
-                let middlewares = self.middlewareProducers
-                    .flatMap({ [ErrorRescueMiddleware(errorRenderer: errorRenderer), $0()] }) +
-                [
-                    ErrorRescueMiddleware(errorRenderer: errorRenderer),
-                    routing,
-                ]
+            let middlewares = self.middlewareProducers
+                .flatMap({ [ErrorRescueMiddleware(errorRenderer: errorRenderer), $0()] }) +
+            [
+                ErrorRescueMiddleware(errorRenderer: errorRenderer),
+                routing,
+            ]
 
-                for middleware in middlewares {
-                    try await hydration.hydrate(middleware)
-                }
+            for middleware in middlewares {
+                try await hydration.hydrate(middleware)
+            }
 
-                let middleware = MiddlewareGroup(middlewares: middlewares)
+            let middleware = MiddlewareGroup(middlewares: middlewares)
 
-                let response = try await middleware.execute(next: BottomRoute())
+            let response = try await middleware.execute(next: BottomRoute())
 
                 let statusCode = response.statusCode
                 let headers = response.additionalHeaders
