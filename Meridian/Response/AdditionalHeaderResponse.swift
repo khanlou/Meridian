@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct AdditionalHeaderResponse: Response, ResponseDetails {
+struct AdditionalHeaderResponse: Response {
 
     let addedHeaders: [String : String]
 
@@ -19,7 +19,7 @@ struct AdditionalHeaderResponse: Response, ResponseDetails {
     }
 
     var additionalHeaders: [String : String] {
-        addedHeaders.merging((wrapping as? ResponseDetails)?.additionalHeaders ?? [:], uniquingKeysWith: { first, second in first })
+        addedHeaders.merging(wrapping.additionalHeaders, uniquingKeysWith: { first, second in first })
     }
 
     func body() throws -> Data {
@@ -27,7 +27,7 @@ struct AdditionalHeaderResponse: Response, ResponseDetails {
     }
 
     var statusCode: StatusCode {
-        (wrapping as? ResponseDetails)?.statusCode ?? .ok
+        wrapping.statusCode
     }
 
 }

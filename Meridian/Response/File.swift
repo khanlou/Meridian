@@ -11,10 +11,6 @@ public struct File: Response {
     public let url: URL
 
     public func body() throws -> Data {
-        do {
-            return try Data(contentsOf: url)
-        } catch {
-            throw error
-        }
+        try Data(contentsOf: url)
     }
 }

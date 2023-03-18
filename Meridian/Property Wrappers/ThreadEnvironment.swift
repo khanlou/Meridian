@@ -15,7 +15,7 @@ class ParameterStorage<T> {
     var wrappedValue: T {
         get {
             guard let storage = storage else {
-                fatalError("The property wrapper's value was accessed at an invalid type.")
+                fatalError("The property wrapper's value was accessed at an invalid time.")
             }
             return storage
         }
