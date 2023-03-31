@@ -123,27 +123,25 @@ final class HTTPHandler: ChannelInboundHandler {
         }
 
         Task {
-            var errorRenderer = self.router.defaultErrorRenderer
 
             do {
 
-                let header = try RequestHeader(
-                    method: HTTPMethod(name: head.method.rawValue),
-                    httpVersion: head.version,
-                    uri: head.uri,
-                    headers: head.headers.map({ ($0, $1) })
-                )
-
-                let hydration = Hydration(context: .init(
-                    header: header,
+                let hydration = try Hydration(context: .init(
+                    header: .init(
+                        method: HTTPMethod(name: head.method.rawValue),
+                        httpVersion: head.version,
+                        uri: head.uri,
+                        headers: head.headers.map({ ($0, $1) })
+                    ),
                     matchedRoute: nil,
                     postBody: body
                 ))
 
-                let routing = RoutingMiddleware(router: self.router, header: header, hydration: hydration)
+                let routing = RoutingMiddleware(router: self.router, hydration: hydration)
 
                 hydration.context.matchedRoute = routing.matchedRoute
-                errorRenderer = routing.errorRenderer
+
+                let errorRenderer = routing.errorRenderer
 
                 let middlewares = self.middlewareProducers
                     .flatMap({ [ErrorRescueMiddleware(errorRenderer: errorRenderer), $0()] }) +

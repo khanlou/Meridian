@@ -80,13 +80,12 @@ struct HeaderExtractor: NonParameterizedExtractor {
 struct RoutingMiddleware: Middleware {
     let hydration: Hydration
 
-//    let result: ((Responder, MatchedRoute)?, ErrorRenderer)
     let route: Responder?
     let matchedRoute: MatchedRoute?
     let errorRenderer: ErrorRenderer
 
-    init(router: Router, header: RequestHeader, hydration: Hydration) {
-        let result = router.route(for: header)
+    init(router: Router, hydration: Hydration) {
+        let result = router.route(for: hydration.context.header)
         self.route = result.0?.0
         self.matchedRoute = result.0?.1
         self.errorRenderer = result.1
