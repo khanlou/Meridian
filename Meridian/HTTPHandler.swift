@@ -10,12 +10,12 @@ import NIO
 import NIOHTTP1
 
 public struct RequestContext {
-    public let header: RequestHeader
-    public let matchedRoute: MatchedRoute
-    public let postBody: Data
-    public let environment: EnvironmentValues
+    public var header: RequestHeader
+    public var matchedRoute: MatchedRoute?
+    public var postBody: Data
+    public var environment: EnvironmentValues
 
-    public init(header: RequestHeader, matchedRoute: MatchedRoute, postBody: Data = Data()) {
+    public init(header: RequestHeader, matchedRoute: MatchedRoute?, postBody: Data = Data()) {
         self.header = header
         self.matchedRoute = matchedRoute
         self.postBody = postBody
@@ -123,96 +123,54 @@ final class HTTPHandler: ChannelInboundHandler {
         }
 
         Task {
-            var errorRenderer = self.router.defaultErrorRenderer
 
             do {
 
-                let header = try RequestHeader(
-                    method: HTTPMethod(name: head.method.rawValue),
-                    httpVersion: head.version,
-                    uri: head.uri,
-                    headers: head.headers.map({ ($0, $1) })
-                )
-
-                let results: (Responder, MatchedRoute)?
-                (results, errorRenderer) = router.route(for: header)
-
-                guard let (route, matchedRoute) = results else {
-                    throw NoRouteFound()
-                }
-
-                let requestContext = RequestContext(
-                    header: header,
-                    matchedRoute: matchedRoute,
+                let hydration = try Hydration(context: .init(
+                    header: .init(
+                        method: HTTPMethod(name: head.method.rawValue),
+                        httpVersion: head.version,
+                        uri: head.uri,
+                        headers: head.headers.map({ ($0, $1) })
+                    ),
+                    matchedRoute: nil,
                     postBody: body
-                )
+                ))
 
-                var errors: [Error] = []
+                let routing = RoutingMiddleware(router: self.router, hydration: hydration)
 
-                let middlewares = self.middlewareProducers.map({ $0() })
+                hydration.context.matchedRoute = routing.matchedRoute
+
+                let errorRenderer = routing.errorRenderer
+
+                let middlewares = self.middlewareProducers
+                    .flatMap({ [ErrorRescueMiddleware(errorRenderer: errorRenderer), $0()] }) +
+                [
+                    ErrorRescueMiddleware(errorRenderer: errorRenderer),
+                    routing,
+                ]
 
                 for middleware in middlewares {
-                    try await hydratePropertyWrappers(on: middleware, context: requestContext, errors: &errors)
+                    try await hydration.hydrate(middleware)
                 }
-
-                try await hydratePropertyWrappers(on: route, context: requestContext, errors: &errors)
 
                 let middleware = MiddlewareGroup(middlewares: middlewares)
 
-                if let firstError = errors.first {
+                let response = try await middleware.execute(next: BottomRoute())
 
-                    let response = try await errorRenderer.render(primaryError: firstError, context: ErrorsContext(allErrors: errors))
+                let statusCode = response.statusCode
+                let headers = response.additionalHeaders
+                let body = try response.body()
 
-                    let statusCode = response.statusCode
-                    let headers = response.additionalHeaders
-
-                    let body = try response.body()
-
-                    try await send(
-                        statusCode: statusCode,
-                        headers: headers,
-                        body: body,
-                        version: head.version,
-                        to: channel
-                    )
-
-                } else {
-
-                    try await route.validate()
-
-                    let response = try await middleware.execute(next: route)
-
-                    let statusCode = response.statusCode
-                    let headers = response.additionalHeaders
-                    let body = try response.body()
-
-                    try await send(
-                        statusCode: statusCode,
-                        headers: headers,
-                        body: body,
-                        version: head.version,
-                        to: channel
-                    )
-                }
-
+                try await send(
+                    statusCode: statusCode,
+                    headers: headers,
+                    body: body,
+                    version: head.version,
+                    to: channel
+                )
             } catch {
-
-                do {
-                    let response = try await errorRenderer.render(primaryError: error, context: ErrorsContext(error: error))
-                    let statusCode = response.statusCode
-                    let headers = response.additionalHeaders
-                    let body = try response.body()
-
-                    try await send(
-                        statusCode: statusCode,
-                        headers: headers,
-                        body: body,
-                        version: head.version,
-                        to: channel
-                    )
-                } catch {
-                    _ = try await channel.close()
-                }
+                _ = try await channel.close()
             }
         }
     }
@@ -245,7 +203,18 @@ final class HTTPHandler: ChannelInboundHandler {
         }
     }
 
-    func hydratePropertyWrappers(on object: Any, context: RequestContext, errors: inout [Error]) async throws {
+}
+
+final class Hydration {
+    var context: RequestContext
+    var errors: [Error]
+
+    init(context: RequestContext, errors: [Error] = []) {
+        self.context = context
+        self.errors = errors
+    }
+
+    func hydrate(_ object: Any) async throws {
         let m = Mirror(reflecting: object)
         for (_, child) in m.children {
             if let prop = child as? PropertyWrapper {
