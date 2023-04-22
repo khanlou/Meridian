@@ -19,6 +19,8 @@ To render JSON, simply wrap your codable value in the `JSON` response:
 
 This will convert the array of todos into JSON data and automatically attach a `Content-Type` header with the value `application/json`.
 
+The global JSONEncoder can be changed or accessed through the environment, or a custom encoder for any specific JSON response can be passed as an initializer parameter.
+
 ### Empty responses
 
 Some requests should return an empty body with a status code of 204 No Content. Meridian provides a custom response for this.
@@ -60,3 +62,7 @@ If you need to change the status code or add additional headers, you can use Swi
     }
 
 With status code modifiers, the last one will win, and with headers, different keys will be merged, and in case of key conflicts, the last one wins.
+
+### Custom responses
+
+Conforming to the `Response` protocol can be a useful in some circumstances. The protocol allows you to access environment variables and other request context from property wrappers, like middleware and responders.

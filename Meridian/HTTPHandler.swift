@@ -144,8 +144,15 @@ final class HTTPHandler: ChannelInboundHandler {
                 let errorRenderer = routing.errorRenderer
 
                 let middlewares = self.middlewareProducers
-                    .flatMap({ [ErrorRescueMiddleware(errorRenderer: errorRenderer), $0()] }) +
+                    .flatMap({ middlewareProducer in
+                        [
+                            ResponseHydrationMiddleware(hydration: hydration),
+                            ErrorRescueMiddleware(errorRenderer: errorRenderer),
+                            middlewareProducer(),
+                        ]
+                    }) +
                 [
+                    ResponseHydrationMiddleware(hydration: hydration),
                     ErrorRescueMiddleware(errorRenderer: errorRenderer),
                     routing,
                 ]
@@ -217,6 +224,10 @@ final class Hydration {
     func hydrate(_ object: Any) async throws {
         let m = Mirror(reflecting: object)
         for (_, child) in m.children {
+            if let response = child as? Response {
+                // Responses can be wrapped by other Responses, so we need to recurse
+                try await self.hydrate(response)
+            }
             if let prop = child as? PropertyWrapper {
                 await prop.update(context, errors: &errors)
             }

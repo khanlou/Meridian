@@ -7,6 +7,36 @@
 
 import Foundation
 
+struct JSONDecoderEnvironmentKey: EnvironmentKey {
+    static var defaultValue = JSONDecoder()
+}
+
+extension EnvironmentValues {
+    public var jsonDecoder: JSONDecoder {
+        get {
+            self[JSONDecoderEnvironmentKey.self]
+        }
+        set {
+            self[JSONDecoderEnvironmentKey.self] = newValue
+        }
+    }
+}
+
+struct JSONEncoderEnvironmentKey: EnvironmentKey {
+    static var defaultValue = JSONEncoder()
+}
+
+extension EnvironmentValues {
+    public var jsonEncoder: JSONEncoder {
+        get {
+            self[JSONEncoderEnvironmentKey.self]
+        }
+        set {
+            self[JSONEncoderEnvironmentKey.self] = newValue
+        }
+    }
+}
+
 struct AnyEncodable: Encodable {
     let base: Encodable
 
@@ -19,9 +49,11 @@ public struct JSON: Response {
 
     let encodable: AnyEncodable
 
-    let encoder: JSONEncoder
+    let encoder: JSONEncoder?
 
-    public init<T: Encodable>(_ encodable: T, encoder: JSONEncoder = .init()) {
+    @Environment(\.jsonEncoder) var defaultEncoder
+
+    public init<T: Encodable>(_ encodable: T, encoder: JSONEncoder? = nil) {
         self.encodable = AnyEncodable(base: encodable)
         self.encoder = encoder
     }
@@ -31,7 +63,7 @@ public struct JSON: Response {
     }
 
     public func body() throws -> Data {
-        return try encoder.encode(encodable)
+        return try (encoder ?? defaultEncoder).encode(encodable)
     }
 }
 
