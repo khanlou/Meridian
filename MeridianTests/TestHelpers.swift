@@ -147,6 +147,7 @@ final class World {
         let handler = HTTPHandler(routesByPrefix: ["": routeGroup], errorRenderer: BasicErrorRenderer())
 
         let channel = NIOAsyncTestingChannel()
+        try channel.pipeline.addHandler(HTTPRequestParsingHandler()).wait()
         try channel.pipeline.addHandler(handler).wait()
 
         self.channel = channel

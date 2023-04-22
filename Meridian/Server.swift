@@ -87,7 +87,10 @@ public final class Server {
             .childChannelInitializer({ channel in
                 channel.pipeline.configureHTTPServerPipeline()
                     .flatMap({
-                        channel.pipeline.addHandler(HTTPHandler(router: self.router, middlewareProducers: self.middlewareProducers))
+                        channel.pipeline.addHandlers([
+                            HTTPRequestParsingHandler(),
+                            HTTPHandler(router: self.router, middlewareProducers: self.middlewareProducers),
+                        ])
                     })
             })
             .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
