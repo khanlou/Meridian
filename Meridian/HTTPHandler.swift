@@ -150,9 +150,9 @@ final class HTTPHandler: ChannelInboundHandler {
                         ErrorRescueMiddleware(errorRenderer: errorRenderer),
                         middlewareProducer(),
                     ]
-
                 }) +
             [
+                ResponseHydrationMiddleware(hydration: hydration),
                 ErrorRescueMiddleware(errorRenderer: errorRenderer),
                 routing,
             ]
