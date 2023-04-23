@@ -89,6 +89,7 @@ public final class Server {
                     .flatMap({
                         channel.pipeline.addHandlers([
                             HTTPRequestParsingHandler(),
+                            HTTPUpgradeHandler(),
                             HTTPHandler(router: self.router, middlewareProducers: self.middlewareProducers),
                         ])
                     })
