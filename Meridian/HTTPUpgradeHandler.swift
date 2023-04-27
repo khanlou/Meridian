@@ -44,10 +44,11 @@ final class HTTPUpgradeHandler: ChannelInboundHandler, RemovableChannelHandler {
 
             channel.pipeline
                 .handler(type: HTTPRequestParsingHandler.self)
-                .map({ parsingHandler -> EventLoopFuture<Void> in
+                .and(channel.pipeline.handler(type: HTTPHandler.self))
+                .map({ (parsingHandler, httpHandler) -> EventLoopFuture<Void> in
                     let buffer = UpgradeBufferHandler()
                     return context.channel.pipeline.addHandler(buffer, position: .before(parsingHandler))
-                        .flatMap({ () -> EventLoopFuture<HTTPHeaders> in
+                        .flatMap({
                             upgrader
                                 .buildUpgradeResponse(
                                     channel: channel,
@@ -65,7 +66,7 @@ final class HTTPUpgradeHandler: ChannelInboundHandler, RemovableChannelHandler {
                             return self.sendHead(head, to: channel)
                         })
                         .flatMap({
-                            let handlers: [RemovableChannelHandler] = [self, parsingHandler]
+                            let handlers: [RemovableChannelHandler] = [parsingHandler, self, httpHandler]
 
                             return .andAllComplete(handlers.map { handler in
                                 return context.pipeline.removeHandler(handler)
@@ -90,16 +91,18 @@ final class HTTPUpgradeHandler: ChannelInboundHandler, RemovableChannelHandler {
 
         let part = HTTPServerResponsePart.head(head)
 
-        _ = channel.write(part)
-
         let empty = channel.allocator.buffer(bytes: [])
         let bodyPart = HTTPServerResponsePart.body(.byteBuffer(empty))
-        _ = channel.write(bodyPart)
 
         let endPart = HTTPServerResponsePart.end(nil)
 
-        return channel.writeAndFlush(endPart)
-
+        return channel.write(part)
+            .flatMap({
+                channel.write(bodyPart)
+            })
+            .flatMap({
+                channel.writeAndFlush(endPart)
+            })
     }
 }
 

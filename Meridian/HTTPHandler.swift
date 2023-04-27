@@ -27,7 +27,7 @@ public struct RequestContext {
     }
 }
 
-final class HTTPHandler: ChannelInboundHandler {
+final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = ParsedHTTPRequest
 
     enum State {
