@@ -20,10 +20,12 @@ final class WebSocketUpgrader: HTTPServerProtocolUpgrader {
             maxFrameSize: 1 << 14,
             automaticErrorHandling: false,
             shouldUpgrade: { channel, head in
+                // check if theres a registered websocket route
                 channel.eventLoop.makeSucceededFuture(HTTPHeaders())
             },
             upgradePipelineHandler: { channel, req in
                 return WebSocket.server(on: channel, onUpgrade: { ws in
+                    // bind the websocket to its route somehow, so that messages that come in here can go into the route
                     print("upgraded! \(ws) \(req)")
                     ws.onPing({ ws2 in
                         print("got ping! pong sent automatically")
@@ -31,13 +33,7 @@ final class WebSocketUpgrader: HTTPServerProtocolUpgrader {
 
                     ws.onText({ ws, string in
                         print("Received: \(string)")
-                        Task {
-                            if #available(macOS 13.0, *) {
-                                try await Task.sleep(for: .seconds(1))
-                            }
-
-                            ws.send("Just received: \(string)")
-                        }
+                        ws.send("Just received: \(string) has \(string.count) characters")
                     })
 
                     ws.onBinary({ _, _ in
