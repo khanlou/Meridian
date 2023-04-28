@@ -55,6 +55,11 @@ public final class WebSocket {
             inner.onText({ ws, text in
                 continuation.yield(.text(text))
             })
+
+            inner.onClose
+                .whenComplete({ _ in
+                    continuation.finish()
+                })
         })
     }
 
