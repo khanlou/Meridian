@@ -42,7 +42,14 @@ final class WebSocketUpgrader: HTTPServerProtocolUpgrader {
             shouldUpgrade: { channel, head in
                 if let responder = responder(for: head) {
                     storedResponder = responder
-                    return channel.eventLoop.makeSucceededFuture(HTTPHeaders())
+                    return channel.eventLoop.makeFutureWithTask({ () -> HTTPHeaders? in
+                        let shouldConnect = try await responder.shouldConnect()
+                        if shouldConnect {
+                            return HTTPHeaders()
+                        } else {
+                            return nil
+                        }
+                    })
                 } else {
                     return channel.eventLoop.makeSucceededFuture(nil)
                 }

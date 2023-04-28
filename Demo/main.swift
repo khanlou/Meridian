@@ -44,11 +44,16 @@ Server(errorRenderer: BasicErrorRenderer())
 
 
 struct WebSocketTester: WebSocketResponder {
+
     func connected(to websocket: WebSocket) async throws {
+
+        print("Connected to websocket")
+
         for try await message in websocket.textMessages {
             print("Received \(message)")
             websocket.send(text: "String: \(message) is \(message.count) characters long")
         }
-        print("closed!")
+
+        print("Websocket closed!")
     }
 }
