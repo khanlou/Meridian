@@ -63,12 +63,7 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
             do {
 
                 let hydration = try Hydration(context: .init(
-                    header: .init(
-                        method: HTTPMethod(name: head.method.rawValue),
-                        httpVersion: head.version,
-                        uri: head.uri,
-                        headers: head.headers.map({ ($0, $1) })
-                    ),
+                    header: .init(nioHead: head),
                     matchedRoute: nil,
                     postBody: body
                 ))
