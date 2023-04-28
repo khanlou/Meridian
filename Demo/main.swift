@@ -45,12 +45,14 @@ Server(errorRenderer: BasicErrorRenderer())
 
 struct WebSocketTester: WebSocketResponder {
 
+    @Path var path
+
     func connected(to websocket: WebSocket) async throws {
 
         print("Connected to websocket")
 
         for try await message in websocket.textMessages {
-            print("Received \(message)")
+            print("Received \(message) at \(path)")
             websocket.send(text: "String: \(message) is \(message.count) characters long")
         }
 
