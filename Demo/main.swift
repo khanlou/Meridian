@@ -33,7 +33,19 @@ Server(errorRenderer: BasicErrorRenderer())
             .on(.get(.root))
 
     }
+    .register({
+        WebSocketTester()
+            .on(.get("/ws"))
+    })
     .middleware(LoggingMiddleware())
     .middleware(TimingMiddleware())
     .environmentObject(Database())
     .listen()
+
+struct WebSocketTester: WebSocketResponder {
+    func execute() async throws -> Response {
+        return WebSocket(
+            onText: { print($0) }
+        )
+    }
+}

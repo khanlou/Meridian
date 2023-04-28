@@ -91,7 +91,7 @@ public final class Server {
                 let http = HTTPHandler(router: self.router, middlewareProducers: self.middlewareProducers)
 
                 return channel.pipeline
-                    .configureHTTPServerPipeline(withServerUpgrade: (upgraders: [WebSocketUpgrader()], completionHandler: { context in
+                    .configureHTTPServerPipeline(withServerUpgrade: (upgraders: [WebSocketUpgrader(router: self.router)], completionHandler: { context in
                         _ = context.pipeline.removeHandler(parsing)
                             .and(context.pipeline.removeHandler(http))
                     }))
