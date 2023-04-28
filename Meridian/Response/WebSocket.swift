@@ -67,13 +67,14 @@ public final class WebSocket {
         _messages
     }
 
-    public var textMessages: AsyncCompactMapSequence<AsyncStream<WebSocket.Message>, String> {
-        return _messages.compactMap({ message in
-            switch message {
-            case let .text(text):
-                return text
-            default:
-                return nil
+    public var textMessages: AsyncStream<String> {
+        AsyncStream(String.self, { continuation in
+            Task {
+                for try await message in messages {
+                    if case let .text(text) = message {
+                        continuation.yield(text)
+                    }
+                }
             }
         })
     }
