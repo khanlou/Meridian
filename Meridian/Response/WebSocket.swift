@@ -6,31 +6,25 @@
 //
 
 import Foundation
+import WebSocketKit
 
 public protocol WebSocketResponder: Responder {
-
+    func shouldConnect() async throws -> Bool
+    
+    func connected(to websocket: Meridian.WebSocket) async throws
 }
 
-public struct WebSocket: Response {
-
-    let onText: (String) async throws -> Void
-
-    let onData: (Data) async throws -> Void
-
-    let onPing: () async throws -> Void
-
-    let onPong: () async throws -> Void
-
-
-    public init(onText: @escaping (String) -> Void = { _ in },
-         onData: @escaping (Data) -> Void = { _ in },
-         onPing: @escaping () -> Void = { },
-         onPong: @escaping () -> Void = { }) {
-        self.onText = onText
-        self.onData = onData
-        self.onPing = onPing
-        self.onPong = onPong
+public extension WebSocketResponder {
+    func shouldConnect() async throws -> Bool {
+        true
     }
+    
+    func execute() async throws -> Response {
+        WebSocketResponse()
+    }
+}
+
+public struct WebSocketResponse: Response {
 
     public func body() throws -> Data {
         Data()
@@ -38,5 +32,52 @@ public struct WebSocket: Response {
 
     public var statusCode: StatusCode {
         .switchingProtocols
+    }
+}
+
+public final class WebSocket {
+    public enum Message {
+        case text(String)
+        case data(Data)
+    }
+
+    let _messages: AsyncStream<Message>
+
+    let inner: WebSocketKit.WebSocket
+
+    init(inner: WebSocketKit.WebSocket) {
+        self.inner = inner
+        _messages = AsyncStream(Message.self, { continuation in
+            inner.onBinary({ ws, bytes in
+                continuation.yield(.data(Data(bytes.readableBytesView)))
+            })
+
+            inner.onText({ ws, text in
+                continuation.yield(.text(text))
+            })
+        })
+    }
+
+    public var messages: AsyncStream<Message> {
+        _messages
+    }
+
+    public var textMessages: AsyncCompactMapSequence<AsyncStream<WebSocket.Message>, String> {
+        return _messages.compactMap({ message in
+            switch message {
+            case let .text(text):
+                return text
+            default:
+                return nil
+            }
+        })
+    }
+
+    public func send(text: String) {
+        inner.send(text)
+    }
+
+    public func send(data: Data) {
+        inner.send(Array(data))
     }
 }

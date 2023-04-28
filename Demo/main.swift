@@ -42,10 +42,13 @@ Server(errorRenderer: BasicErrorRenderer())
     .environmentObject(Database())
     .listen()
 
+
 struct WebSocketTester: WebSocketResponder {
-    func execute() async throws -> Response {
-        return WebSocket(
-            onText: { print($0) }
-        )
+    func connected(to websocket: WebSocket) async throws {
+        for try await message in websocket.textMessages {
+            print("Received \(message)")
+            websocket.send(text: "String: \(message) is \(message.count) characters long")
+        }
+        print("closed!")
     }
 }

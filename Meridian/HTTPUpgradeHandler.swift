@@ -16,6 +16,8 @@ final class WebSocketUpgrader: HTTPServerProtocolUpgrader {
     let innerUpgrader: NIOWebSocketServerUpgrader
 
     init(router: Router) {
+        var storedResponder: WebSocketResponder?
+
         @Sendable func responder(for head: HTTPRequestHead) -> WebSocketResponder? {
             guard let header = try? RequestHeader(nioHead: head) else {
                 return nil
@@ -38,7 +40,8 @@ final class WebSocketUpgrader: HTTPServerProtocolUpgrader {
             maxFrameSize: 1 << 14,
             automaticErrorHandling: false,
             shouldUpgrade: { channel, head in
-                if responder(for: head) != nil {
+                if let responder = responder(for: head) {
+                    storedResponder = responder
                     return channel.eventLoop.makeSucceededFuture(HTTPHeaders())
                 } else {
                     return channel.eventLoop.makeSucceededFuture(nil)
@@ -46,57 +49,14 @@ final class WebSocketUpgrader: HTTPServerProtocolUpgrader {
             },
             upgradePipelineHandler: { channel, head in
                 return WebSocketKit.WebSocket.server(on: channel, onUpgrade: { ws in
+                    guard let route = storedResponder else {
+                        fatalError("should never get to here, should already be validated")
+                    }
+                    
                     Task {
-
                         do {
-                            guard let route = responder(for: head) else {
-                                fatalError("should never get to here, should already be validated")
-                            }
-
-                            guard let webSocket = try await route.execute() as? WebSocket else {
-                                fatalError("invalid")
-                            }
-
-                            ws.onText({ ws, text in
-                                Task {
-                                    do {
-                                        try await webSocket.onText(text)
-                                    } catch {
-                                        print(error)
-                                    }
-                                }
-                            })
-
-                            ws.onBinary({ ws, bytes in
-                                Task {
-                                    do {
-                                        try await webSocket.onData(Data(buffer: bytes, byteTransferStrategy: .automatic))
-                                    } catch {
-                                        print(error)
-                                    }
-                                }
-                            })
-
-                            ws.onPing({ ws in
-                                Task {
-                                    do {
-                                        try await webSocket.onPing()
-                                    } catch {
-                                        print(error)
-                                    }
-                                }
-                            })
-
-                            ws.onPong({ ws in
-                                Task {
-                                    do {
-                                        try await webSocket.onPong()
-                                    } catch {
-                                        print(error)
-                                    }
-                                }
-                            })
-
+                            let websocket = Meridian.WebSocket(inner: ws)
+                            try await route.connected(to: websocket)
                         } catch {
 
                         }
