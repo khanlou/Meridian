@@ -18,6 +18,7 @@ public struct RequestHeader: CustomStringConvertible {
     public let method: HTTPMethod
     public let httpVersion: HTTPVersion
     public let headers: Headers
+    public let uri: String
 
     private var urlComponents: URLComponents
 
@@ -25,6 +26,7 @@ public struct RequestHeader: CustomStringConvertible {
         self.method = method
         self.httpVersion = httpVersion
         self.headers = Headers(storage: headers)
+        self.uri = uri
         guard let components = URLComponents(string: uri) else {
             throw UnparseableRequest()
         }
@@ -45,6 +47,6 @@ public struct RequestHeader: CustomStringConvertible {
     }
 
     public var description: String {
-        "\(Self.self)(method: \(method), uri: \(path))"
+        "\(Self.self)(method: \(method), uri: \(uri))"
     }
 }
