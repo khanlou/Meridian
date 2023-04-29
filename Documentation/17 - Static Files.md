@@ -1,4 +1,4 @@
-# 13 - Static Files
+# 17 - Static Files
 
 Your app may need to serve static files, like JavaScript, CSS, or images. Meridian has a Route that can help you with this. Meridian can serve any resources that are in your module.
 

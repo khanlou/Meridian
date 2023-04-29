@@ -1,4 +1,4 @@
-# 13 - Error Renderers
+# 14 - Error Renderers
 
 Different parts of your app may need to render errors in different ways. For example, a website with a landing page and an API may need two different error renderings. If you go to the wrong address anywhere other than the API, you should get an HTML page that helps you get back to where you want to go. However, if you are in the `/api` subdirectory, you should get a machine readable JSON error. Here's an example:
 
