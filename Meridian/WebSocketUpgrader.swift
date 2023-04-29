@@ -67,7 +67,7 @@ final class WebSocketUpgrader: HTTPServerProtocolUpgrader {
                             let websocket = Meridian.WebSocket(inner: ws)
                             try await route.connected(to: websocket)
                         } catch {
-                            _ = ws.close(code: .unexpectedServerError)
+                            _ = try await ws.close(code: .unexpectedServerError).get()
                         }
                     }
 
