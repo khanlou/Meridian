@@ -47,7 +47,7 @@ struct WebSocketTester: WebSocketResponder {
 
     @Path var path
 
-    func connected(to websocket: WebSocket) async throws {
+    func connected(to webSocket: WebSocket) async throws {
 
         print("Connected to websocket")
 

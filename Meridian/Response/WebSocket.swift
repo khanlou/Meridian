@@ -11,7 +11,7 @@ import WebSocketKit
 public protocol WebSocketResponder: Responder {
     func shouldConnect() async throws -> Bool
     
-    func connected(to websocket: Meridian.WebSocket) async throws
+    func connected(to webSocket: Meridian.WebSocket) async throws
 }
 
 public extension WebSocketResponder {
