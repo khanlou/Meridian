@@ -79,6 +79,18 @@ public final class WebSocket {
         })
     }
 
+    public var dataMessages: AsyncStream<Data> {
+        AsyncStream(Data.self, { continuation in
+            Task {
+                for try await message in messages {
+                    if case let .data(data) = message {
+                        continuation.yield(data)
+                    }
+                }
+            }
+        })
+    }
+
     public func send(text: String) {
         inner.send(text)
     }
