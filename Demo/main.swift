@@ -51,9 +51,9 @@ struct WebSocketTester: WebSocketResponder {
 
         print("Connected to websocket")
 
-        for try await message in websocket.textMessages {
+        for try await message in webSocket.textMessages {
             print("Received \(message) at \(path)")
-            websocket.send(text: "String: \(message) is \(message.count) characters long")
+            webSocket.send(text: "String: \(message) is \(message.count) characters long")
         }
 
         print("Websocket closed!")
