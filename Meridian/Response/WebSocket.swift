@@ -7,6 +7,7 @@
 
 import Foundation
 import WebSocketKit
+import NIOWebSocket
 
 public protocol WebSocketResponder: Responder {
     func shouldConnect() async throws -> Bool
@@ -97,5 +98,36 @@ public final class WebSocket {
 
     public func send(data: Data) {
         inner.send(Array(data))
+    }
+
+    public var closeCode: WebSocketErrorCode? {
+        inner.closeCode
+    }
+}
+
+public extension WebSocketErrorCode {
+    var name: String {
+        switch self {
+        case .normalClosure:
+            return "normalClosure"
+        case .goingAway:
+            return "goingAway"
+        case .protocolError:
+            return "protocolError"
+        case .unacceptableData:
+            return "unacceptableData"
+        case .dataInconsistentWithMessage:
+            return "dataInconsistentWithMessage"
+        case .policyViolation:
+            return "policyViolation"
+        case .messageTooLarge:
+            return "messageTooLarge"
+        case .missingExtension:
+            return "missingExtension"
+        case .unexpectedServerError:
+            return "unexpectedServerError"
+        case .unknown(_):
+            return "unknown"
+        }
     }
 }
