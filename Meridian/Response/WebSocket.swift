@@ -44,7 +44,7 @@ public final class WebSocket {
 
     let _messages: AsyncStream<Message>
 
-    let inner: WebSocketKit.WebSocket
+    public let inner: WebSocketKit.WebSocket
 
     init(inner: WebSocketKit.WebSocket) {
         self.inner = inner
