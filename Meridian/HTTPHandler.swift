@@ -95,6 +95,7 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
                 let middleware = MiddlewareGroup(middlewares: middlewares)
 
                 let response = try await middleware.execute(next: BottomRoute())
+                    .additionalHeaders(["Server": EnvironmentValues().serverName])
 
                 let statusCode = response.statusCode
                 let headers = response.additionalHeaders
