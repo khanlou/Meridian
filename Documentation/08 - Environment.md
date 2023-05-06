@@ -32,6 +32,19 @@ To get access to this database, you can use the `@EnvironmentObject` property wr
 
 `@EnvironmentObject` uses the type of the variable to find the instance of the object.
 
+#### Dependent Environment Objects
+
+Some environment objects are dependent on other environment objects. To construct one of those objects, you can use a special version of the `.environmentObject` modifier. For example, if your Database is dependent on the server's `loopGroup`, you can initialize that like so:
+
+    .environmentObject(with: { env in
+        Database(loopGroup: env.loopGroup)
+    })
+
+Once your database is initialized, you can use it from your responders in the same way:
+
+    @EnvironmentObject var database: Database
+
+
 ### Keyed Environment Values
 
 If the object you'd like to store in the environment is a value type, or you need multiple instances for a given type (like DateFormatters, for instance), you can set up keys. This works very similarly to SwiftUI.
