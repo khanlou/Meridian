@@ -11,9 +11,18 @@ import NIOHTTP1
 @testable import Meridian
 
 struct JSONValueRoute: Responder {
-    
+
     @JSONValue("name") var name: String
-    
+
+    func execute() throws -> Response {
+        "The name is \(name)"
+    }
+}
+
+struct JSONValueWithIndexRoute: Responder {
+
+    @JSONValue("[0].name") var name: String
+
     func execute() throws -> Response {
         "The name is \(name)"
     }
@@ -78,6 +87,8 @@ class JSONValueRouteTests: XCTestCase {
         return try World(routes: [
             JSONValueRoute()
                 .on("/json_value"),
+            JSONValueWithIndexRoute()
+                .on("/json_value_with_index"),
             OptionalJSONValueRoute()
                 .on("/optional"),
             MultipleJSONValueRoute()
@@ -136,6 +147,42 @@ class JSONValueRouteTests: XCTestCase {
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a JSON body with a value of type String at key path \"name\" but did not find one.")
+    }
+
+    func testPathsWithIndexes() async throws {
+
+        let world = try self.makeWorld()
+
+        let json = """
+        [
+            { "name": "Jeff" }
+        ]
+        """
+
+        let data = json.data(using: .utf8) ?? Data()
+
+        try await world.send(HTTPRequestBuilder(uri: "/json_value_with_index", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+
+        let response = try await world.receive()
+        XCTAssertEqual(response.statusCode, .ok)
+        XCTAssertEqual(response.bodyString, "The name is Jeff")
+    }
+
+    func testPathsWithIndexesFailing() async throws {
+
+        let world = try self.makeWorld()
+
+        let json = """
+        { "name": "Jeff" }
+        """
+
+        let data = json.data(using: .utf8) ?? Data()
+
+        try await world.send(HTTPRequestBuilder(uri: "/json_value_with_index", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+
+        let response = try await world.receive()
+        XCTAssertEqual(response.statusCode, .badRequest)
+        XCTAssertEqual(response.bodyString, "The endpoint expects a JSON body with a value of type String at key path \"[0].name\" but did not find one.")
     }
 
     func testMultiple() async throws {

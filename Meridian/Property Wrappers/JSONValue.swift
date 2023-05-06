@@ -126,7 +126,7 @@ public struct JSONValue<Type: Decodable>: PropertyWrapper {
                 throw MissingBodyError()
             }
 
-            let object = try JSONSerialization.jsonObject(with: requestContext.postBody, options: []) as? NSDictionary ?? .init()
+            let object = try JSONSerialization.jsonObject(with: requestContext.postBody, options: []) as? NSObject ?? NSDictionary()
 
             let string: String
             do {
