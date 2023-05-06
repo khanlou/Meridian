@@ -18,9 +18,10 @@ final class Router {
     }
 
     func register(prefix: String, errorRenderer: ErrorRenderer?, _ routes: @escaping () -> [Route]) {
-        routesByPrefix[prefix, default: RouteGroup()].append(contentsOf: routes)
+        let normalizedPrefix = normalizePath(prefix)
+        routesByPrefix[normalizedPrefix, default: RouteGroup()].append(contentsOf: routes)
         if let errorRenderer = errorRenderer {
-            self.routesByPrefix[prefix, default: RouteGroup()].customErrorRenderer = errorRenderer
+            self.routesByPrefix[normalizedPrefix, default: RouteGroup()].customErrorRenderer = errorRenderer
         }
 
     }

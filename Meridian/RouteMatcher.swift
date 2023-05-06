@@ -7,7 +7,7 @@
 
 import Foundation
 
-private func normalizePath(_ string: String) -> String {
+func normalizePath(_ string: String) -> String {
     var result = string.split(separator: "/").joined(separator: "/")
     if !result.starts(with: "/") {
         result.insert("/", at: result.startIndex)
