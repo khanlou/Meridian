@@ -114,6 +114,39 @@ public struct JSONValue<Type: Decodable>: PropertyWrapper {
         }
     }
 
+    public init(wrappedValue: Type, _ keyPath: String) {
+        self.extractor = { requestContext in
+            try Self.checkMethod(requestContext)
+
+            try Self.checkHeader(requestContext)
+
+            guard !requestContext.postBody.isEmpty else {
+                throw MissingBodyError()
+            }
+
+            let object = try JSONSerialization.jsonObject(with: requestContext.postBody, options: []) as? NSObject ?? NSDictionary()
+
+            let string: String
+            do {
+                let result = try object._value(forKeyPath: keyPath)
+                string = String(describing: result)
+            } catch {
+                return wrappedValue
+            }
+
+            do {
+                if Type.self == Bool.self {
+                    return (string as NSString).boolValue as! Type
+                }
+                return try decodeFragment(Type.self, from: string)
+            } catch {
+                throw JSONKeyTypeMismatchError(type: Type.self, keyPath: keyPath)
+            }
+
+        }
+
+    }
+
 
     @_disfavoredOverload
     public init(_ keyPath: String) {

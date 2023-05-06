@@ -19,6 +19,15 @@ struct JSONValueRoute: Responder {
     }
 }
 
+struct JSONValueWithDefaultRoute: Responder {
+
+    @JSONValue("name") var name = "no name given!"
+
+    func execute() throws -> Response {
+        "The name is \(name)"
+    }
+}
+
 struct JSONValueWithIndexRoute: Responder {
 
     @JSONValue("[0].name") var name: String
@@ -89,6 +98,8 @@ class JSONValueRouteTests: XCTestCase {
                 .on("/json_value"),
             JSONValueWithIndexRoute()
                 .on("/json_value_with_index"),
+            JSONValueWithDefaultRoute()
+                .on("/json_value_with_default"),
             OptionalJSONValueRoute()
                 .on("/optional"),
             MultipleJSONValueRoute()
@@ -147,6 +158,25 @@ class JSONValueRouteTests: XCTestCase {
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .badRequest)
         XCTAssertEqual(response.bodyString, "The endpoint expects a JSON body with a value of type String at key path \"name\" but did not find one.")
+    }
+
+    func testKeyDefault() async throws {
+
+        let world = try self.makeWorld()
+
+        let json = """
+        {
+            "name2": "hello"
+        }
+        """
+
+        let data = json.data(using: .utf8) ?? Data()
+
+        try await world.send(HTTPRequestBuilder(uri: "/json_value_with_default", method: .POST, headers: ["Content-Type": "application/json"], bodyData: data))
+
+        let response = try await world.receive()
+        XCTAssertEqual(response.statusCode, .ok)
+        XCTAssertEqual(response.bodyString, "The name is no name given!")
     }
 
     func testPathsWithIndexes() async throws {
