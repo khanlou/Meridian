@@ -17,7 +17,7 @@ Using this property wrapper requires a `Content-Type` of `application/x-www-form
 
 ### Optionality
 
-If the query parameter is not always required, you can change its type to be an optional:
+If the URL body parameter is not required, you can change its type to be an optional:
 
     @URLBodyParameter("name") var name: String?
 
