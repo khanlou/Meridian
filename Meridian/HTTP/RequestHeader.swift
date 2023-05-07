@@ -22,6 +22,15 @@ public struct RequestHeader: CustomStringConvertible {
 
     private var urlComponents: URLComponents
 
+    public init(nioHead: HTTPRequestHead) throws {
+        try self.init(
+            method: HTTPMethod(name: nioHead.method.rawValue),
+            httpVersion: nioHead.version,
+            uri: nioHead.uri,
+            headers: nioHead.headers.map({ ($0, $1) })
+        )
+    }
+
     public init(method: HTTPMethod, httpVersion: HTTPVersion = .http1_1, uri: String, headers: [(String, String)]) throws {
         self.method = method
         self.httpVersion = httpVersion

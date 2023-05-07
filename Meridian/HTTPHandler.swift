@@ -27,19 +27,8 @@ public struct RequestContext {
     }
 }
 
-enum HTTPHandlerUnrecoverableError: LocalizedError {
-    case unexpectedPart(HTTPHandler.State, HTTPServerRequestPart)
-
-    var errorDescription: String? {
-        switch self {
-        case .unexpectedPart(let state, let httpServerRequestPart):
-            return "A part of \(httpServerRequestPart) was received while in the \(state) state."
-        }
-    }
-}
-
-final class HTTPHandler: ChannelInboundHandler {
-    typealias InboundIn = HTTPServerRequestPart
+final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
+    typealias InboundIn = ParsedHTTPRequest
 
     enum State {
         case idle
@@ -52,8 +41,6 @@ final class HTTPHandler: ChannelInboundHandler {
 
     let middlewareProducers: [() -> Middleware]
 
-    var state = State.idle
-
     convenience init(routesByPrefix: [String: RouteGroup], errorRenderer: ErrorRenderer, middlewareProducers: [() -> Middleware] = []) {
         self.init(router: Router(routesByPrefix: routesByPrefix, defaultErrorRenderer: errorRenderer), middlewareProducers: middlewareProducers)
     }
@@ -63,76 +50,20 @@ final class HTTPHandler: ChannelInboundHandler {
         self.middlewareProducers = middlewareProducers
     }
 
-    func updateState(with data: NIOAny) throws {
-        let part = unwrapInboundIn(data)
-
-        switch part {
-        case let .head(head):
-            switch state {
-            case .idle:
-                self.state = .headerReceived(head)
-            default:
-                throw HTTPHandlerUnrecoverableError.unexpectedPart(state, part)
-            }
-        case let .body(byteBuffer):
-            switch state {
-            case let .headerReceived(head):
-                self.state = .inProgress(head, Data(byteBuffer.readableBytesView))
-            case let .inProgress(head, body):
-                var body = body
-                body.append(contentsOf: byteBuffer.readableBytesView)
-                self.state = .inProgress(head, body)
-            default:
-                throw HTTPHandlerUnrecoverableError.unexpectedPart(state, part)
-            }
-        case .end(_):
-            switch state {
-            case let .headerReceived(head):
-                // what's the content length? can .body come twice?
-                self.state = .complete(head, Data())
-            case let .inProgress(head, body):
-                self.state = .complete(head, body)
-            default:
-                throw HTTPHandlerUnrecoverableError.unexpectedPart(state, part)
-            }
-        }
-    }
-
-    func dataIfReady() -> (HTTPRequestHead, Data)? {
-        if case let .complete(head, data) = state {
-            return (head, data)
-        } else {
-            return nil
-        }
-    }
-
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
 
         let channel = context.channel
 
-        do {
-            try self.updateState(with: data)
-        } catch {
-            assertionFailure(error.localizedDescription)
-            try? channel.close().wait()
-            return
-        }
-
-        guard let (head, body) = dataIfReady() else {
-            return
-        }
+        let parsedRequest = unwrapInboundIn(data)
+        let head = parsedRequest.head
+        let body = parsedRequest.data
 
         Task {
 
             do {
 
                 let hydration = try Hydration(context: .init(
-                    header: .init(
-                        method: HTTPMethod(name: head.method.rawValue),
-                        httpVersion: head.version,
-                        uri: head.uri,
-                        headers: head.headers.map({ ($0, $1) })
-                    ),
+                    header: .init(nioHead: head),
                     matchedRoute: nil,
                     postBody: body
                 ))
@@ -204,7 +135,6 @@ final class HTTPHandler: ChannelInboundHandler {
 
         do {
             _ = try await channel.writeAndFlush(endPart)
-            self.state = .idle
         } catch {
             try? await channel.close()
         }

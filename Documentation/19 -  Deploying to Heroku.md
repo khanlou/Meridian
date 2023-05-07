@@ -1,4 +1,4 @@
-# 14 - Deploying to Heroku
+# 19 - Deploying to Heroku
 
 Deploying Meridian apps to Heroku is very similar to other Swift on the server frameworks. You need 3 things.
 

@@ -85,9 +85,18 @@ public final class Server {
             .serverChannelOption(ChannelOptions.backlog, value: 256)
             .serverChannelOption(reuseAddrOpt, value: 1)
             .childChannelInitializer({ channel in
-                channel.pipeline.configureHTTPServerPipeline()
+
+                let parsing = HTTPRequestParsingHandler()
+
+                let http = HTTPHandler(router: self.router, middlewareProducers: self.middlewareProducers)
+
+                return channel.pipeline
+                    .configureHTTPServerPipeline(withServerUpgrade: (upgraders: [WebSocketUpgrader(router: self.router)], completionHandler: { context in
+                        _ = context.pipeline.removeHandler(parsing)
+                            .and(context.pipeline.removeHandler(http))
+                    }))
                     .flatMap({
-                        channel.pipeline.addHandler(HTTPHandler(router: self.router, middlewareProducers: self.middlewareProducers))
+                        channel.pipeline.addHandlers([parsing, http])
                     })
             })
             .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)

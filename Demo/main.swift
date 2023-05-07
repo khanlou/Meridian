@@ -33,7 +33,29 @@ Server(errorRenderer: BasicErrorRenderer())
             .on(.get(.root))
 
     }
+    .register({
+        WebSocketTester()
+            .on(.get("/ws"))
+    })
     .middleware(LoggingMiddleware())
     .middleware(TimingMiddleware())
     .environmentObject(Database())
     .listen()
+
+
+struct WebSocketTester: WebSocketResponder {
+
+    @Path var path
+
+    func connected(to webSocket: WebSocket) async throws {
+
+        print("Connected to websocket")
+
+        for try await message in webSocket.textMessages {
+            print("Received \(message) at \(path)")
+            webSocket.send(text: "String: \(message) is \(message.count) characters long")
+        }
+
+        print("Websocket closed!")
+    }
+}
