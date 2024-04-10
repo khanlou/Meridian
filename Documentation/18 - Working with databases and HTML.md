@@ -44,7 +44,7 @@ Once that's done, you can return HTML nodes as responses:
 
 Meridian does not include a way to talk to databases. However, any synchronous database library will work fine. If you're using Postgres, you can use [this dependency](https://github.com/khanlou/SwiftgresQL):
 
-    .package(name: "SwiftgreSQL", url: "https://github.com/khanlou/SwiftgresQL", from: "0.1.6"),
+    .package(url: "https://github.com/khanlou/SwiftgresQL", from: "0.1.6"),
 
 Then, to make a database, make a new class, like so:
 
