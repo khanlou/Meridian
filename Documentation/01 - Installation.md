@@ -4,7 +4,7 @@ Meridian uses Swift Package Manager for installation.
 
 Add Meridian as a dependency for your package:
 
-    .package(url: "https://github.com/khanlou/Meridian.git", from: "0.0.6"),
+    .package(url: "https://github.com/khanlou/Meridian.git", from: "0.2.5"),
 
 The version should be the latest tag on GitHub.
 
@@ -14,25 +14,31 @@ Add Meridian as a dependency for your target as well:
 
 If you haven't used Swift Package Manager much, here's a complete Package.swift:
 
+    // swift-tools-version:5.9
+
+    import PackageDescription
+    
     let package = Package(
-        name: "MyFirstApp",
-        products: [
-            .executable(name: "App", targets: ["App"]),
-            .library(name: "MyFirstApp", targets: ["MyFirstApp"]),
-        ],
-        dependencies: [
-            .package(url: "https://github.com/khanlou/Meridian.git", from: "0.1.2"),
-            .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.2.0"),
-        ],
-        targets: [
-            .target(name: "App", dependencies: ["MyFirstApp"]),
-            .target(name: "MyFirstApp", dependencies: [
-                .product(name: "Meridian", package: "Meridian"),
-                .product(name: "Backtrace", package: "swift-backtrace"),
-            ]),
-        .testTarget(name: "MyFirstAppTests", dependencies: ["MyFirstApp"]),
-        ]
+	    name: "MyFirstApp",
+	    platforms: [.macOS(.v14)],
+	    products: [
+	    	.executable(name: "App", targets: ["App"]),
+	    	.library(name: "MyFirstApp", targets: ["MyFirstApp"]),
+	    ],
+	    dependencies: [
+	    	.package(url: "https://github.com/khanlou/Meridian.git", from: "0.2.5"),
+	    	.package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.2.0"),
+	    ],
+	    targets: [
+	    	.executableTarget(name: "App", dependencies: ["MyFirstApp"]),
+	    	.target(name: "MyFirstApp", dependencies: [
+	    		.product(name: "Meridian", package: "Meridian"),
+	    		.product(name: "Backtrace", package: "swift-backtrace"),
+	    	]),
+	    .testTarget(name: "MyFirstAppTests", dependencies: ["MyFirstApp"]),
+	    ]
     )
+
 
 A few notes:
 
