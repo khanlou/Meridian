@@ -54,30 +54,31 @@ Then, to make a database, make a new class, like so:
     
         let pools: EventLoopGroupConnectionPool<PostgresConnectionSource>
 
-        public init(loopGroup: EventLoopGroup) {
-            var configuration = PostgresConfiguration(url: ProcessInfo.processInfo.environment["DATABASE_URL"] ?? "")!
+        public init(loopGroup: EventLoopGroup) throws {
+             var configuration = try SQLPostgresConfiguration(url: ProcessInfo.processInfo.environment["DATABASE_URL"] ?? "")
+             var tlsConfig = TLSConfiguration.makeClientConfiguration()
+             tlsConfig.certificateVerification = .none
+             configuration.coreConfiguration.tls = try .prefer(.init(configuration: tlsConfig))
 
-            configuration.tlsConfiguration = .forClient(certificateVerification: .none)
-
-            self.pools = EventLoopGroupConnectionPool(
-                source: PostgresConnectionSource(configuration: configuration),
-                on: loopGroup
-            )
-        }
+             self.pools = EventLoopGroupConnectionPool(
+                 source: PostgresConnectionSource(sqlConfiguration: configuration),
+                 on: loopGroup
+             )
+         }
         
         func fetchAllUsers() async throws -> [User] {
             return try await self.pools
                 .database(logger: Logger(label: "postgres"))
                 .sql()
                 .raw("SELECT * FROM users")
-                .decode(User.self)
+                .all(decoding: User.self)
         }
     }
 
 Lastly, add your database to the environment:
 
     .environmentObject(with: { env in
-        Database(loopGroup: env.loopGroup)
+        try! Database(loopGroup: env.loopGroup)
     })
 
 Finally, you can use your database in a Responder:
