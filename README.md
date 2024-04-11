@@ -36,7 +36,7 @@ Meridian uses Swift Package Manager for installation.
 
 Add Meridian as a dependency for your package:
 
-    .package(url: "https://github.com/khanlou/Meridian.git", from: "0.0.6"),
+    .package(url: "https://github.com/khanlou/Meridian.git", from: "0.2.5"),
 
 The version should be the latest tag on GitHub.
 
