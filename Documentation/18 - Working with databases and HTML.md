@@ -65,8 +65,8 @@ Then, to make a database, make a new class, like so:
             )
         }
         
-        func fetchAllUsers() throws -> [User] {
-            return self.pools
+        func fetchAllUsers() async throws -> [User] {
+            return try await self.pools
                 .database(logger: Logger(label: "postgres"))
                 .sql()
                 .raw("SELECT * FROM users")
@@ -87,6 +87,6 @@ Finally, you can use your database in a Responder:
         @EnvironmentObject var database: Database
     
         public func execute() async throws -> Response {
-            return try JSON(database.fetchAllUsers())
+            return try await JSON(database.fetchAllUsers())
         }
     }
