@@ -13,7 +13,7 @@ struct SampleEndpoint: Responder {
     
     @EnvironmentObject var database: Database
     
-    func body() throws {
+    func execute() throws {
         JSON(database.fetchFollowers(of: userID, sortDirection: sortDirection))
     }
   
