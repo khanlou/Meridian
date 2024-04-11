@@ -2,10 +2,7 @@
 
 Here is a minimal Meridian server.
 
-    import Backtrace
     import Meridian
-    
-    Backtrace.install()
     
     struct HelloWorld: Responder {
         func execute() async throws -> Response {
@@ -22,14 +19,9 @@ Here is a minimal Meridian server.
 
 We will go over each line in depth.
 
-First, import Meridian and Backtrace (for crashes).
+First, import Meridian.
 
-    import Backtrace
     import Meridian
-    
-Install Backtrace. This will ensure that any crashes will be logged.
-    
-    Backtrace.install()
     
 Create your first responder:
 

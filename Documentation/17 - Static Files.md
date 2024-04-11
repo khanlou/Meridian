@@ -8,7 +8,6 @@ To enable this, you need to tell your Package.swift that you have static resourc
             .target(name: "App", dependencies: ["MyFirstApp"], resources: [.process("Static")]), // => files in the Static folder will be included in the bundle
             .target(name: "MyFirstApp", dependencies: [
                 .product(name: "Meridian", package: "Meridian"),
-                .product(name: "Backtrace", package: "swift-backtrace"),
             ]),
 
 (Note: you must use `.process`. `.copy` will not work.)
