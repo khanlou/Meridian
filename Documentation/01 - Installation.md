@@ -19,24 +19,24 @@ If you haven't used Swift Package Manager much, here's a complete Package.swift:
     import PackageDescription
     
     let package = Package(
-	    name: "MyFirstApp",
-	    platforms: [.macOS(.v14)],
-	    products: [
-	    	.executable(name: "App", targets: ["App"]),
-	    	.library(name: "MyFirstApp", targets: ["MyFirstApp"]),
-	    ],
-	    dependencies: [
-	    	.package(url: "https://github.com/khanlou/Meridian.git", from: "0.2.5"),
-	    	.package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.2.0"),
-	    ],
-	    targets: [
-	    	.executableTarget(name: "App", dependencies: ["MyFirstApp"]),
-	    	.target(name: "MyFirstApp", dependencies: [
-	    		.product(name: "Meridian", package: "Meridian"),
-	    		.product(name: "Backtrace", package: "swift-backtrace"),
-	    	]),
-	    .testTarget(name: "MyFirstAppTests", dependencies: ["MyFirstApp"]),
-	    ]
+        name: "MyFirstApp",
+        platforms: [.macOS(.v14)],
+        products: [
+        	.executable(name: "App", targets: ["App"]),
+        	.library(name: "MyFirstApp", targets: ["MyFirstApp"]),
+        ],
+        dependencies: [
+        	.package(url: "https://github.com/khanlou/Meridian.git", from: "0.2.5"),
+        	.package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.2.0"),
+        ],
+        targets: [
+        	.executableTarget(name: "App", dependencies: ["MyFirstApp"]),
+        	.target(name: "MyFirstApp", dependencies: [
+        		.product(name: "Meridian", package: "Meridian"),
+        		.product(name: "Backtrace", package: "swift-backtrace"),
+        	]),
+        .testTarget(name: "MyFirstAppTests", dependencies: ["MyFirstApp"]),
+        ]
     )
 
 
