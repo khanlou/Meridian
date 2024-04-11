@@ -42,29 +42,45 @@ Once that's done, you can return HTML nodes as responses:
 
 ### Databases
 
-Meridian does not include a way to talk to databases. However, any synchronous database library will work fine. If you're using Postgres, you can use [this dependency](https://github.com/khanlou/SwiftgresQL):
+Meridian does not include a way to talk to databases. However, many database libraries will work fine. If you're using Postgres, the Vapor community's Postgres library works well:
 
-    .package(url: "https://github.com/khanlou/SwiftgresQL", from: "0.1.6"),
+    .package(url: "https://github.com/vapor/postgres-kit.git", from: "2.9.0"),
 
 Then, to make a database, make a new class, like so:
 
-    import SwiftgreSQL
+    import PostgresKit
     
     final class Database {
     
-        let connection = try! Connection(connInfo: ProcessInfo.processInfo.environment["DATABASE_URL"] ?? "")
+        let pools: EventLoopGroupConnectionPool<PostgresConnectionSource>
+
+        public init(loopGroup: EventLoopGroup) {
+            var configuration = PostgresConfiguration(url: ProcessInfo.processInfo.environment["DATABASE_URL"] ?? "")!
+
+            configuration.tlsConfiguration = .forClient(certificateVerification: .none)
+
+            self.pools = EventLoopGroupConnectionPool(
+                source: PostgresConnectionSource(configuration: configuration),
+                on: loopGroup
+            )
+        }
         
         func fetchAllUsers() throws -> [User] {
-            return try connection.execute("SELECT * FROM users")
+            return self.pools
+                .database(logger: Logger(label: "postgres"))
+                .sql()
+                .raw("SELECT * FROM users")
                 .decode(User.self)
         }
     }
 
 Lastly, add your database to the environment:
 
-    .environmentObject(Database())
+    .environmentObject(with: { env in
+        Database(loopGroup: env.loopGroup)
+    })
 
-Now, you can use your database in a Responder:
+Finally, you can use your database in a Responder:
 
     public struct ListUsersRoute: Responder {
         
