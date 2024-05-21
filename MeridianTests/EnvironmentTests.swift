@@ -35,7 +35,7 @@ struct EnvironmentKeyTestRoute: Responder {
     }
 }
 
-struct Todo: Encodable {
+struct Todo: Codable, Equatable {
     let label: String
     let done: Bool
 }
@@ -98,6 +98,13 @@ final class EnvironmentTests: XCTestCase {
 
         let response = try await world.receive()
         XCTAssertEqual(response.statusCode, .ok)
-        XCTAssertEqual(response.bodyString, "[{\"label\":\"Finish environment property wrappers\",\"done\":true},{\"label\":\"Implement an endpoint with a \\\"database\\\"\",\"done\":true},{\"label\":\"Profit!\",\"done\":false}]")
+        let body = try XCTUnwrap(response.bodyString)
+
+        let data = try XCTUnwrap(Data(body.utf8))
+
+        let decoded = try JSONDecoder().decode([Todo].self, from: data)
+
+        XCTAssertEqual(decoded, Database().todos)
+
     }
 }
