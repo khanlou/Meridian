@@ -44,7 +44,7 @@ Once that's done, you can return HTML nodes as responses:
 
 Meridian does not include a way to talk to databases. However, many database libraries will work fine. If you're using Postgres, the Vapor community's Postgres library works well:
 
-    .package(url: "https://github.com/vapor/postgres-kit.git", from: "2.9.0"),
+    .package(url: "https://github.com/vapor/postgres-kit.git", from: "2.12.0"),
 
 Then, to make a database, make a new class, like so:
 
