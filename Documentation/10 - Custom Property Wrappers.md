@@ -17,7 +17,7 @@ For a simple example, we'll take a look at an API version, passed in via a heade
     
     struct APIVersionExtractor: NonParameterizedExtractor {
         static func extract(from context: RequestContext) throws -> APIVersion? {
-            let apiVersion = context.header.headers["X-API-Version"] else {
+            guard let apiVersion = context.header.headers["X-API-Version"] else {
                 return nil
             }
             return APIVersion(rawValue: apiVersion)
