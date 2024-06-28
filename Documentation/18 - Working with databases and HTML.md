@@ -6,11 +6,11 @@ Meridian does not include support for HTML or databases, but they can be added v
 
 To render HTML, the best approach is to use Robert Böhnke's Swim. Add it as a dependency in your package:
 
-    .package(name: "HTML", url: "https://github.com/robb/Swim", .revision("46d115e")),
+    .package(url: "https://github.com/robb/Swim", from: "0.4.0"),
 
 And in your target:
 
-    .product(name: "HTML", package: "HTML")
+    .product(name: "HTML", package: "Swim")
 
 The next step is to conform Swim's Node to be a `Response`:
 
