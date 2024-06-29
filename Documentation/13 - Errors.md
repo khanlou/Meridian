@@ -1,6 +1,6 @@
 # 13 - Errors
 
-Errors are an important part of any server application, and Meridian's errors are first-class. The property wrappers through specific errors one of their preconditions is not met. For example, the `@QueryParameter` property wrapper can throw two errors:
+Errors are an important part of any server application, and Meridian's errors are first-class. The property wrappers throw specific errors one of their preconditions is not met. For example, the `@QueryParameter` property wrapper can throw two errors:
 
 * `MissingQueryParameterError` – if the query parameter is expected, but not present.
 
