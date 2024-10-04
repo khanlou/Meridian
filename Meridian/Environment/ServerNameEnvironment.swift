@@ -8,7 +8,7 @@
 import Foundation
 
 public struct ServerNameEnvironmentKey: EnvironmentKey {
-    public static var defaultValue = "Meridian"
+    public static let defaultValue = "Meridian"
 }
 
 extension EnvironmentValues {

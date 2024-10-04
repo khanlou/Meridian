@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct HTTPMethod: CustomStringConvertible, Equatable, Hashable {
+public struct HTTPMethod: CustomStringConvertible, Equatable, Hashable, Sendable {
     public let name: String
 
     public var description: String {

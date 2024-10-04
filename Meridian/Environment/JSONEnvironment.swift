@@ -8,7 +8,7 @@
 import Foundation
 
 struct JSONDecoderEnvironmentKey: EnvironmentKey {
-    static var defaultValue = JSONDecoder()
+    static let defaultValue = JSONDecoder()
 }
 
 extension EnvironmentValues {
@@ -23,7 +23,7 @@ extension EnvironmentValues {
 }
 
 struct JSONEncoderEnvironmentKey: EnvironmentKey {
-    static var defaultValue = JSONEncoder()
+    static let defaultValue = JSONEncoder()
 }
 
 extension EnvironmentValues {

@@ -8,7 +8,7 @@
 import Foundation
 
 struct RouterEnvironmentKey: EnvironmentKey {
-    static var defaultValue = Router(routesByPrefix: [:], defaultErrorRenderer: BasicErrorRenderer())
+    static let defaultValue = Router(routesByPrefix: [:], defaultErrorRenderer: BasicErrorRenderer())
 }
 
 extension EnvironmentValues {

@@ -9,7 +9,7 @@ import Foundation
 import NIO
 
 struct LoopGroupEnvironmentKey: EnvironmentKey {
-    static var defaultValue: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 0)
+    static let defaultValue: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 0)
 }
 
 extension EnvironmentValues {

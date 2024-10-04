@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct StatusCode: CustomStringConvertible, Equatable, Hashable {
+public struct StatusCode: CustomStringConvertible, Equatable, Hashable, Sendable {
     public let code: Int
     public let name: String
 
@@ -92,7 +92,7 @@ extension StatusCode {
 }
 
 extension StatusCode: CaseIterable {
-    static public var allCases: [StatusCode] = [
+    static public let allCases: [StatusCode] = [
         .`continue`, .switchingProtocols, .processing, .earlyHints,  .ok, .created, .accepted, .nonAuthoritativeInformation, .noContent, .resetContent, .partialContent, .multiStatus, .alreadyReported, .imUsed,  .multipleChoices, .movedPermanently, .found, .seeOther, .notModified, .useProxy, .temporaryRedirect, .permanentRedirect,  .badRequest, .unauthorized, .paymentRequired, .forbidden, .notFound, .methodNotAllowed, .notAcceptable, .proxyAuthenticationRequired, .requestTimeout, .conflict, .gone, .lengthRequired, .preconditionFailed, .payloadTooLarge, .uriTooLong, .unsupportedMediaType, .rangeNotSatisfiable, .expectationFailed, .imATeapot, .misdirectedRequest, .unprocessableEntity, .locked, .failedDependency, .tooEarly, .upgradeRequired, .preconditionRequired, .tooManyRequests, .requestHeaderFieldsTooLarge, .unavailableForLegalReasons,  .internalServerError, .notImplemented, .badGateway, .serviceUnavailable, .gatewayTimeout, .httpVersionNotSupported, .variantAlsoNegotiates, .insufficientStorage, .loopDetected, .notExtended, .networkAuthenticationRequired,
      ]
 }
