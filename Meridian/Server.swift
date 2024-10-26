@@ -60,7 +60,7 @@ public final class Server {
 
     public init(errorRenderer: ErrorRenderer) {
         enableLineBufferedLogging()
-        self.router = Router(routesByPrefix: [:], defaultErrorRenderer: errorRenderer)
+        self.router = Router(defaultErrorRenderer: errorRenderer)
         EnvironmentValues.shared[RouterEnvironmentKey.self] = self.router
         EnvironmentValues.shared.loopGroup = self.loopGroup
    }

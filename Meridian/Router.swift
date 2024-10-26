@@ -12,8 +12,8 @@ final class Router {
 
     var defaultErrorRenderer: ErrorRenderer
 
-    init(routesByPrefix: [String: RouteGroup], defaultErrorRenderer: ErrorRenderer) {
-        self.routesByPrefix = routesByPrefix
+    init(defaultErrorRenderer: ErrorRenderer) {
+        self.routesByPrefix = [:]
         self.defaultErrorRenderer = defaultErrorRenderer
     }
 
