@@ -39,15 +39,14 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
 
     let router: Router
 
-    let middlewareProducers: [() -> Middleware]
 
     convenience init(errorRenderer: ErrorRenderer, middlewareProducers: [() -> Middleware] = []) {
-        self.init(router: Router(defaultErrorRenderer: errorRenderer), middlewareProducers: middlewareProducers)
+        self.init(router: Router(defaultErrorRenderer: errorRenderer, middlewareProducers: middlewareProducers))
     }
 
-    init(router: Router, middlewareProducers: [() -> Middleware]) {
+    init(router: Router, middlewareProducers: [() -> Middleware] = []) {
         self.router = router
-        self.middlewareProducers = middlewareProducers
+        self.router.middlewareProducers = middlewareProducers
     }
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -74,7 +73,7 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
 
                 let errorRenderer = routing.errorRenderer
 
-                let middlewares = self.middlewareProducers
+                let middlewares = self.router.middlewareProducers
                     .flatMap({ middlewareProducer in
                         [
                             ResponseHydrationMiddleware(hydration: hydration),

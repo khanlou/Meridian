@@ -12,9 +12,12 @@ final class Router {
 
     var defaultErrorRenderer: ErrorRenderer
 
-    init(defaultErrorRenderer: ErrorRenderer) {
+    var middlewareProducers: [() -> Middleware]
+
+    init(defaultErrorRenderer: ErrorRenderer, middlewareProducers: [() -> Middleware] = []) {
         self.routesByPrefix = [:]
         self.defaultErrorRenderer = defaultErrorRenderer
+        self.middlewareProducers = middlewareProducers
     }
 
     func register(prefix: String, errorRenderer: ErrorRenderer?, _ routes: @escaping () -> [Route]) {
