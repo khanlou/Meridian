@@ -24,6 +24,12 @@ public protocol Middleware {
     func execute(next: Responder) async throws -> Response
 }
 
+public struct EmptyMiddleware: Middleware {
+    public func execute(next: Responder) async throws -> Response {
+        try await next.execute()
+    }
+}
+
 public extension Middleware {
     func makeResponder(wrapping next: Responder) async throws -> Responder {
         return BlockResponder(block: {
