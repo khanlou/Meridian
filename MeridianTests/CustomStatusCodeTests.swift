@@ -21,12 +21,12 @@ struct CustomStatusCodeTestRoute: Responder {
 final class CustomStatusCodeRouteTests: XCTestCase {
     
     func makeWorld() throws -> World {
-        return try World(routes: [
+        return try World(builder: {
             CustomStatusCodeTestRoute()
-                .on("/statusCode"),
-        ])
+                .on("/statusCode")
+        })
     }
-    
+
     func testBasic() async throws {
         
         let world = try self.makeWorld()

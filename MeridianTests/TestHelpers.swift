@@ -141,9 +141,9 @@ final class World {
 
     let channel: NIOAsyncTestingChannel
 
-    init(routes: [Route]) throws {
+    init(@RouteBuilder builder: @escaping () -> [_BuildableRoute]) throws {
         let handler = HTTPHandler(errorRenderer: BasicErrorRenderer())
-        handler.router.register({ routes })
+        handler.router.register(builder)
 
         let channel = NIOAsyncTestingChannel()
         try channel.pipeline.addHandler(HTTPRequestParsingHandler()).wait()

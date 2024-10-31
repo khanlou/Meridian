@@ -20,10 +20,10 @@ struct RedirectResponseTestRoute: Responder {
 final class RedirectRouteTests: XCTestCase {
     
     func makeWorld() throws -> World {
-        return try World(routes: [
+        return try World(builder: {
             RedirectResponseTestRoute()
-                .on("/redirect"),
-        ])
+                .on("/redirect")
+        })
     }
 
     func testBasic() async throws {

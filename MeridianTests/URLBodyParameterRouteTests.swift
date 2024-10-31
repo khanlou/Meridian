@@ -74,20 +74,20 @@ class URLBodyParameterRouteTests: XCTestCase {
     let headers = ["Content-Type": "application/x-www-form-urlencoded"]
 
     func makeWorld() throws -> World {
-        return try World(routes: [
+        return try World(builder: {
             StringBodyParameterRoute()
-                .on("/string"),
+                .on("/string")
             IntBodyParameterRoute()
-                .on("/int"),
+                .on("/int")
             MusicNoteBodyParameterRoute()
-                .on("/play"),
+                .on("/play")
             OptionalBodyParameterRoute()
-                .on("/play_optional"),
+                .on("/play_optional")
             OptionalWithDefaultBodyParameterRoute()
-                .on("/optional_with_default"),
+                .on("/optional_with_default")
             MultipleBodyParameterRoute()
-                .on("/multiple_parameter"),
-        ])
+                .on("/multiple_parameter")
+        })
     }
 
     func testString() async throws {

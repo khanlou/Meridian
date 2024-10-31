@@ -64,20 +64,20 @@ struct LetterURLParameterRoute: Responder {
 class URLParameterRouteTests: XCTestCase {
 
     func makeWorld() throws -> World {
-        return try World(routes: [
+        return try World(builder: {
             StringURLParameterRoute()
-                .on("/string/\(\.id)"),
+                .on("/string/\(\.id)")
             IntURLParameterRoute()
-                .on("/int/\(\.number)"),
+                .on("/int/\(\.number)")
             IntLikeRoute()
-                .on("/int/like"),
+                .on("/int/like")
             LetterURLParameterRoute()
-                .on("/letter/\(\.letter)"),
+                .on("/letter/\(\.letter)")
             MultipleURLParameterRoute()
-                .on("/int/\(\.number)/letter/\(\.letter)"),
+                .on("/int/\(\.number)/letter/\(\.letter)")
             NoURLParameterRoute()
-                .on("/sample"),
-        ])
+                .on("/sample")
+        })
     }
 
     func testString() async throws {

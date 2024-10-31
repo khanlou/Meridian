@@ -20,10 +20,10 @@ struct JSONResponseTestRoute: Responder {
 final class JSONResponseRouteTests: XCTestCase {
     
     func makeWorld() throws -> World {
-        return try World(routes: [
+        return try World(builder: {
             JSONResponseTestRoute()
-                .on("/customJSON"),
-        ])
+                .on("/customJSON")
+        })
     }
 
     func testBasic() async throws {

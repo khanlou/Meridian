@@ -71,12 +71,12 @@ final class EnvironmentTests: XCTestCase {
 
         EnvironmentValues.shared.storage[ObjectIdentifier(Database.self)] = Database()
 
-        return try World(routes: [
+        return try World(builder: {
             EnvironmentKeyTestRoute()
-                .on("/environmentKey"),
+                .on("/environmentKey")
             EnvironmentObjectTestRoute()
-                .on("/environmentObject"),
-        ])
+                .on("/environmentObject")
+        })
     }
 
     func testEnvironmentKeys() async throws {
