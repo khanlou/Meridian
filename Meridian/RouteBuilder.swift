@@ -28,6 +28,7 @@ extension Responder {
 public struct Group: _BuildableRoute {
     var prefix: String = ""
     var routes: () -> [_BuildableRoute]
+    var errorRenderer: ErrorRenderer?
 
     public init(_ prefix: String = "", @RouteBuilder _ builder: @escaping () -> [_BuildableRoute]) {
         self.prefix = prefix
@@ -37,6 +38,16 @@ public struct Group: _BuildableRoute {
     internal init(prefix: String = "", routes: @autoclosure @escaping () -> [Group]) {
         self.prefix = prefix
         self.routes = routes
+    }
+
+    internal init(prefix: String = "", routes: @escaping () -> [_BuildableRoute], errorRenderer: ErrorRenderer? = nil) {
+        self.prefix = prefix
+        self.routes = routes
+        self.errorRenderer = errorRenderer
+    }
+
+    public func errorRenderer(_ renderer: ErrorRenderer?) -> Self {
+        .init(prefix: prefix, routes: routes, errorRenderer: renderer)
     }
 }
 

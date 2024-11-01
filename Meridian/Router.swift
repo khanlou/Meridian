@@ -20,6 +20,7 @@ public struct RouterTrieNode {
             self.routes.append(route)
         } else if let group = buildableRoute as? Group {
             if group.prefix.path.isEmpty {
+                self.errorRenderer = group.errorRenderer
                 for route in group.routes() {
                     self.insert(route)
                 }
@@ -31,6 +32,7 @@ public struct RouterTrieNode {
                 for buildableRoute in group.routes() {
                     self.children[String(prefix), default: .empty].insert(buildableRoute)
                 }
+                self.children[String(prefix), default: .empty].errorRenderer = group.errorRenderer
             } else {
                 self.children[String(prefix), default: .empty].insert(group)
             }
@@ -38,6 +40,10 @@ public struct RouterTrieNode {
     }
 
     func bestRouteMatching(header: RequestHeader, errorHandler: inout ErrorRenderer) -> (Route, MatchedRoute)? {
+
+        if let errorRenderer {
+            errorHandler = errorRenderer
+        }
 
         if routes.isEmpty && header.path.path.isEmpty {
             return nil
