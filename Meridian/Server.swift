@@ -66,15 +66,16 @@ public final class Server {
    }
 
     @discardableResult
-    public func register(errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [Route]) -> Self {
-        self.router.register(prefix: "", errorRenderer: errorRenderer, builder)
+    public func register(errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [_BuildableRoute]) -> Self {
+        self.router.register(builder)
         return self
     }
 
     @discardableResult
-    public func group(prefix: String, errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [Route]) -> Self {
-        self.router.register(prefix: prefix, errorRenderer: errorRenderer, builder)
-        return self
+    public func group(prefix: String, errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [_BuildableRoute]) -> Self {
+        self.register(errorRenderer: errorRenderer) {
+            Group(prefix, builder)
+        }
     }
 
     public func listen() {

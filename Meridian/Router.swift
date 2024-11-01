@@ -7,41 +7,50 @@
 
 import Foundation
 
-struct RouterTrieNode {
+public struct RouterTrieNode {
     var children: [String: RouterTrieNode]
-    var routes: [() -> [Route]]
+    var routes: [Route]
     var middleware: Middleware
     var errorRenderer: ErrorRenderer?
 
     static let empty: RouterTrieNode = .init(children: [:], routes: [], middleware: EmptyMiddleware(), errorRenderer: nil)
 
-    mutating func insert(_ routes: @escaping () -> [Route], errorRenderer: ErrorRenderer?, atPath path: some Collection<Substring>) {
-        if let first = path.first {
-            self.children[String(first), default: .empty].insert(routes, errorRenderer: errorRenderer, atPath: path.dropFirst())
-        } else {
-            self.routes.append(routes)
-            if let errorRenderer {
-                self.errorRenderer = errorRenderer
+    mutating func insert(_ buildableRoute: _BuildableRoute) {
+        if let route = buildableRoute as? Route {
+            self.routes.append(route)
+        } else if let group = buildableRoute as? Group {
+            if group.prefix.path.isEmpty {
+                for route in group.routes() {
+                    self.insert(route)
+                }
+                return
+            }
+            var group = group
+            let prefix = group.prefix.path.removeFirst()
+            if group.prefix.isEmpty {
+                for buildableRoute in group.routes() {
+                    self.children[String(prefix), default: .empty].insert(buildableRoute)
+                }
+            } else {
+                self.children[String(prefix), default: .empty].insert(group)
             }
         }
     }
 
     func bestRouteMatching(header: RequestHeader, errorHandler: inout ErrorRenderer) -> (Route, MatchedRoute)? {
 
-        if routes.isEmpty && header.path.isEmpty {
+        if routes.isEmpty && header.path.path.isEmpty {
             return nil
         }
-        for route in routes.flatMap({ $0() }) {
+        for route in routes {
             if let matchedRoute = route.matcher.matches(header) {
                 return (route, matchedRoute)
             }
         }
 
-        let index = header.path.dropFirst().firstIndex(of: "/")
-        let next = header.path.dropFirst()[..<(index ?? header.path.endIndex)]
-
+        if header.path.path.isEmpty { return nil }
         var mutableHeader = header
-        mutableHeader.path.removeFirst(next.count)
+        let next = mutableHeader.path.path.removeFirst()
 
         return self.children[String(next)]?.bestRouteMatching(header: mutableHeader, errorHandler: &errorHandler)
     }
@@ -50,7 +59,7 @@ struct RouterTrieNode {
 
         var matchingMethods = Set<HTTPMethod>()
 
-        for route in routes.flatMap({ $0() }) {
+        for route in routes {
             for method in HTTPMethod.primaryMethods {
                 let header = try RequestHeader(method: method, uri: path, headers: [])
                 if route.matcher.matches(header) != nil {
@@ -61,35 +70,44 @@ struct RouterTrieNode {
 
         guard !path.isEmpty else { return matchingMethods }
 
-        let index = path.dropFirst().firstIndex(of: "/")
-        let next = path.dropFirst()[..<(index ?? path.endIndex)]
+        var path = path
 
-        let newPath = path.dropFirst(next.count + 1)
+        let next = path.removeFirst()
 
-        let fromChildren = try children[String(next), default: .empty].methods(matching: String(newPath))
+        let fromChildren = try children[String(next), default: .empty].methods(matching: String(path))
 
         return matchingMethods.union(fromChildren)
     }
 }
 
 final class Router {
-    var root: RouterTrieNode
+
+    var registeredRoutes: [() -> [_BuildableRoute]] = []
 
     var defaultErrorRenderer: ErrorRenderer
 
     var middlewareProducers: [() -> Middleware]
 
     init(defaultErrorRenderer: ErrorRenderer, middlewareProducers: [() -> Middleware] = []) {
-        self.root = .empty
         self.defaultErrorRenderer = defaultErrorRenderer
         self.middlewareProducers = middlewareProducers
     }
 
-    func register(prefix: String, errorRenderer: ErrorRenderer?, _ routes: @escaping () -> [Route]) {
-        root.insert(routes, errorRenderer: errorRenderer, atPath: normalizePath(prefix).split(separator: "/"))
+    func register(_ routes: @escaping () -> [_BuildableRoute]) {
+        registeredRoutes.append(routes)
+    }
+
+    func makeTrie() -> RouterTrieNode {
+        var root = RouterTrieNode.empty
+        for route in registeredRoutes.flatMap({ $0() }) {
+            root.insert(route)
+        }
+        return root
     }
 
     func route(for header: RequestHeader) -> ((Responder, MatchedRoute)?, ErrorRenderer) {
+        let root = makeTrie()
+
         var errorHandlerBestGuess = defaultErrorRenderer
 
         if let (route, matchedRoute) = root.bestRouteMatching(header: header, errorHandler: &errorHandlerBestGuess) {
@@ -104,7 +122,18 @@ final class Router {
     }
 
     func methods(for path: String) throws -> Set<HTTPMethod> {
-        return try root.methods(matching: path)
+        return try makeTrie().methods(matching: path)
+    }
+}
+
+private extension String {
+    var path: [Substring] {
+        get {
+            self.split(separator: "/")
+        }
+        set {
+            self = newValue.joined(separator: "/")
+        }
     }
 }
 
