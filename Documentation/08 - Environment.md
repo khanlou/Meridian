@@ -17,7 +17,7 @@ For example, if you have a database:
 You can add this to your `Server`.
 
     Server(errorRenderer: BasicErrorRenderer())
-        .register({
+        .routes({
             LogInRoute()
                 .on(.get("/login"))
         })

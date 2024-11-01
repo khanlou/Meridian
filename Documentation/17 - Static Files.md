@@ -34,7 +34,7 @@ Once that's done, the `BundledFiles` route can be included in your Path.
     import MyFirstApp
 
     Server(errorRenderer: BasicErrorRenderer())
-        .register({
+        .routes({
         
             HelloWorld()
                 .on(.root)

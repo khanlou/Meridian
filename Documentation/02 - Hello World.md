@@ -11,7 +11,7 @@ Here is a minimal Meridian server.
     }
     
     Server(errorRenderer: BasicErrorRenderer())
-        .register({
+        .routes({
             HelloWorld()
                 .on(.root)
         })
@@ -39,7 +39,7 @@ Next, create a server with a basic error renderer. You can read more about error
 
 Register your new route. The `.on` modifier attaches a path to a `Responder`, and lets Meridian know when a specific `Responder` should be used when a request comes in.
 
-        .register({
+        .routes({
             HelloWorld()
                 .on(.root)
         })

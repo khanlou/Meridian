@@ -5,35 +5,37 @@ Meridian's routing allows the expression of all kinds of routes.
 Let's look at the routing for a hypothetical todo app.
 
     Server(errorRenderer: BasicErrorRenderer())
-        .register {
+        .routes {
             LandingPage()
                 .on(.get(.root))
-        }
-        .group(prefix: "/api/todos", errorRenderer: JSONErrorRenderer()) {
-        
-            ListTodos()
-                .on([.get(.root), .get("/list")])
-    
-            ClearTodos()
-                .on(.delete(.root))
-    
-            ShowTodo()
-                .on(.get("/\(\.id)"))
 
-            CreateTodo()
-                .on(.post(.root))
-    
-            EditTodo()
-                .on(.patch("/\(\.id)"))
-    
-            DeleteTodo()
-                .on(.delete("/\(\.id)"))
-    
+            Group("/api/todos") {
+
+                ListTodos()
+                    .on([.get(.root), .get("/list")])
+
+                ClearTodos()
+                    .on(.delete(.root))
+
+                ShowTodo()
+                    .on(.get("/\(\.id)"))
+
+                CreateTodo()
+                    .on(.post(.root))
+
+                EditTodo()
+                    .on(.patch("/\(\.id)"))
+
+                DeleteTodo()
+                    .on(.delete("/\(\.id)"))
+
+            }
+            .errorRenderer(JSONErrorRenderer())
         }
         .environmentObject(Database())
         .listen()
 
-There are two ways to register routes — first, you can use the `register` method, which registers top level routes, and second, you can use the `group` method, which registers all the routes under a prefix (and includes an optional custom `ErrorRenderer`).
+Routes go in a `routes` method. You can have more than one, but you don't need more than one. Inside the routes method is a Swift result builder, which accepts both routes and groups. Using the `Group` type, you can register multiple routes under a prefix. You can also leave the prefix off, which serves as an organizational tool and will not create a path component. You can read more about Groups in [14 Error Renderers](14 - Error Renderers.md) and [15 Middleware](15 - Middleware.md)
 
 Every Responder needs to have `.on` called on it with a `RouteMatcher`. Mostly, you won't need to define custom `RouteMatcher` instances, but the ability is there if necessary.
 
