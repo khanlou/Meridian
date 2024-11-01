@@ -88,27 +88,51 @@ struct RoutingMiddleware: Middleware {
 
     let route: Responder?
     let matchedRoute: MatchedRoute?
+    let middlewares: [Middleware]
     let errorRenderer: ErrorRenderer
 
     init(router: Router, hydration: Hydration) {
         let result = router.route(for: hydration.context.header)
         self.route = result.0?.0
         self.matchedRoute = result.0?.1
-        self.errorRenderer = result.1
+        self.middlewares = result.1
+        self.errorRenderer = result.2
         self.hydration = hydration
     }
 
     func execute(next: Responder) async throws -> Response {
+        let middleware = try await makeMiddleware()
         if let route {
             try await hydration.hydrate(route)
             if let firstError = hydration.errors.first {
                 return try await errorRenderer.render(primaryError: firstError, context: .init(allErrors: hydration.errors))
             }
             try await route.validate()
-            return try await route.execute()
+            return try await middleware.execute(next: route)
         } else {
-            return try await next.execute()
+            return try await middleware.execute(next: next)
         }
+    }
+
+    func makeMiddleware() async throws -> Middleware {
+        let middlewares = self.middlewares
+            .flatMap({ middleware in
+                [
+                    ResponseHydrationMiddleware(hydration: hydration),
+                    ErrorRescueMiddleware(errorRenderer: errorRenderer),
+                    middleware,
+                ]
+            }) +
+        [
+            ResponseHydrationMiddleware(hydration: hydration),
+            ErrorRescueMiddleware(errorRenderer: errorRenderer),
+        ]
+
+        for middleware in middlewares {
+            try await hydration.hydrate(middleware)
+        }
+
+        return MiddlewareGroup(middlewares: middlewares)
     }
 }
 

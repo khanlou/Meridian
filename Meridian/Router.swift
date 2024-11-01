@@ -10,10 +10,10 @@ import Foundation
 public struct RouterTrieNode {
     var children: [String: RouterTrieNode]
     var routes: [Route]
-    var middleware: Middleware
+    var middlewareProducers: [() -> Middleware]
     var errorRenderer: ErrorRenderer?
 
-    static let empty: RouterTrieNode = .init(children: [:], routes: [], middleware: EmptyMiddleware(), errorRenderer: nil)
+    static let empty: RouterTrieNode = .init(children: [:], routes: [], middlewareProducers: [], errorRenderer: nil)
 
     mutating func insert(_ buildableRoute: _BuildableRoute) {
         if let route = buildableRoute as? Route {
@@ -21,6 +21,7 @@ public struct RouterTrieNode {
         } else if let group = buildableRoute as? Group {
             if group.prefix.path.isEmpty {
                 self.errorRenderer = group.errorRenderer
+                self.middlewareProducers.append(contentsOf: group.middlewareProducers)
                 for route in group.routes() {
                     self.insert(route)
                 }
@@ -33,13 +34,14 @@ public struct RouterTrieNode {
                     self.children[String(prefix), default: .empty].insert(buildableRoute)
                 }
                 self.children[String(prefix), default: .empty].errorRenderer = group.errorRenderer
+                self.children[String(prefix), default: .empty].middlewareProducers.append(contentsOf: group.middlewareProducers)
             } else {
                 self.children[String(prefix), default: .empty].insert(group)
             }
         }
     }
 
-    func bestRouteMatching(header: RequestHeader, errorHandler: inout ErrorRenderer) -> (Route, MatchedRoute)? {
+    func bestRouteMatching(header: RequestHeader, middleware: [Middleware], errorHandler: inout ErrorRenderer) -> (Route, [Middleware], MatchedRoute)? {
 
         if let errorRenderer {
             errorHandler = errorRenderer
@@ -50,7 +52,7 @@ public struct RouterTrieNode {
         }
         for route in routes {
             if let matchedRoute = route.matcher.matches(header) {
-                return (route, matchedRoute)
+                return (route, self.middlewareProducers.map({ $0() }) + middleware, matchedRoute)
             }
         }
 
@@ -58,7 +60,7 @@ public struct RouterTrieNode {
         var mutableHeader = header
         let next = mutableHeader.path.path.removeFirst()
 
-        return self.children[String(next)]?.bestRouteMatching(header: mutableHeader, errorHandler: &errorHandler)
+        return self.children[String(next)]?.bestRouteMatching(header: mutableHeader, middleware: self.middlewareProducers.map({ $0() }) + middleware, errorHandler: &errorHandler)
     }
 
     func methods(matching path: String) throws -> Set<HTTPMethod> {
@@ -111,20 +113,20 @@ final class Router {
         return root
     }
 
-    func route(for header: RequestHeader) -> ((Responder, MatchedRoute)?, ErrorRenderer) {
+    func route(for header: RequestHeader) -> ((Responder, MatchedRoute)?, [Middleware], ErrorRenderer) {
         let root = makeTrie()
 
         var errorHandlerBestGuess = defaultErrorRenderer
 
-        if let (route, matchedRoute) = root.bestRouteMatching(header: header, errorHandler: &errorHandlerBestGuess) {
-            return ((route.responder, matchedRoute), errorHandlerBestGuess)
+        if let (route, middleware, matchedRoute) = root.bestRouteMatching(header: header, middleware: middlewareProducers.map({ $0() }), errorHandler: &errorHandlerBestGuess) {
+            return ((route.responder, matchedRoute), middleware, errorHandlerBestGuess)
         }
 
         if header.method == .OPTIONS {
-            return ((OptionsRoute(), MatchedRoute()), errorHandlerBestGuess)
+            return ((OptionsRoute(), MatchedRoute()), middlewareProducers.map({ $0() }), errorHandlerBestGuess)
         }
 
-        return (nil, errorHandlerBestGuess)
+        return (nil, middlewareProducers.map({ $0() }), errorHandlerBestGuess)
     }
 
     func methods(for path: String) throws -> Set<HTTPMethod> {

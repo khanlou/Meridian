@@ -71,29 +71,7 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
 
                 hydration.context.matchedRoute = routing.matchedRoute
 
-                let errorRenderer = routing.errorRenderer
-
-                let middlewares = self.router.middlewareProducers
-                    .flatMap({ middlewareProducer in
-                        [
-                            ResponseHydrationMiddleware(hydration: hydration),
-                            ErrorRescueMiddleware(errorRenderer: errorRenderer),
-                            middlewareProducer(),
-                        ]
-                    }) +
-                [
-                    ResponseHydrationMiddleware(hydration: hydration),
-                    ErrorRescueMiddleware(errorRenderer: errorRenderer),
-                    routing,
-                ]
-
-                for middleware in middlewares {
-                    try await hydration.hydrate(middleware)
-                }
-
-                let middleware = MiddlewareGroup(middlewares: middlewares)
-
-                let response = try await middleware.execute(next: BottomRoute())
+                let response = try await routing.execute(next: BottomRoute())
                     .additionalHeaders(["Server": EnvironmentValues().serverName])
 
                 let statusCode = response.statusCode

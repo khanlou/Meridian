@@ -18,12 +18,12 @@ final class WebSocketUpgrader: HTTPServerProtocolUpgrader {
     init(router: Router) {
         var storedResponder: WebSocketResponder?
 
-        @Sendable func responder(for head: HTTPRequestHead) -> (WebSocketResponder, MatchedRoute)? {
+        @Sendable func responder(for head: HTTPRequestHead) -> (WebSocketResponder, [Middleware], MatchedRoute)? {
             guard let header = try? RequestHeader(nioHead: head) else {
                 return nil
             }
 
-            let (match, _) = router.route(for: header)
+            let (match, middleware, _) = router.route(for: header)
 
             guard let match else {
                 return nil
@@ -33,14 +33,14 @@ final class WebSocketUpgrader: HTTPServerProtocolUpgrader {
                 return nil
             }
 
-            return (responder, match.1)
+            return (responder, middleware, match.1)
         }
 
         self.innerUpgrader = NIOWebSocketServerUpgrader(
             maxFrameSize: 1 << 14,
             automaticErrorHandling: false,
             shouldUpgrade: { channel, head in
-                if let (responder, matchedRoute) = responder(for: head) {
+                if let (responder, _, matchedRoute) = responder(for: head) {
                     storedResponder = responder
                     return channel.eventLoop.makeFutureWithTask({ () -> HTTPHeaders? in
                         let hydration = try Hydration(context: .init(header: .init(nioHead: head), matchedRoute: matchedRoute))

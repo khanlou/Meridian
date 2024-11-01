@@ -65,6 +65,7 @@ public final class Server {
         EnvironmentValues.shared.loopGroup = self.loopGroup
    }
 
+    // deprecate
     @discardableResult
     public func register(errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [_BuildableRoute]) -> Self {
         self.routes {
@@ -73,6 +74,7 @@ public final class Server {
         }
     }
 
+    // deprecate
     @discardableResult
     public func group(prefix: String, errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [_BuildableRoute]) -> Self {
         self.routes {
