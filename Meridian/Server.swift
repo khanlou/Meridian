@@ -20,34 +20,6 @@ struct ServeOptions: ParsableArguments {
     @Option var host: String = "localhost"
 }
 
-struct RouteGroup: ExpressibleByArrayLiteral {
-
-    var routes: [() -> [Route]]
-    var customErrorRenderer: ErrorRenderer?
-
-    init() {
-        self.routes = []
-        self.customErrorRenderer = nil
-    }
-
-    init(arrayLiteral elements: Route...) {
-        self.routes = [{ elements }]
-        self.customErrorRenderer = nil
-    }
-
-    mutating func append(_ route: Route) {
-        self.routes.append({ [route] })
-    }
-
-    mutating func append(contentsOf routes: @escaping () -> [Route]) {
-        self.routes.append(routes)
-    }
-
-    func makeAllRoutes() -> [Route] {
-        routes.flatMap({ $0() })
-    }
-}
-
 public final class Server {
 
     let options = ServeOptions.parseOrExit()
