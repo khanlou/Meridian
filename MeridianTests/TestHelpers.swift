@@ -141,8 +141,8 @@ final class World {
 
     let channel: NIOAsyncTestingChannel
 
-    init(@RouteBuilder builder: @escaping () -> [_BuildableRoute]) throws {
-        let handler = HTTPHandler(errorRenderer: BasicErrorRenderer())
+    init(errorRenderer: ErrorRenderer = BasicErrorRenderer(), @RouteBuilder builder: @escaping () -> [_BuildableRoute]) throws {
+        let handler = HTTPHandler(errorRenderer: errorRenderer)
         handler.router.register(builder)
 
         let channel = NIOAsyncTestingChannel()
