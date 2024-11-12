@@ -105,9 +105,10 @@ struct RoutingMiddleware: Middleware {
         if let route {
             try await hydration.hydrate(route)
             if let firstError = hydration.errors.first {
-                let response = try await errorRenderer.render(primaryError: firstError, context: .init(allErrors: hydration.errors))
-                let wrapper = ResponseWrapper(response: response)
-                return try await middleware.execute(next: wrapper)
+                let responder = BlockResponder {
+                    try await errorRenderer.render(primaryError: firstError, context: .init(allErrors: hydration.errors))
+                }
+                return try await middleware.execute(next: responder)
             }
             try await route.validate()
             return try await middleware.execute(next: route)
@@ -136,15 +137,6 @@ struct RoutingMiddleware: Middleware {
 
         return MiddlewareGroup(middlewares: middlewares)
     }
-
-    struct ResponseWrapper: Responder {
-        let response: Response
-        
-        func execute() async throws -> Response {
-            return response
-        }
-    }
-
 }
 
 struct ErrorRescueMiddleware: Middleware {
