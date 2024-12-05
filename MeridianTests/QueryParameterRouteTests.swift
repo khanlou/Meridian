@@ -94,24 +94,24 @@ struct RequiredFlagParameterRoute: Responder {
 class QueryParameterRouteTests: XCTestCase {
     
     func makeWorld() throws -> World {
-        return try World(routes: [
+        return try World(builder: {
             StringQueryParameterRoute()
-                .on("/string"),
+                .on("/string")
             IntQueryParameterRoute()
-                .on("/int"),
+                .on("/int")
             MusicNoteQueryParameterRoute()
-                .on("/play"),
+                .on("/play")
             OptionalParameterRoute()
-                .on("/play_optional"),
+                .on("/play_optional")
             OptionalWithDefaultParameterRoute()
-                .on("/optional_with_default"),
+                .on("/optional_with_default")
             MultipleParameterRoute()
-                .on("/multiple_parameter"),
+                .on("/multiple_parameter")
             OptionalFlagParameterRoute()
-                .on("/optional_flag"),
+                .on("/optional_flag")
             RequiredFlagParameterRoute()
-                .on("/required_flag"),
-        ])
+                .on("/required_flag")
+        })
     }
 
     func testString() async throws {

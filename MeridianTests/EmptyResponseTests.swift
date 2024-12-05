@@ -19,12 +19,12 @@ struct EmptyResponseTestRoute: Responder {
 final class EmptyResponseRouteTests: XCTestCase {
     
     func makeWorld() throws -> World {
-        return try World(routes: [
+        return try World(builder: {
             EmptyResponseTestRoute()
-                .on("/emptyResponse"),
-        ])
+                .on("/emptyResponse")
+        })
     }
-    
+
     func testBasic() async throws {
         
         let world = try self.makeWorld()

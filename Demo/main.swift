@@ -12,26 +12,29 @@ import Meridian
 Backtrace.install()
 
 Server(errorRenderer: BasicErrorRenderer())
-    .group(prefix: "todos", errorRenderer: JSONErrorRenderer()) {
+    .routes {
+        Group("todos") {
 
-        DeleteTodo()
-            .on(.delete("/\(\.id)"))
+            DeleteTodo()
+                .on(.delete("/\(\.id)"))
 
-        EditTodo()
-            .on(.patch("/\(\.id)"))
+            EditTodo()
+                .on(.patch("/\(\.id)"))
 
-        ShowTodo()
-            .on(.get("/\(\.id)"))
+            ShowTodo()
+                .on(.get("/\(\.id)"))
 
-        ClearTodos()
-            .on(.delete(.root))
+            ClearTodos()
+                .on(.delete(.root))
 
-        CreateTodo()
-            .on(.post(.root))
-        
-        ListTodos()
-            .on(.get(.root))
+            CreateTodo()
+                .on(.post(.root))
 
+            ListTodos()
+                .on(.get(.root))
+
+        }
+        .errorRenderer(JSONErrorRenderer())
     }
     .register({
         WebSocketTester()

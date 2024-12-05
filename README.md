@@ -20,7 +20,7 @@ struct SampleEndpoint: Responder {
 }
 
 Server(errorRenderer: BasicErrorRenderer())
-    .register {
+    .routes {
         SampleEndpoint()
             .on("/api/users/\(\.id))/followers")
 

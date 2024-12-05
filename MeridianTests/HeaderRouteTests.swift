@@ -22,10 +22,10 @@ struct HeaderTestRoute: Responder {
 final class HeaderRouteTests: XCTestCase {
 
     func makeWorld() throws -> World {
-        return try World(routes: [
+        return try World(builder: {
             HeaderTestRoute()
-                .on("/header"),
-        ])
+                .on("/header")
+        })
     }
 
     func testRandomly() async throws {

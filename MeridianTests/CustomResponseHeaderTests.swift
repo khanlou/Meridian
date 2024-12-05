@@ -21,10 +21,10 @@ struct CustomResponseHeaderTestRoute: Responder {
 final class CustomResponseHeaderTests: XCTestCase {
     
     func makeWorld() throws -> World {
-        return try World(routes: [
+        return try World(builder: {
             CustomResponseHeaderTestRoute()
-                .on("/customHeader"),
-        ])
+                .on("/customHeader")
+        })
     }
     
     func testBasic() async throws {

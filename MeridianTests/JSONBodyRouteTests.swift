@@ -43,12 +43,12 @@ struct OptionalJSONBodyTestRoute: Responder {
 final class JSONBodyRouteTests: XCTestCase {
     
     func makeWorld() throws -> World {
-        return try World(routes: [
+        return try World(builder: {
             JSONBodyTestRoute()
-                .on("/json_body"),
+                .on("/json_body")
             OptionalJSONBodyTestRoute()
-                .on("/optional_json_body"),
-        ])
+                .on("/optional_json_body")
+        })
     }
 
     func testBasic() async throws {

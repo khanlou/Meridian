@@ -21,7 +21,7 @@ URL parameters are slightly more complex than query parameters in Meridian. This
     }
 
     Server(errorRenderer: IBErrorRenderer())
-        .register({
+        .routes({
             
             ShowInvoice()
                 .on("/invoices/\(\.invoiceID)")

@@ -22,10 +22,10 @@ struct HTTPMethodTestRoute: Responder {
 final class HTTPMethodRouteTests: XCTestCase {
 
     func makeWorld() throws -> World {
-        return try World(routes: [
+        return try World(builder: {
             HTTPMethodTestRoute()
-                .on("/method"),
-        ])
+                .on("/method")
+        })
     }
 
     func testRandomly() async throws {

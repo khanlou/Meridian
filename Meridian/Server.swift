@@ -20,34 +20,6 @@ struct ServeOptions: ParsableArguments {
     @Option var host: String = "localhost"
 }
 
-struct RouteGroup: ExpressibleByArrayLiteral {
-
-    var routes: [() -> [Route]]
-    var customErrorRenderer: ErrorRenderer?
-
-    init() {
-        self.routes = []
-        self.customErrorRenderer = nil
-    }
-
-    init(arrayLiteral elements: Route...) {
-        self.routes = [{ elements }]
-        self.customErrorRenderer = nil
-    }
-
-    mutating func append(_ route: Route) {
-        self.routes.append({ [route] })
-    }
-
-    mutating func append(contentsOf routes: @escaping () -> [Route]) {
-        self.routes.append(routes)
-    }
-
-    func makeAllRoutes() -> [Route] {
-        routes.flatMap({ $0() })
-    }
-}
-
 public final class Server {
 
     let options = ServeOptions.parseOrExit()
@@ -65,15 +37,27 @@ public final class Server {
         EnvironmentValues.shared.loopGroup = self.loopGroup
    }
 
+    // deprecate
     @discardableResult
-    public func register(errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [Route]) -> Self {
-        self.router.register(prefix: "", errorRenderer: errorRenderer, builder)
-        return self
+    public func register(errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [_BuildableRoute]) -> Self {
+        self.routes {
+            Group("", builder)
+                .errorRenderer(errorRenderer)
+        }
+    }
+
+    // deprecate
+    @discardableResult
+    public func group(prefix: String, errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [_BuildableRoute]) -> Self {
+        self.routes {
+            Group(prefix, builder)
+                .errorRenderer(errorRenderer)
+        }
     }
 
     @discardableResult
-    public func group(prefix: String, errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [Route]) -> Self {
-        self.router.register(prefix: prefix, errorRenderer: errorRenderer, builder)
+    public func routes(@RouteBuilder _ builder: @escaping () -> [_BuildableRoute]) -> Self {
+        self.router.register(builder)
         return self
     }
 

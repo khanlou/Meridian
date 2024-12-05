@@ -7,7 +7,9 @@
 
 import Foundation
 
-public struct Route {
+public protocol _BuildableRoute { }
+
+public struct Route: _BuildableRoute {
     public let matcher: RouteMatcher
     public let responder: Responder
 
@@ -23,9 +25,41 @@ extension Responder {
     }
 }
 
+public struct Group: _BuildableRoute {
+    var prefix: String = ""
+    var routes: () -> [_BuildableRoute]
+    var errorRenderer: ErrorRenderer?
+    var middlewareProducers: [() -> Middleware] = []
+
+    public init(_ prefix: String = "", @RouteBuilder _ builder: @escaping () -> [_BuildableRoute]) {
+        self.prefix = prefix
+        self.routes = builder
+    }
+
+    internal init(prefix: String = "", routes: @autoclosure @escaping () -> [Group]) {
+        self.prefix = prefix
+        self.routes = routes
+    }
+
+    internal init(prefix: String = "", routes: @escaping () -> [_BuildableRoute], errorRenderer: ErrorRenderer? = nil, middlewareProducers: [() -> Middleware] = []) {
+        self.prefix = prefix
+        self.routes = routes
+        self.errorRenderer = errorRenderer
+        self.middlewareProducers = middlewareProducers
+    }
+
+    public func errorRenderer(_ renderer: ErrorRenderer?) -> Self {
+        .init(prefix: prefix, routes: routes, errorRenderer: renderer, middlewareProducers: middlewareProducers)
+    }
+
+    public func middleware(_ middlewareProducer: @autoclosure @escaping () -> Middleware) -> Self {
+        .init(prefix: prefix, routes: routes, errorRenderer: errorRenderer, middlewareProducers: self.middlewareProducers + [middlewareProducer])
+    }
+}
+
 @resultBuilder
 public struct RouteBuilder {
-    public static func buildBlock(_ routes: Route...) -> [Route] {
-        return routes
+    public static func buildBlock(_ routes: _BuildableRoute...) -> [_BuildableRoute] {
+        routes
     }
 }

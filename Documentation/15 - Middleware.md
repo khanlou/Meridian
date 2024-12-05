@@ -3,15 +3,22 @@
 Middleware is a way to inject behavior before or after your requests.
 
     Server(errorRenderer: BasicErrorRenderer())
-        .register {
+        .routes {
             LandingPage()
                 .on(.get(.root))
+                
+            Group("/api") {
+                ListTodos()
+                    .on(.get("/todos))
+            }
+            .errorRenderer(JSONErrorRenderer())
+            .middleware(RateLimitingMiddleware())
+            .middleware(LoggingMiddleware())
         }
-        .middleware(LoggingMiddleware())
         .middleware(TimingMiddleware())
         .listen()
 
-This code will install two middlewares into the server, one to log every request that comes in, and one logs the duration of each request.
+This code will install two middlewares on the `/api` group, one to log every request that comes in, and one that rate limits users. In addition, there is a middleware installed on the whole server that logs the duration of every request request.
 
 Middlewares are executed in the order that they are added. In this case, the logging middleware is the first thing that is executed when the request comes in, and the last thing to be executed as the request is being sent out.
 
@@ -53,5 +60,3 @@ To execute something after the responder has done its work, store the result of 
     }
 
 Middleware can take an arbitrary amount of time to execute, using `async` tasks.
-
-Middleware applies to all queries that come into the server.

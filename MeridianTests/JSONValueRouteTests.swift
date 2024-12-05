@@ -93,22 +93,22 @@ struct OptionalBoolJSONValueRoute: Responder {
 class JSONValueRouteTests: XCTestCase {
     
     func makeWorld() throws -> World {
-        return try World(routes: [
+        return try World(builder: {
             JSONValueRoute()
-                .on("/json_value"),
+                .on("/json_value")
             JSONValueWithIndexRoute()
-                .on("/json_value_with_index"),
+                .on("/json_value_with_index")
             JSONValueWithDefaultRoute()
-                .on("/json_value_with_default"),
+                .on("/json_value_with_default")
             OptionalJSONValueRoute()
-                .on("/optional"),
+                .on("/optional")
             MultipleJSONValueRoute()
-                .on("/multiple"),
+                .on("/multiple")
             BoolJSONValueRoute()
-                .on("/hi"),
+                .on("/hi")
             OptionalBoolJSONValueRoute()
                 .on("/optional_bool")
-        ])
+        })
     }
 
     func testString() async throws {
