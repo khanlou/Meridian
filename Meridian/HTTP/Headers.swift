@@ -17,4 +17,8 @@ public struct Headers {
             })?
             .value
     }
+
+    public var allHeaders: [(name: String, value: String)] {
+        storage
+    }
 }
