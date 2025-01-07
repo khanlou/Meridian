@@ -15,7 +15,7 @@ func normalizePath(_ string: String) -> String {
     return result
 }
 
-public struct MatchedRoute {
+public struct MatchedRoute: Sendable {
     let parameters: [String: Substring]
 
     public init(parameters: [String: Substring] = [:]) {
@@ -38,10 +38,10 @@ public struct MatchedRoute {
     }
 }
 
-public struct RouteMatcher {
-    public let matches: (RequestHeader) -> MatchedRoute?
+public struct RouteMatcher: Sendable {
+    public let matches: @Sendable (RequestHeader) -> MatchedRoute?
 
-    public init(matches: @escaping (RequestHeader) -> MatchedRoute?) {
+    public init(matches: @escaping @Sendable (RequestHeader) -> MatchedRoute?) {
         self.matches = matches
     }
 
@@ -87,7 +87,7 @@ public struct RouteMatcher {
 
 extension RouteMatcher: ExpressibleByStringInterpolation {
 
-    public struct RegexMatcher: StringInterpolationProtocol {
+    public struct RegexMatcher: StringInterpolationProtocol, Sendable {
 
         var regexString = ""
 
