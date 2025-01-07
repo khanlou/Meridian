@@ -9,7 +9,7 @@ import Foundation
 
 public protocol Response {
 
-    var statusCode: StatusCode  { get }
+    var statusCode: StatusCode { get }
 
     var additionalHeaders: [String: String] { get }
 
