@@ -11,7 +11,7 @@ import NIOHTTP1
 @testable import Meridian
 
 struct NumberFormatterEnvironmentKey: EnvironmentKey {
-    static var defaultValue = NumberFormatter()
+    static let defaultValue = NumberFormatter()
 }
 
 extension EnvironmentValues {
