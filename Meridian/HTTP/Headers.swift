@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Headers {
+public struct Headers: Sendable {
     let storage: [(name: String, value: String)]
 
     public subscript(name: String) -> String? {
