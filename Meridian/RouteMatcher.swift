@@ -38,34 +38,48 @@ public struct MatchedRoute: Sendable {
     }
 }
 
-public struct RouteMatcher: Sendable {
-    public let matches: @Sendable (RequestHeader) -> MatchedRoute?
+public indirect enum RouteMatcher: Sendable {
+    case any
+    case root
+    case path(String)
+    case interpolated(InterpolatedPath)
+    case custom(matches: @Sendable (RequestHeader) -> MatchedRoute?)
+    case method(HTTPMethod, RouteMatcher)
+    case multiple([RouteMatcher])
 
-    public init(matches: @escaping @Sendable (RequestHeader) -> MatchedRoute?) {
-        self.matches = matches
+    public init(matches: @Sendable @escaping (RequestHeader) -> MatchedRoute?) {
+        self = .custom(matches: matches)
     }
 
-    public static func path(_ string: String) -> RouteMatcher {
-        return RouteMatcher(matches: { header in
-            if (normalizePath(header.path) == normalizePath(string)) {
-                return MatchedRoute()
-            } else {
-                return nil
-            }
-        })
-    }
-
-    public static let root = RouteMatcher.path("")
-
-    public static let any = RouteMatcher(matches: { _ in MatchedRoute() })
-
-    public static func method(_ method: HTTPMethod, _ matcher: RouteMatcher) -> RouteMatcher {
-        RouteMatcher(matches: { header in
-            if header.method == method {
-                return matcher.matches(header)
-            }
+    public func matches(_ header: RequestHeader) -> MatchedRoute? {
+        switch self {
+        case .path(let string) where normalizePath(header.path) == normalizePath(string):
+            return MatchedRoute()
+        case .path:
             return nil
-        })
+
+        case .root where normalizePath(header.path) == normalizePath(""):
+            return MatchedRoute()
+        case .root:
+            return nil
+
+        case let .method(method, matcher) where method == header.method:
+            return matcher.matches(header)
+        case .method:
+            return nil
+
+        case let .interpolated(interpolatedPath):
+            return interpolatedPath.matches(header)
+
+        case let .multiple(matchers):
+            return matchers.lazy.compactMap({ $0.matches(header) }).first
+
+        case .any:
+            return MatchedRoute()
+
+        case .custom(let matches):
+            return matches(header)
+        }
     }
 
     public static func get(_ matcher: RouteMatcher) -> RouteMatcher {
@@ -87,69 +101,105 @@ public struct RouteMatcher: Sendable {
 
 extension RouteMatcher: ExpressibleByStringInterpolation {
 
-    public struct RegexMatcher: StringInterpolationProtocol, Sendable {
-
-        var regexString = ""
-
-        var mapping: [(String, LosslessStringConvertible.Type)] = []
-
-        public init(literalCapacity: Int, interpolationCount: Int) {
-
-        }
-
-        mutating public func appendLiteral(_ literal: String) {
-            regexString.append(literal) // escape for regex
-        }
-
-        public mutating func appendInterpolation<SpecificKey: URLParameterKey>(_ urlParameter: KeyPath<ParameterKeys, SpecificKey>) {
-
-            regexString.append("([^/]+)")
-
-            mapping.append((SpecificKey.stringKey, SpecificKey.DecodeType.self))
-        }
-    }
-
     public init(stringLiteral value: String) {
-        self = Self.path(value)
+        self = .path(value)
     }
 
-    public init(stringInterpolation: RegexMatcher) {
-        let regex = try! NSRegularExpression(pattern: "^\(normalizePath(stringInterpolation.regexString))$")
-
-        self.matches = { header in
-            let path = normalizePath(header.path)
-            let matches = regex.matches(in: path, range: NSRange(location: 0, length: path.utf16.count))
-
-            if matches.isEmpty {
-                return nil
-            }
-
-            var result: [String: Substring] = [:]
-
-            for match in matches {
-                let ranges = (0..<match.numberOfRanges)
-                    .dropFirst() /*ignore the first match*/
-                    .map({ match.range(at: $0) })
-
-                for (mapping, range) in zip(stringInterpolation.mapping, ranges) {
-                    let (urlParameterName, type) = mapping
-                    guard let nativeRange = Range(range, in: path) else { fatalError("Should be able to convert ranges") }
-                    let substring = path[nativeRange]
-                    let valueIsConvertible = type.init(String(substring)) != nil
-                    guard valueIsConvertible else { return nil }
-                    result[urlParameterName] = substring
-                }
-            }
-
-            return MatchedRoute(parameters: result)
-        }
+    public init(stringInterpolation: InterpolatedPath) {
+        self = .interpolated(stringInterpolation)
     }
 }
 
 extension RouteMatcher: ExpressibleByArrayLiteral {
     public init(arrayLiteral elements: RouteMatcher...) {
-        self.matches = { header in
-            elements.lazy.compactMap({ $0.matches(header) }).first
+        self = .multiple(elements)
+    }
+}
+
+public struct InterpolatedPath: StringInterpolationProtocol, Sendable {
+    enum Component: Sendable {
+        case literal(String)
+        case parameter(name: String, type: LosslessStringConvertible.Type)
+    }
+
+    var components: [Component] = []
+
+    public init(literalCapacity: Int, interpolationCount: Int) {
+
+    }
+
+    mutating public func appendLiteral(_ literal: String) {
+        components.append(.literal(literal))
+    }
+
+    public mutating func appendInterpolation<SpecificKey: URLParameterKey>(_ urlParameter: KeyPath<ParameterKeys, SpecificKey>) {
+
+        components.append(.parameter(name: SpecificKey.stringKey, type: SpecificKey.DecodeType.self))
+    }
+
+    var regex: NSRegularExpression {
+        let regexString = components
+            .map({ component -> String in
+                switch component {
+                case .literal(let string):
+                    return string
+                case .parameter:
+                    return "([^/]+)"
+                }
+            })
+            .joined()
+
+        return try! NSRegularExpression(pattern: "^\(normalizePath(regexString))$")
+    }
+
+    var mapping: [(String, LosslessStringConvertible.Type)] {
+        components.compactMap({ component in
+            switch component {
+            case .literal(_):
+                nil
+            case .parameter(let name, let type):
+                (name, type)
+            }
+        })
+    }
+
+    var pathString: String {
+        components.compactMap({ component in
+            switch component {
+            case let .literal(string):
+                string
+            case .parameter(let name, _):
+                "{\(name.split(separator: ".").last ?? name[...])}"
+            }
+        })
+        .joined()
+    }
+
+    func matches(_ header: RequestHeader) -> MatchedRoute? {
+        let path = normalizePath(header.path)
+        let matches = regex.matches(in: path, range: NSRange(location: 0, length: path.utf16.count))
+
+        if matches.isEmpty {
+            return nil
         }
+
+        var result: [String: Substring] = [:]
+
+        for match in matches {
+            let ranges = (0..<match.numberOfRanges)
+                .dropFirst() /*ignore the first match*/
+                .map({ match.range(at: $0) })
+
+            for (mapping, range) in zip(mapping, ranges) {
+                let (urlParameterName, type) = mapping
+                guard let nativeRange = Range(range, in: path) else { fatalError("Should be able to convert ranges") }
+                let substring = path[nativeRange]
+                let valueIsConvertible = type.init(String(substring)) != nil
+                guard valueIsConvertible else { return nil }
+                result[urlParameterName] = substring
+            }
+        }
+
+        return MatchedRoute(parameters: result)
     }
 }
