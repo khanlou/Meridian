@@ -112,6 +112,7 @@ final class RouterTests: XCTestCase {
                 .middleware(AddHeaderMiddleware(key: "Shared-Middleware", value: "B"))
                 .middleware(AddHeaderMiddleware(key: "Middleware", value: "B"))
             }
+            .middleware(AddHeaderMiddleware(key: "GroupWithNoNameMiddleware", value: "A"))
         })
     }
 
@@ -129,6 +130,7 @@ final class RouterTests: XCTestCase {
         try await atPath("/a", expect: .body("matching a subpath should work"))
         try await atPath("/throws", expect: .body("An unknown error occurred in ThrowingExtractor. (Error with dependency)"))
         try await atPath("/b", expect: .body("an group with no prefix should work"))
+        try await atPath("/b", expect: .header("GroupWithNoNameMiddleware", "A"))
         try await atPath("/c", expect: .body("another group with no prefix should work"))
         try await atPath("/c", expect: .headerNil("Middleware"))
         try await atPath("/z", expect: .notFound)
