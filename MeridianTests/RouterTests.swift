@@ -113,7 +113,7 @@ final class RouterTests: XCTestCase {
                 .middleware(AddHeaderMiddleware(key: "Middleware", value: "B"))
             }
             .middleware(AddHeaderMiddleware(key: "GroupWithNoNameMiddleware", value: "A"))
-        })
+        }, middlewareProducers: [{ AddHeaderMiddleware(key: "Middleware", value: "A") }])
     }
 
     enum Expectation {
@@ -125,14 +125,15 @@ final class RouterTests: XCTestCase {
 
     func testBasic() async throws {
         try await atPath("/", expect: .body("root paths should work"))
-        try await atPath("/", expect: .headerNil("Middleware"))
+        try await atPath("/", expect: .headerNil("Shared-Middleware"))
+        try await atPath("/a", expect: .header("Middleware", "A"))
         try await atPath("/", expect: .headerNil("Shared-Middleware"))
         try await atPath("/a", expect: .body("matching a subpath should work"))
         try await atPath("/throws", expect: .body("An unknown error occurred in ThrowingExtractor. (Error with dependency)"))
         try await atPath("/b", expect: .body("an group with no prefix should work"))
         try await atPath("/b", expect: .header("GroupWithNoNameMiddleware", "A"))
         try await atPath("/c", expect: .body("another group with no prefix should work"))
-        try await atPath("/c", expect: .headerNil("Middleware"))
+        try await atPath("/c", expect: .headerNil("Shared-Middleware"))
         try await atPath("/z", expect: .notFound)
         try await atPath("/z", expect: .body("No matching route was found. (Error with dependency)"))
         try await atPath("/b/a", expect: .body("a group with a prefix should work"))
