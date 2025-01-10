@@ -22,7 +22,7 @@ final class OptionsRouteTests: XCTestCase {
         return try World(builder: {
             BasicRoute()
                 .on(.get("/"))
-        })
+        }, middlewareProducers: [OptionsMiddleware.init])
     }
 
     func testBasic() async throws {
@@ -36,5 +36,18 @@ final class OptionsRouteTests: XCTestCase {
         XCTAssertEqual(response.statusCode, .noContent)
         XCTAssertEqual(response.bodyString, "")
         XCTAssertEqual(response.headers.first(where: { $0.name == "Allow" })?.value, "GET")
+    }
+
+    func testNotFound() async throws {
+
+        let world = try self.makeWorld()
+
+        try await world.send(HTTPRequestBuilder(uri: "/not_found", method: .OPTIONS))
+
+        let response = try await world.receive()
+
+        XCTAssertEqual(response.statusCode, .notFound)
+        XCTAssertEqual(response.bodyString, "")
+        XCTAssertEqual(response.headers.first(where: { $0.name == "Allow" })?.value, "")
     }
 }

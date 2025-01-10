@@ -41,7 +41,7 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
 
 
     convenience init(errorRenderer: ErrorRenderer, middlewareProducers: [() -> Middleware] = []) {
-        self.init(router: Router(defaultErrorRenderer: errorRenderer, middlewareProducers: middlewareProducers))
+        self.init(router: Router(defaultErrorRenderer: errorRenderer), middlewareProducers: middlewareProducers)
     }
 
     init(router: Router, middlewareProducers: [() -> Middleware] = []) {

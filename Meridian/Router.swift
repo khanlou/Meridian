@@ -70,7 +70,12 @@ struct RouterTrieNode {
             })
             .reduce(into: Set<HTTPMethod>()) { matchingMethods, routeAndNode in
                 for method in HTTPMethod.primaryMethods {
-                    let header = try RequestHeader(method: method, uri: path, headers: [])
+                    var header = try RequestHeader(method: method, uri: path, headers: [])
+                    guard routeAndNode.node.path.count <= header.path.path.count, zip(routeAndNode.node.path, header.path.path).allSatisfy({ $0 == $1 }) else {
+                        return
+                    }
+                    header.path.path.removeFirst(routeAndNode.node.path.count)
+
                     if routeAndNode.route.matcher.matches(header) != nil {
                         matchingMethods.insert(method)
                     }
@@ -147,10 +152,6 @@ final class Router {
 
         if let (route, middleware, matchedRoute) = root.bestRouteMatching(header: header, middleware: middlewareProducers.map({ $0() }), errorHandler: &errorHandlerBestGuess) {
             return ((route.responder, matchedRoute), middleware, errorHandlerBestGuess)
-        }
-
-        if header.method == .OPTIONS {
-            return ((OptionsRoute(), MatchedRoute()), middlewareProducers.map({ $0() }), errorHandlerBestGuess)
         }
 
         return (nil, middlewareProducers.map({ $0() }), errorHandlerBestGuess)

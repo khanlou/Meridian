@@ -7,13 +7,19 @@
 
 import Foundation
 
-struct OptionsRoute: Responder {
-    
+public struct OptionsMiddleware: Middleware {
+
+    public init() { }
+
     @Environment(\.router) var router
 
     @Path var path: String
 
-    func execute() throws -> Response {
+    @RequestMethod var method: HTTPMethod
+
+    public func execute(next: Responder) async throws -> Response {
+
+        guard method == .OPTIONS else { return try await next.execute() }
 
         let matchingMethods = try self.router.methods(for: path)
 
@@ -22,5 +28,6 @@ struct OptionsRoute: Responder {
                 "Allow": HTTPMethod.primaryMethods.filter(matchingMethods.contains).map({ $0.name }).joined(separator: ", ")
             ])
             .allowCORS()
+            .statusCode(matchingMethods.isEmpty ? .notFound : .noContent)
     }
 }
