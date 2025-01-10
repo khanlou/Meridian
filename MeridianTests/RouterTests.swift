@@ -161,9 +161,9 @@ final class RouterTests: XCTestCase {
         case .notFound:
             XCTAssertEqual(response.statusCode, .notFound, file: file, line: line)
         case let .headerNil(key):
-            XCTAssert(!response.headers.contains(where: { $0.name == key }), file: file, line: line)
+            XCTAssertNil(response.headers.first(where: { $0.name == key }), file: file, line: line)
         case let .header(key, value):
-            XCTAssert(response.headers.contains(where: { $0.name == key && $0.value == value }), file: file, line: line)
+            XCTAssertEqual(response.headers.first(where: { $0.name == key })?.value, value, file: file, line: line)
         }
     }
 }
