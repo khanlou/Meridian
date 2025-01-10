@@ -11,12 +11,14 @@ import NIOHTTP1
 import NIOWebSocket
 import WebSocketKit
 
-final class WebSocketUpgrader: HTTPServerProtocolUpgrader {
+extension WebSocketKit.WebSocket: @retroactive @unchecked Sendable { }
+
+final class WebSocketUpgrader: HTTPServerProtocolUpgrader, @unchecked Sendable {
 
     let innerUpgrader: NIOWebSocketServerUpgrader
 
     init(router: Router) {
-        var storedResponder: WebSocketResponder?
+        nonisolated(unsafe) var storedResponder: WebSocketResponder?
 
         @Sendable func responder(for head: HTTPRequestHead) -> (WebSocketResponder, [Middleware], MatchedRoute)? {
             guard let header = try? RequestHeader(nioHead: head) else {

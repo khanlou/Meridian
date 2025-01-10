@@ -7,10 +7,10 @@
 
 import Foundation
 
-struct RouterTrieNode {
+struct RouterTrieNode: Sendable {
     var children: [String: RouterTrieNode]
     var routes: [Route]
-    var middlewareProducers: [() -> Middleware]
+    var middlewareProducers: [@Sendable () -> Middleware]
     var errorRenderer: ErrorRenderer?
 
     static let empty: RouterTrieNode = .init(children: [:], routes: [], middlewareProducers: [], errorRenderer: nil)
@@ -120,7 +120,7 @@ extension RouterTrieNode: Sequence {
     }
 }
 
-final class Router {
+final class Router: @unchecked Sendable {
 
     var registeredRoutes: [() -> [_BuildableRoute]] = []
 

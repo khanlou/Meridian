@@ -9,7 +9,7 @@ import Foundation
 
 public protocol _BuildableRoute { }
 
-public struct Route: _BuildableRoute {
+public struct Route: _BuildableRoute, Sendable {
     public let matcher: RouteMatcher
     public let responder: Responder
 
@@ -29,7 +29,7 @@ public struct Group: _BuildableRoute {
     var prefix: String = ""
     var routes: () -> [_BuildableRoute]
     var errorRenderer: ErrorRenderer?
-    var middlewareProducers: [() -> Middleware] = []
+    var middlewareProducers: [@Sendable () -> Middleware] = []
 
     public init(_ prefix: String = "", @RouteBuilder _ builder: @escaping () -> [_BuildableRoute]) {
         self.prefix = prefix
@@ -41,7 +41,7 @@ public struct Group: _BuildableRoute {
         self.routes = routes
     }
 
-    internal init(prefix: String = "", routes: @escaping () -> [_BuildableRoute], errorRenderer: ErrorRenderer? = nil, middlewareProducers: [() -> Middleware] = []) {
+    internal init(prefix: String = "", routes: @escaping () -> [_BuildableRoute], errorRenderer: ErrorRenderer? = nil, middlewareProducers: [@Sendable () -> Middleware] = []) {
         self.prefix = prefix
         self.routes = routes
         self.errorRenderer = errorRenderer
@@ -52,7 +52,7 @@ public struct Group: _BuildableRoute {
         .init(prefix: prefix, routes: routes, errorRenderer: renderer, middlewareProducers: middlewareProducers)
     }
 
-    public func middleware(_ middlewareProducer: @autoclosure @escaping () -> Middleware) -> Self {
+    public func middleware(_ middlewareProducer: @autoclosure @escaping @Sendable () -> Middleware) -> Self {
         .init(prefix: prefix, routes: routes, errorRenderer: errorRenderer, middlewareProducers: self.middlewareProducers + [middlewareProducer])
     }
 }

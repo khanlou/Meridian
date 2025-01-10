@@ -36,8 +36,8 @@ public struct WebSocketResponse: Response {
     }
 }
 
-public final class WebSocket {
-    public enum Message {
+public final class WebSocket: @unchecked Sendable {
+    public enum Message: Sendable {
         case text(String)
         case data(Data)
     }

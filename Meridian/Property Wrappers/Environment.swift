@@ -7,6 +7,8 @@
 
 import Foundation
 
+extension KeyPath: @unchecked @retroactive Sendable {}
+
 public typealias EnvironmentObject<Type> = Custom<EnvironmentObjectExtractor<Type>>
 
 public struct EnvironmentObjectExtractor<Type>: NonParameterizedExtractor {

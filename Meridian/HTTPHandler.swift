@@ -9,7 +9,7 @@ import Foundation
 import NIO
 import NIOHTTP1
 
-public struct RequestContext {
+public struct RequestContext: Sendable {
     public var header: RequestHeader
     public var matchedRoute: MatchedRoute?
     public var postBody: Data
@@ -51,26 +51,44 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
         let head = parsedRequest.head
         let body = parsedRequest.data
 
-        Task {
+
+        Task { [router] in
+
             do {
                 let request = try RequestContext(
                     header: .init(nioHead: head),
                     matchedRoute: nil,
                     postBody: body
                 )
-                let response = try await self.router.handle(request: request)
+                let response = try await router.handle(request: request)
 
                 let statusCode = response.statusCode
                 let headers = response.additionalHeaders
                 let body = try response.body()
 
-                try await send(
-                    statusCode: statusCode,
-                    headers: headers,
-                    body: body,
-                    version: head.version,
-                    to: channel
-                )
+                var head = HTTPResponseHead(version: head.version, status: HTTPResponseStatus(statusCode: statusCode.code))
+
+                for (name, value) in headers {
+                    head.headers.add(name: name, value: value)
+                }
+
+                let part = HTTPServerResponsePart.head(head)
+
+                _ = channel.write(part)
+
+                var buffer = channel.allocator.buffer(capacity: body.count)
+                buffer.writeBytes(body)
+
+                let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
+                _ = channel.write(bodyPart)
+
+                let endPart = HTTPServerResponsePart.end(nil)
+
+                do {
+                    _ = try await channel.writeAndFlush(endPart)
+                } catch {
+                    try? await channel.close()
+                }
             } catch {
                 _ = try await channel.close()
             }
@@ -79,34 +97,11 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
 
     fileprivate func send(statusCode: StatusCode, headers: [String: String], body: Data, version: HTTPVersion, to channel: Channel) async throws {
 
-        var head = HTTPResponseHead(version: version, status: HTTPResponseStatus(statusCode: statusCode.code))
-
-        for (name, value) in headers {
-            head.headers.add(name: name, value: value)
-        }
-
-        let part = HTTPServerResponsePart.head(head)
-
-        _ = channel.write(part)
-
-        var buffer = channel.allocator.buffer(capacity: body.count)
-        buffer.writeBytes(body)
-
-        let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
-        _ = channel.write(bodyPart)
-
-        let endPart = HTTPServerResponsePart.end(nil)
-
-        do {
-            _ = try await channel.writeAndFlush(endPart)
-        } catch {
-            try? await channel.close()
-        }
     }
 
 }
 
-final class Hydration {
+final class Hydration: @unchecked Sendable {
     var context: RequestContext
     var errors: [Error]
 

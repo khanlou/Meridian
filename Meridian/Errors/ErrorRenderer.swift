@@ -42,7 +42,7 @@ public struct ErrorsContext {
     }
 }
 
-public protocol ErrorRenderer {
+public protocol ErrorRenderer: Sendable {
 
     func render(primaryError: Error, context: ErrorsContext) async throws -> Response
 

@@ -16,9 +16,9 @@ public protocol EnvironmentKey {
 
 }
 
-public final class EnvironmentValues {
+public final class EnvironmentValues: @unchecked Sendable {
 
-    static var shared = EnvironmentValues()
+    nonisolated(unsafe) static var shared = EnvironmentValues()
 
     var storage: [ObjectIdentifier: Any] = [:]
 

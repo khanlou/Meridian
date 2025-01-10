@@ -8,7 +8,7 @@
 import Foundation
 import Meridian
 
-struct Todo: Codable {
+struct Todo: Codable, Sendable {
     var id: UUID
     var title: String 
     var completed: Bool = false

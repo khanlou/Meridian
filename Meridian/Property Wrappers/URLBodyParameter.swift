@@ -12,11 +12,11 @@ private struct URLBodyHolder<Contained: Decodable>: Decodable {
 }
 
 @propertyWrapper
-public struct URLBodyParameter<Type: Decodable>: PropertyWrapper {
+public struct URLBodyParameter<Type: Decodable & Sendable>: PropertyWrapper {
 
     @ParameterStorage var finalValue: Type
 
-    let extractor: (RequestContext) throws -> Type
+    let extractor: @Sendable (RequestContext) throws -> Type
 
     func update(_ requestContext: RequestContext, errors: inout [Error]) {
         do {
