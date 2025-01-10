@@ -58,21 +58,13 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
         let body = parsedRequest.data
 
         Task {
-
             do {
-
-                let hydration = try Hydration(context: .init(
+                let request = try RequestContext(
                     header: .init(nioHead: head),
                     matchedRoute: nil,
                     postBody: body
-                ))
-
-                let routing = RoutingMiddleware(router: self.router, hydration: hydration)
-
-                hydration.context.matchedRoute = routing.matchedRoute
-
-                let response = try await routing.execute(next: BottomRoute())
-                    .additionalHeaders(["Server": EnvironmentValues().serverName])
+                )
+                let response = try await self.router.handle(request: request)
 
                 let statusCode = response.statusCode
                 let headers = response.additionalHeaders

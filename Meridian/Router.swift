@@ -129,6 +129,17 @@ final class Router {
         return (nil, middlewareProducers.map({ $0() }), errorHandlerBestGuess)
     }
 
+    func handle(request: RequestContext) async throws -> Response {
+        let hydration = Hydration(context: request)
+
+        let routing = RoutingMiddleware(router: self, hydration: hydration)
+
+        hydration.context.matchedRoute = routing.matchedRoute
+
+        return try await routing.execute(next: BottomRoute())
+            .additionalHeaders(["Server": EnvironmentValues().serverName])
+    }
+
     func methods(for path: String) throws -> Set<HTTPMethod> {
         return try makeTrie().methods(matching: path)
     }
