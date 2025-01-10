@@ -126,6 +126,10 @@ final class Router {
             return ((OptionsRoute(), MatchedRoute()), middlewareProducers.map({ $0() }), errorHandlerBestGuess)
         }
 
+        if header.method == .HEAD {
+            return ((HeadRoute(), MatchedRoute()), middlewareProducers.map({ $0() }), errorHandlerBestGuess)
+        }
+
         return (nil, middlewareProducers.map({ $0() }), errorHandlerBestGuess)
     }
 
