@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OpenAPIKit
 
 public struct Present: Codable {
     public init() {
@@ -44,6 +45,8 @@ public struct QueryParameter<Type: Decodable>: PropertyWrapper {
 
     @ParameterStorage var finalValue: Type
 
+    let parameterDescription: OpenAPIParameter
+
     let extractor: (RequestContext) throws -> Type
 
     func update(_ requestContext: RequestContext, errors: inout [Error]) {
@@ -60,6 +63,7 @@ public struct QueryParameter<Type: Decodable>: PropertyWrapper {
 
     @_disfavoredOverload
     public init(_ key: String) {
+        self.parameterDescription = .init(name: key, context: .query(required: true, allowEmptyValue: false), schema: schema(from: Type.self))
         self.extractor = { context in
             guard let item = context.queryParameters.first(where: { $0.name == key }) else {
                 throw MissingQueryParameterError(key: key)
@@ -76,6 +80,7 @@ public struct QueryParameter<Type: Decodable>: PropertyWrapper {
     }
 
     public init<Inner>(_ key: String) where Type == Inner? {
+        self.parameterDescription = .init(name: key, context: .query(required: false, allowEmptyValue: false), schema: schema(from: Inner.self))
         self.extractor = { context in
             guard let value = context.queryParameters.first(where: { $0.name == key })?.value else {
                 return nil
@@ -89,6 +94,7 @@ public struct QueryParameter<Type: Decodable>: PropertyWrapper {
     }
 
     public init(wrappedValue: Type, _ key: String) {
+        self.parameterDescription = .init(name: key, context: .query(required: false, allowEmptyValue: false), schema: schema(from: Type.self))
         self.extractor = { context in
             guard let value = context.queryParameters.first(where: { $0.name == key })?.value else {
                 return wrappedValue
@@ -100,10 +106,15 @@ public struct QueryParameter<Type: Decodable>: PropertyWrapper {
             }
         }
     }
+
+    func openAPIParameters() -> [OpenAPI.Parameter] {
+        [parameterDescription]
+    }
 }
 
 extension QueryParameter where Type == Present {
     public init(_ key: String) {
+        self.parameterDescription = .init(name: key, context: .query(required: true, allowEmptyValue: false), schema: .null())
         self.extractor = { context in
             guard context.queryParameters.first(where: { $0.name == key }) != nil else {
                 throw MissingQueryParameterError(key: key)
@@ -115,6 +126,7 @@ extension QueryParameter where Type == Present {
 
 extension QueryParameter where Type == Present? {
     public init(_ key: String) {
+        self.parameterDescription = .init(name: key, context: .query(required: false, allowEmptyValue: false), schema: .null())
         self.extractor = { context in
             guard context.queryParameters.first(where: { $0.name == key }) != nil else {
                 return nil

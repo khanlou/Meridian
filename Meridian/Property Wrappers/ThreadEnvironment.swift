@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OpenAPIKit
 
 @propertyWrapper
 class ParameterStorage<T> {
@@ -27,4 +28,5 @@ class ParameterStorage<T> {
 
 protocol PropertyWrapper {
     func update(_ requestContext: RequestContext, errors: inout [Error]) async
+    func openAPIParameters() -> [OpenAPI.Parameter]
 }

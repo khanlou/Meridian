@@ -13,4 +13,8 @@ public struct BodyExtractor: NonParameterizedExtractor {
     public static func extract(from context: RequestContext) async throws -> Data {
         return context.postBody
     }
+
+    public static func openAPIParameters() -> [OpenAPIParameter] {
+        []
+    }
 }

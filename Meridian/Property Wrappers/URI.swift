@@ -13,4 +13,8 @@ public struct URIExtractor: NonParameterizedExtractor {
     public static func extract(from context: RequestContext) throws -> String {
         return context.header.uri
     }
+
+    public static func openAPIParameters() -> [OpenAPIParameter] {
+        []
+    }
 }

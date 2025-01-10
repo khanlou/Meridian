@@ -6,6 +6,9 @@
 //
 
 import Foundation
+import OpenAPIKit
+
+public typealias OpenAPIParameter = OpenAPI.Parameter
 
 public protocol ParameterizedExtractor {
     associatedtype Output
@@ -13,6 +16,7 @@ public protocol ParameterizedExtractor {
 
     static func extract(from context: RequestContext, parameters: Parameters) async throws -> Output
 
+    static func openAPIParameters(_ input: Parameters) -> [OpenAPIParameter]
 }
 
 public protocol NonParameterizedExtractor {
@@ -20,6 +24,7 @@ public protocol NonParameterizedExtractor {
 
     static func extract(from context: RequestContext) async throws -> Output
 
+    static func openAPIParameters() -> [OpenAPIParameter]
 }
 
 @propertyWrapper
@@ -46,6 +51,10 @@ public struct CustomWithParameters<Extractor: ParameterizedExtractor>: PropertyW
     public var wrappedValue: Extractor.Output {
         finalValue
     }
+
+    func openAPIParameters() -> [OpenAPIParameter] {
+        Extractor.openAPIParameters(parameters)
+    }
 }
 
 @propertyWrapper
@@ -67,5 +76,9 @@ public struct Custom<Extractor: NonParameterizedExtractor>: PropertyWrapper {
 
     public var wrappedValue: Extractor.Output {
         finalValue
+    }
+
+    func openAPIParameters() -> [OpenAPIParameter] {
+        Extractor.openAPIParameters()
     }
 }

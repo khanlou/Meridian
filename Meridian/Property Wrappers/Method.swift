@@ -13,4 +13,8 @@ public struct HTTPMethodExtractor: NonParameterizedExtractor {
     public static func extract(from context: RequestContext) throws -> HTTPMethod {
         return context.header.method
     }
+
+    public static func openAPIParameters() -> [OpenAPIParameter] {
+        []
+    }
 }

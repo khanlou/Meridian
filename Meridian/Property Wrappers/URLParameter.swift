@@ -16,4 +16,8 @@ public struct URLParameterExtractor<SpecificURLParameterKey: URLParameterKey>: P
         }
         return try matchedRoute.parameter(for: SpecificURLParameterKey.self)
     }
+
+    public static func openAPIParameters(_ parameters: Parameters) -> [OpenAPIParameter] {
+        [.init(name: SpecificURLParameterKey.stringKeyMinusModuleName, context: .path, schema: schema(from: SpecificURLParameterKey.DecodeType.self))]
+    }
 }

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OpenAPIKit
 
 @propertyWrapper
 public struct JSONBody<Type: Decodable>: PropertyWrapper {
@@ -73,5 +74,7 @@ public struct JSONBody<Type: Decodable>: PropertyWrapper {
         }
     }
 
+    func openAPIParameters() -> [OpenAPI.Parameter] {
+        []
+    }
 }
-

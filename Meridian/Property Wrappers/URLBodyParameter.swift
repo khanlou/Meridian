@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OpenAPIKit
 
 private struct URLBodyHolder<Contained: Decodable>: Decodable {
     let value: Contained
@@ -105,6 +106,10 @@ public struct URLBodyParameter<Type: Decodable>: PropertyWrapper {
         guard let contentType = context.header.headers["Content-Type"], contentType.contains("application/x-www-form-urlencoded") else {
             throw URLBodyDecodingError()
         }
+    }
+
+    func openAPIParameters() -> [OpenAPI.Parameter] {
+        []
     }
 }
 

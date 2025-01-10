@@ -13,4 +13,8 @@ public struct PathExtractor: NonParameterizedExtractor {
     public static func extract(from context: RequestContext) throws -> String {
         return context.header.path
     }
+
+    public static func openAPIParameters() -> [OpenAPIParameter] {
+        []
+    }
 }

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OpenAPIKit
 
 enum KeyPathComponent {
     case name(String)
@@ -197,5 +198,8 @@ public struct JSONValue<Type: Decodable>: PropertyWrapper {
         }
     }
 
+    func openAPIParameters() -> [OpenAPI.Parameter] {
+        []
+    }
 }
 

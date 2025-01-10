@@ -17,6 +17,10 @@ public protocol URLParameterKey {
 
 extension URLParameterKey {
     static var stringKey: String {
-        String(reflecting: Self.self) 
+        String(reflecting: self)
+    }
+
+    static var stringKeyMinusModuleName: String {
+        String(stringKey.split(separator: ".").last ?? stringKey[...])
     }
 }

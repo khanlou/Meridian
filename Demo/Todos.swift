@@ -25,6 +25,9 @@ struct ListTodos: Responder {
 
     @EnvironmentObject var database: Database
 
+    @QueryParameter("limit") var limit: Bool
+    @QueryParameter("sort") var sort: String
+
     func execute() throws -> Response {
         JSON(database.todos)
             .allowCORS()

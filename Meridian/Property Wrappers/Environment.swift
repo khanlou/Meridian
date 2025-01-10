@@ -16,6 +16,10 @@ public struct EnvironmentObjectExtractor<Type>: NonParameterizedExtractor {
         }
         return value
     }
+
+    public static func openAPIParameters() -> [OpenAPIParameter] {
+        []
+    }
 }
 
 public typealias Environment<Value> = CustomWithParameters<EnvironmentKeyExtractor<Value>>
@@ -23,5 +27,9 @@ public typealias Environment<Value> = CustomWithParameters<EnvironmentKeyExtract
 public struct EnvironmentKeyExtractor<Value>: ParameterizedExtractor {
     public static func extract(from context: RequestContext, parameters: KeyPath<EnvironmentValues, Value>) throws -> Value {
         EnvironmentValues.shared[keyPath: parameters]
+    }
+
+    public static func openAPIParameters(_ parameters: Parameters) -> [OpenAPIParameter] {
+        []
     }
 }

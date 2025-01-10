@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OpenAPIKit
 
 public struct BlockResponder: Responder {
 
@@ -80,6 +81,10 @@ public struct TimingMiddleware: Middleware {
 struct HeaderExtractor: NonParameterizedExtractor {
     static func extract(from context: RequestContext) async throws -> RequestHeader {
         return context.header
+    }
+
+    static func openAPIParameters() -> [OpenAPI.Parameter] {
+        []
     }
 }
 

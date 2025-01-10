@@ -17,6 +17,10 @@ final class RouterTests: XCTestCase {
     struct Wrench: Error { }
 
     struct ThrowingExtractor: NonParameterizedExtractor {
+        static func openAPIParameters() -> [Meridian.OpenAPIParameter] {
+            []
+        }
+        
         static func extract(from context: RequestContext) async throws -> String {
             throw Wrench()
         }
