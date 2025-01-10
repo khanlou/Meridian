@@ -139,7 +139,6 @@ final class RouterTests: XCTestCase {
         try await atPath("/b/c", expect: .header("Middleware", "C"))
         try await atPath("/b/c", expect: .body("a nested group with a prefix should work"))
         try await atPath("/b/c", expect: .header("Shared-Middleware", "B"))
-        try await atPath("/b/c", expect: .header("Middleware", "C"))
         try await atPath("/b/e/f", expect: .body("two path components in the prefix should work"))
         try await atPath("/b/b", expect: .notFound)
         try await atPath("/b/z", expect: .notFound)
