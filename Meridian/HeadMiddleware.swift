@@ -37,7 +37,9 @@ struct HeadResponse: Response {
     }
 }
 
-struct HeadMiddleware: Middleware {
+public struct HeadMiddleware: Middleware {
+
+    public init() { }
 
     @Environment(\.router) var router
 
@@ -45,7 +47,7 @@ struct HeadMiddleware: Middleware {
 
     @RequestMethod var method
 
-    func execute(next: any Responder) async throws -> any Response {
+    public func execute(next: any Responder) async throws -> any Response {
 
         guard method == .HEAD else { return try await next.execute() }
 
