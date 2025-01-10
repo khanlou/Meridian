@@ -43,24 +43,23 @@ struct RouterTrieNode {
 
     func bestRouteMatching(header: RequestHeader, middleware: [Middleware], errorHandler: inout ErrorRenderer) -> (Route, [Middleware], MatchedRoute)? {
 
-        if let errorRenderer {
-            errorHandler = errorRenderer
-        }
-
-        if routes.isEmpty && header.path.path.isEmpty {
-            return nil
-        }
-        for route in routes {
-            if let matchedRoute = route.matcher.matches(header) {
-                return (route, self.middlewareProducers.map({ $0() }) + middleware, matchedRoute)
-            }
-        }
-
-        if header.path.path.isEmpty { return nil }
-        var mutableHeader = header
-        let next = mutableHeader.path.path.removeFirst()
-
-        return self.children[String(next)]?.bestRouteMatching(header: mutableHeader, middleware: self.middlewareProducers.map({ $0() }) + middleware, errorHandler: &errorHandler)
+        return self
+            .flatMap({ node in
+                node.node.routes.map({ (route: $0, node: node) })
+            })
+            .compactMap({ route, node -> (Route, [Middleware], MatchedRoute)? in
+                var mutableHeader = header
+                guard node.path.count <= mutableHeader.path.path.count, zip(node.path, mutableHeader.path.path).allSatisfy({ $0 == $1 }) else {
+                    return nil
+                }
+                mutableHeader.path.path.removeFirst(node.path.count)
+                errorHandler = (node.errorRenderer ?? errorHandler)
+                guard let matchedRoute = route.matcher.matches(mutableHeader) else {
+                    return nil
+                }
+                return (route, node.middlewareProducers.map({ $0() }), matchedRoute)
+            })
+            .first
     }
 
     func methods(matching path: String) throws -> Set<HTTPMethod> {
@@ -85,6 +84,42 @@ struct RouterTrieNode {
         let fromChildren = try children[String(next), default: .empty].methods(matching: String(path))
 
         return matchingMethods.union(fromChildren)
+    }
+}
+
+extension RouterTrieNode: Sequence {
+
+    struct RoutableNode {
+        let node: RouterTrieNode
+        let errorRenderer: ErrorRenderer?
+        let middlewareProducers: [() -> Middleware]
+        let path: [String]
+    }
+
+    func makeIterator() -> Iterator {
+        Iterator(startingNode: self)
+    }
+
+    struct Iterator: IteratorProtocol {
+        var nodeStack: [RoutableNode] = []
+
+        init(startingNode: RouterTrieNode) {
+            nodeStack.append(RoutableNode(node: startingNode, errorRenderer: startingNode.errorRenderer, middlewareProducers: startingNode.middlewareProducers, path: []))
+        }
+
+        public mutating func next() -> RoutableNode? {
+            guard !nodeStack.isEmpty else { return nil }
+            let next = nodeStack.removeFirst()
+            nodeStack.append(contentsOf: next.node.children.map({ pathComponent, node in
+                RoutableNode(
+                    node: node,
+                    errorRenderer: node.errorRenderer ?? next.errorRenderer,
+                    middlewareProducers: node.middlewareProducers + next.middlewareProducers,
+                    path: next.path + [pathComponent]
+                )
+            }))
+            return next
+        }
     }
 }
 
