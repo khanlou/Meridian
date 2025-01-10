@@ -57,7 +57,7 @@ struct RouterTrieNode {
                 guard let matchedRoute = route.matcher.matches(mutableHeader) else {
                     return nil
                 }
-                return (route, node.middlewareProducers.map({ $0() }), matchedRoute)
+                return (route, node.middlewareProducers.map({ $0() }) + middleware, matchedRoute)
             })
             .first
     }
