@@ -39,6 +39,10 @@ Server(errorRenderer: BasicErrorRenderer())
     .register({
         WebSocketTester()
             .on(.get("/ws"))
+
+        OpenAPIDocument()
+            .on(.get("/openapi.json"))
+
     })
     .middleware(LoggingMiddleware())
     .middleware(TimingMiddleware())

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OpenAPIKit
 
 struct RouterTrieNode {
     var children: [String: RouterTrieNode]
@@ -120,7 +121,7 @@ extension RouterTrieNode: Sequence {
     }
 }
 
-final class Router {
+public final class Router {
 
     var registeredRoutes: [() -> [_BuildableRoute]] = []
 

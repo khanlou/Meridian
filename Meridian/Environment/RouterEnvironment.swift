@@ -12,7 +12,7 @@ struct RouterEnvironmentKey: EnvironmentKey {
 }
 
 extension EnvironmentValues {
-    var router: Router {
+    public var router: Router {
         get {
             self[RouterEnvironmentKey.self]
         }

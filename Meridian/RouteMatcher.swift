@@ -82,6 +82,33 @@ public indirect enum RouteMatcher: Sendable {
         }
     }
 
+    var path: String {
+        switch self {
+        case .root:
+            return ""
+        case .path(let string):
+            return string
+        case .method(_, let routeMatcher):
+            return routeMatcher.path
+        case .custom:
+            return ""
+        case .any:
+            return ""
+        case let .interpolated(interpolatedPath):
+            return interpolatedPath.pathString
+        case let .multiple(matchers):
+            return matchers.first!.path
+        }
+    }
+
+    var httpMethod: HTTPMethod? {
+        if case let .method(httpMethod, _) = self {
+            httpMethod
+        } else {
+            nil
+        }
+    }
+
     public static func get(_ matcher: RouteMatcher) -> RouteMatcher {
         self.method(.GET, matcher)
     }

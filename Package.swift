@@ -13,6 +13,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0"),
         .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.2.0"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.3.0"),
+        .package(url: "https://github.com/mattpolzin/OpenAPIKit", from: "3.1.3")
     ],
     targets: [
         .executableTarget(name: "Demo", dependencies: [
@@ -25,6 +26,7 @@ let package = Package(
             .product(name: "NIOWebSocket", package: "swift-nio"),
             .product(name: "WebSocketKit", package: "websocket-kit"),
             .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            .product(name: "OpenAPIKit", package: "OpenAPIKit"),
         ], path: "Meridian"),
         .testTarget(name: "MeridianTests", dependencies: ["Meridian"], path: "MeridianTests"),
     ]
