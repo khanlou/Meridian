@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct RouterTrieNode {
+struct RouterTrieNode {
     var children: [String: RouterTrieNode]
     var routes: [Route]
     var middlewareProducers: [() -> Middleware]
