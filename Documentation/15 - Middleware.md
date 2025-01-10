@@ -20,7 +20,7 @@ Middleware is a way to inject behavior before or after your requests.
 
 This code will install two middlewares on the `/api` group, one to log every request that comes in, and one that rate limits users. In addition, there is a middleware installed on the whole server that logs the duration of every request request.
 
-Middlewares are executed in the order that they are added. In this case, the logging middleware is the first thing that is executed when the request comes in, and the last thing to be executed as the request is being sent out.
+Middlewares are executed in the order that they are added. In this case, the rate limiting middleware is the first thing that is executed when the request comes in, and the last thing to be executed as the request is being sent out. The timing middleware is the last middleware to be executed before the route is executed, and the first one immediately after the route is done being executed.
 
 To create a new middleware, you need to conform to the `Middleware` protocol:
 
