@@ -37,13 +37,17 @@ struct HeadResponse: Response {
     }
 }
 
-struct HeadRoute: Responder {
+struct HeadMiddleware: Middleware {
 
     @Environment(\.router) var router
 
     @Custom<FullRequestContextExtractor> var fullContext
 
-    func execute() async throws -> Response {
+    @RequestMethod var method
+
+    func execute(next: any Responder) async throws -> any Response {
+
+        guard method == .HEAD else { return try await next.execute() }
 
         let request = try RequestContext(
             header: .init(method: .GET, httpVersion: fullContext.header.httpVersion, uri: fullContext.header.uri, headers: fullContext.header.headers.allHeaders),
