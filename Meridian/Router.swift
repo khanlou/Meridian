@@ -64,26 +64,18 @@ struct RouterTrieNode {
 
     func methods(matching path: String) throws -> Set<HTTPMethod> {
 
-        var matchingMethods = Set<HTTPMethod>()
-
-        for route in routes {
-            for method in HTTPMethod.primaryMethods {
-                let header = try RequestHeader(method: method, uri: path, headers: [])
-                if route.matcher.matches(header) != nil {
-                    matchingMethods.insert(method)
+        return try self
+            .flatMap({ node in
+                node.node.routes.map({ (route: $0, node: node) })
+            })
+            .reduce(into: Set<HTTPMethod>()) { matchingMethods, routeAndNode in
+                for method in HTTPMethod.primaryMethods {
+                    let header = try RequestHeader(method: method, uri: path, headers: [])
+                    if routeAndNode.route.matcher.matches(header) != nil {
+                        matchingMethods.insert(method)
+                    }
                 }
             }
-        }
-
-        guard !path.isEmpty else { return matchingMethods }
-
-        var path = path
-
-        let next = path.removeFirst()
-
-        let fromChildren = try children[String(next), default: .empty].methods(matching: String(path))
-
-        return matchingMethods.union(fromChildren)
     }
 }
 
