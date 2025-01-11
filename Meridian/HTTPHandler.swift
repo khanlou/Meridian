@@ -27,7 +27,7 @@ public struct RequestContext: Sendable {
     }
 }
 
-final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
+final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler, Sendable {
     typealias InboundIn = ParsedHTTPRequest
 
     enum State {
@@ -37,7 +37,7 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
         case complete(HTTPRequestHead, Data)
     }
 
-    var router: Router
+    let router: Router
 
     init(router: Router) {
         self.router = router
