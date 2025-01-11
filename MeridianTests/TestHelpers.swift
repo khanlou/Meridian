@@ -64,18 +64,35 @@ struct HTTPResponseReader {
         String(data: body, encoding: .utf8)
     }
     
-    init(head: HTTPServerResponsePart?, body: HTTPServerResponsePart?, end: HTTPServerResponsePart?) throws {
+    init(head: HTTPClientResponsePart?, body: HTTPClientResponsePart?, end: HTTPClientResponsePart?) throws {
         if case let .head(info)? = head {
             self.statusCode = info.status
             self.headers = info.headers.map({ ($0, $1) })
         } else {
             throw ResponseDestructuringError()
         }
-        if case let .body(content)? = body, case let .byteBuffer(byteBuffer) = content {
+        if case let .body(byteBuffer)? = body {
             self.body = Data(byteBuffer.readableBytesView)
         } else {
             throw ResponseDestructuringError()
         }
+    }
+}
+
+class IODataToByteBufferConverter: ChannelOutboundHandler {
+    typealias OutboundIn = HTTPPart<HTTPResponseHead, IOData>
+    typealias OutboundOut = HTTPPart<HTTPResponseHead, ByteBuffer>
+
+    func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?)
+    {
+        let part: OutboundOut = switch self.unwrapOutboundIn(data) {
+        case .head(let head): .head(head)
+        case .body(.byteBuffer(let body)): .body(body)
+        case .body: fatalError()
+        case .end(let tail): .end(tail)
+        }
+
+        context.write(self.wrapOutboundOut(part), promise: promise)
     }
 }
 
@@ -150,6 +167,7 @@ final class World {
         let channel = NIOAsyncTestingChannel()
         try channel.pipeline.addHandler(HTTPRequestParsingHandler()).wait()
         try channel.pipeline.addHandler(handler).wait()
+        try channel.pipeline.addHandler(IODataToByteBufferConverter()).wait()
 
         self.channel = channel
     }
