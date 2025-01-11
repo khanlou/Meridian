@@ -40,7 +40,7 @@ struct Todo: Codable, Equatable {
     let done: Bool
 }
 
-final class Database {
+final class Database: @unchecked Sendable {
     let todos: [Todo]
     
     init() {

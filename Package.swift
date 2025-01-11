@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "Meridian",
-    platforms: [.macOS(.v10_15)],
+    platforms: [.macOS(.v13)],
     products: [
         .executable(name: "Demo", targets: ["Demo"]),
         .library(name: "Meridian", targets: ["Meridian"]),

@@ -89,7 +89,7 @@ extension RouterTrieNode: Sequence {
     struct RoutableNode {
         let node: RouterTrieNode
         let errorRenderer: ErrorRenderer?
-        let middlewareProducers: [() -> Middleware]
+        let middlewareProducers: [@Sendable () -> Middleware]
         let path: [String]
     }
 
@@ -120,20 +120,20 @@ extension RouterTrieNode: Sequence {
     }
 }
 
-final class Router: @unchecked Sendable {
+struct Router: Sendable {
 
-    var registeredRoutes: [() -> [_BuildableRoute]] = []
+    var registeredRoutes: [@Sendable () -> [_BuildableRoute]] = []
 
     var defaultErrorRenderer: ErrorRenderer
 
-    var middlewareProducers: [() -> Middleware]
+    var middlewareProducers: [@Sendable () -> Middleware]
 
-    init(defaultErrorRenderer: ErrorRenderer, middlewareProducers: [() -> Middleware] = []) {
+    init(defaultErrorRenderer: ErrorRenderer, middlewareProducers: [@Sendable () -> Middleware] = []) {
         self.defaultErrorRenderer = defaultErrorRenderer
         self.middlewareProducers = middlewareProducers
     }
 
-    func register(_ routes: @escaping () -> [_BuildableRoute]) {
+    mutating func register(_ routes: @Sendable @escaping () -> [_BuildableRoute]) {
         registeredRoutes.append(routes)
     }
 

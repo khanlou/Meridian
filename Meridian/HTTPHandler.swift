@@ -37,7 +37,7 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
         case complete(HTTPRequestHead, Data)
     }
 
-    let router: Router
+    var router: Router
 
     init(router: Router) {
         self.router = router
@@ -51,8 +51,9 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
         let head = parsedRequest.head
         let body = parsedRequest.data
 
+        let router = self.router
 
-        Task { [router] in
+        Task { [send = Self.send] in
 
             do {
                 let request = try RequestContext(
@@ -66,39 +67,38 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
                 let headers = response.additionalHeaders
                 let body = try response.body()
 
-                var head = HTTPResponseHead(version: head.version, status: HTTPResponseStatus(statusCode: statusCode.code))
-
-                for (name, value) in headers {
-                    head.headers.add(name: name, value: value)
-                }
-
-                let part = HTTPServerResponsePart.head(head)
-
-                _ = channel.write(part)
-
-                var buffer = channel.allocator.buffer(capacity: body.count)
-                buffer.writeBytes(body)
-
-                let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
-                _ = channel.write(bodyPart)
-
-                let endPart = HTTPServerResponsePart.end(nil)
-
-                do {
-                    _ = try await channel.writeAndFlush(endPart)
-                } catch {
-                    try? await channel.close()
-                }
+                try await send(statusCode, headers, body, head.version, channel)
             } catch {
                 _ = try await channel.close()
             }
         }
     }
 
-    fileprivate func send(statusCode: StatusCode, headers: [String: String], body: Data, version: HTTPVersion, to channel: Channel) async throws {
+    fileprivate static func send(statusCode: StatusCode, headers: [String: String], body: Data, version: HTTPVersion, to channel: Channel) async throws {
+        var head = HTTPResponseHead(version: version, status: HTTPResponseStatus(statusCode: statusCode.code))
 
+        for (name, value) in headers {
+            head.headers.add(name: name, value: value)
+        }
+
+        let part = HTTPServerResponsePart.head(head)
+
+        _ = channel.write(part)
+
+        var buffer = channel.allocator.buffer(capacity: body.count)
+        buffer.writeBytes(body)
+
+        let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
+        _ = channel.write(bodyPart)
+
+        let endPart = HTTPServerResponsePart.end(nil)
+
+        do {
+            _ = try await channel.writeAndFlush(endPart)
+        } catch {
+            try? await channel.close()
+        }
     }
-
 }
 
 final class Hydration: @unchecked Sendable {

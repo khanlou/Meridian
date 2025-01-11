@@ -10,7 +10,7 @@ import NIO
 
 public protocol EnvironmentKey {
 
-    associatedtype Value
+    associatedtype Value: Sendable
 
     static var defaultValue: Value { get }
 
@@ -20,7 +20,7 @@ public final class EnvironmentValues: @unchecked Sendable {
 
     nonisolated(unsafe) static var shared = EnvironmentValues()
 
-    var storage: [ObjectIdentifier: Any] = [:]
+    var storage: [ObjectIdentifier: Sendable] = [:]
 
     public subscript<Key: EnvironmentKey>(key: Key.Type) -> Key.Value {
         get {
@@ -32,8 +32,7 @@ public final class EnvironmentValues: @unchecked Sendable {
         }
     }
 
-    public func object<MyType>(ofType: MyType.Type) -> MyType? {
+    public func object<MyType: Sendable>(ofType: MyType.Type) -> MyType? {
         storage[ObjectIdentifier(MyType.self)] as? MyType
     }
-
 }

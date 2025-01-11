@@ -46,7 +46,7 @@ struct Todo: Codable, Sendable {
     }
 }
 
-final class Database {
+final class Database: @unchecked Sendable {
     var todos: [Todo]
     
     init() {
