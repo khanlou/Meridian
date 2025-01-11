@@ -14,7 +14,7 @@ enum KeyPathComponent {
 
 enum KeyPathError: Error {
     case invalidKeyPath(String)
-    case notAnArray(NSObject)
+    case notAnArray
     case typeError
 }
 
@@ -58,7 +58,7 @@ extension NSObject {
                 return try object._value(forKeyPath: Array(forKeyPath.dropFirst()))
             case .index(let i):
                 guard let array = self as? NSArray else {
-                    throw KeyPathError.notAnArray(self)
+                    throw KeyPathError.notAnArray
                 }
                 let object = array[i] as! NSObject
                 return try object._value(forKeyPath: Array(forKeyPath.dropFirst()))
