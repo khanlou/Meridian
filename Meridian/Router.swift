@@ -41,7 +41,7 @@ struct RouterTrieNode {
         }
     }
 
-    func bestRouteMatching(header: RequestHeader, middleware: [Middleware], errorHandler: inout ErrorRenderer) -> (Route, [Middleware], MatchedRoute)? {
+    func bestRouteMatching(header: RequestHeader, errorHandler: inout ErrorRenderer) -> (Route, [Middleware], MatchedRoute)? {
 
         return self
             .flatMap({ node in
@@ -57,7 +57,7 @@ struct RouterTrieNode {
                 guard let matchedRoute = route.matcher.matches(mutableHeader) else {
                     return nil
                 }
-                return (route, node.middlewareProducers.map({ $0() }) + middleware, matchedRoute)
+                return (route, node.middlewareProducers.map({ $0() }), matchedRoute)
             })
             .first
     }
@@ -139,6 +139,7 @@ final class Router {
 
     func makeTrie() -> RouterTrieNode {
         var root = RouterTrieNode.empty
+        root.middlewareProducers = self.middlewareProducers
         for route in registeredRoutes.flatMap({ $0() }) {
             root.insert(route)
         }
@@ -150,7 +151,7 @@ final class Router {
 
         var errorHandlerBestGuess = defaultErrorRenderer
 
-        if let (route, middleware, matchedRoute) = root.bestRouteMatching(header: header, middleware: middlewareProducers.map({ $0() }), errorHandler: &errorHandlerBestGuess) {
+        if let (route, middleware, matchedRoute) = root.bestRouteMatching(header: header, errorHandler: &errorHandlerBestGuess) {
             return ((route.responder, matchedRoute), middleware, errorHandlerBestGuess)
         }
 
