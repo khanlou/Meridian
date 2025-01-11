@@ -39,14 +39,8 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
 
     let router: Router
 
-
-    convenience init(errorRenderer: ErrorRenderer, middlewareProducers: [() -> Middleware] = []) {
-        self.init(router: Router(defaultErrorRenderer: errorRenderer), middlewareProducers: middlewareProducers)
-    }
-
-    init(router: Router, middlewareProducers: [() -> Middleware] = []) {
+    init(router: Router) {
         self.router = router
-        self.router.middlewareProducers = middlewareProducers
     }
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {

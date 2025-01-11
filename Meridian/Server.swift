@@ -28,8 +28,6 @@ public final class Server {
 
     var router: Router
 
-    var middlewareProducers: [() -> Middleware] = []
-
     public init(errorRenderer: ErrorRenderer) {
         enableLineBufferedLogging()
         self.router = Router(defaultErrorRenderer: errorRenderer)
@@ -72,7 +70,7 @@ public final class Server {
 
                 let parsing = HTTPRequestParsingHandler()
 
-                let http = HTTPHandler(router: self.router, middlewareProducers: self.middlewareProducers)
+                let http = HTTPHandler(router: self.router)
 
                 return channel.pipeline
                     .configureHTTPServerPipeline(withServerUpgrade: (upgraders: [WebSocketUpgrader(router: self.router)], completionHandler: { context in
@@ -121,7 +119,7 @@ extension Server {
 
 extension Server {
     public func middleware(_ middleware: @autoclosure @escaping () -> Middleware) -> Self {
-        self.middlewareProducers.append(middleware)
+        self.router.middlewareProducers.append(middleware)
         return self
     }
 }
