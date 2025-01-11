@@ -180,7 +180,7 @@ private extension String {
             self.split(separator: "/")
         }
         set {
-            self = newValue.joined(separator: "/")
+            self = normalizePath(newValue)
         }
     }
 }
