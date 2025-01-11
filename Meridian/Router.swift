@@ -120,7 +120,7 @@ extension RouterTrieNode: Sequence {
     }
 }
 
-final class Router {
+struct Router {
 
     var registeredRoutes: [() -> [_BuildableRoute]] = []
 
@@ -133,7 +133,7 @@ final class Router {
         self.middlewareProducers = middlewareProducers
     }
 
-    func register(_ routes: @escaping () -> [_BuildableRoute]) {
+    mutating func register(_ routes: @escaping () -> [_BuildableRoute]) {
         registeredRoutes.append(routes)
     }
 
