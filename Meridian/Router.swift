@@ -13,7 +13,7 @@ struct RouterTrieNode {
     var middlewareProducers: [() -> Middleware]
     var errorRenderer: ErrorRenderer?
 
-    static let empty: RouterTrieNode = .init(children: [:], routes: [], middlewareProducers: [], errorRenderer: nil)
+    static var empty: RouterTrieNode { .init(children: [:], routes: [], middlewareProducers: [], errorRenderer: nil) }
 
     mutating func insert(_ buildableRoute: _BuildableRoute) {
         if let route = buildableRoute as? Route {
