@@ -32,4 +32,8 @@ public struct Redirect: Response {
     public static func seeOther(url: URL) -> Redirect {
         Redirect(url: url, statusCode: .seeOther)
     }
+
+    public static func movedPermanently(url: URL) -> Redirect {
+        Redirect(url: url, statusCode: .movedPermanently)
+    }
 }
