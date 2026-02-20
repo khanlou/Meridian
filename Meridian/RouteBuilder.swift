@@ -59,7 +59,30 @@ public struct Group: _BuildableRoute {
 
 @resultBuilder
 public struct RouteBuilder {
-    public static func buildBlock(_ routes: _BuildableRoute...) -> [_BuildableRoute] {
-        routes
+    public typealias Build = _BuildableRoute
+    public typealias Component = [any _BuildableRoute]
+
+    public static func buildExpression(_ expression: Build) -> Component {
+        [expression]
+    }
+
+    public static func buildBlock(_ components: Component...) -> Component {
+        components.flatMap({ $0 })
+    }
+
+    public static func buildOptional(_ component: Component?) -> Component {
+        component ?? []
+    }
+
+    public static func buildLimitedAvailability(_ component: Component) -> Component {
+        component
+    }
+
+    public static func buildEither(first component: Component) -> Component {
+        component
+    }
+
+    public static func buildEither(second component: Component) -> Component {
+        component
     }
 }
