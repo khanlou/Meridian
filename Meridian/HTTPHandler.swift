@@ -9,7 +9,7 @@ import Foundation
 import NIO
 import NIOHTTP1
 
-public struct RequestContext {
+public struct RequestContext: Sendable {
     public var header: RequestHeader
     public var matchedRoute: MatchedRoute?
     public var postBody: Data
@@ -27,7 +27,7 @@ public struct RequestContext {
     }
 }
 
-final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
+final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler, Sendable {
     typealias InboundIn = ParsedHTTPRequest
 
     enum State {
@@ -51,34 +51,29 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
         let head = parsedRequest.head
         let body = parsedRequest.data
 
-        Task {
+        let router = self.router
+
+        _ = context.eventLoop.makeFutureWithTask { [send = Self.send] in
             do {
                 let request = try RequestContext(
                     header: .init(nioHead: head),
                     matchedRoute: nil,
                     postBody: body
                 )
-                let response = try await self.router.handle(request: request)
+                let response = try await router.handle(request: request)
 
                 let statusCode = response.statusCode
                 let headers = response.additionalHeaders
                 let body = try response.body()
 
-                try await send(
-                    statusCode: statusCode,
-                    headers: headers,
-                    body: body,
-                    version: head.version,
-                    to: channel
-                )
+                try await send(statusCode, headers, body, head.version, channel)
             } catch {
                 _ = try await channel.close()
             }
         }
     }
 
-    fileprivate func send(statusCode: StatusCode, headers: [String: String], body: Data, version: HTTPVersion, to channel: Channel) async throws {
-
+    fileprivate static func send(statusCode: StatusCode, headers: [String: String], body: Data, version: HTTPVersion, to channel: Channel) async throws {
         var head = HTTPResponseHead(version: version, status: HTTPResponseStatus(statusCode: statusCode.code))
 
         for (name, value) in headers {
@@ -103,10 +98,9 @@ final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
             try? await channel.close()
         }
     }
-
 }
 
-final class Hydration {
+final class Hydration: @unchecked Sendable {
     var context: RequestContext
     var errors: [Error]
 

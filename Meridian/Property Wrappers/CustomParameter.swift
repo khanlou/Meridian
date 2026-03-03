@@ -9,7 +9,7 @@ import Foundation
 
 public protocol ParameterizedExtractor {
     associatedtype Output
-    associatedtype Parameters
+    associatedtype Parameters: Sendable
 
     static func extract(from context: RequestContext, parameters: Parameters) async throws -> Output
 
@@ -23,7 +23,7 @@ public protocol NonParameterizedExtractor {
 }
 
 @propertyWrapper
-public struct CustomWithParameters<Extractor: ParameterizedExtractor>: PropertyWrapper {
+public struct CustomWithParameters<Extractor: ParameterizedExtractor>: PropertyWrapper, Sendable {
 
     let parameters: Extractor.Parameters
 
@@ -49,7 +49,7 @@ public struct CustomWithParameters<Extractor: ParameterizedExtractor>: PropertyW
 }
 
 @propertyWrapper
-public struct Custom<Extractor: NonParameterizedExtractor>: PropertyWrapper {
+public struct Custom<Extractor: NonParameterizedExtractor>: PropertyWrapper, Sendable {
 
     public init() { }
 

@@ -40,7 +40,7 @@ struct Todo: Codable, Equatable {
     let done: Bool
 }
 
-final class Database {
+final class Database: Sendable {
     let todos: [Todo]
     
     init() {
@@ -69,7 +69,7 @@ final class EnvironmentTests: XCTestCase {
         formatter.numberStyle = .spellOut
         EnvironmentValues.shared[NumberFormatterEnvironmentKey.self] = formatter
 
-        EnvironmentValues.shared.storage[ObjectIdentifier(Database.self)] = Database()
+        EnvironmentValues.shared.setObject(Database(), for: Database.self)
 
         return try World(builder: {
             EnvironmentKeyTestRoute()

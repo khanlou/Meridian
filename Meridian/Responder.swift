@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol Responder {
+public protocol Responder: Sendable {
 
     func validate() async throws
 
