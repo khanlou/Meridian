@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Present: Codable {
+public struct Present: Codable, Sendable {
     public init() {
 
     }
@@ -40,11 +40,11 @@ func decodeFragment<T: Decodable>(_ type: T.Type, from value: String) throws -> 
 }
 
 @propertyWrapper
-public struct QueryParameter<Type: Decodable>: PropertyWrapper {
+public struct QueryParameter<Type: Decodable & Sendable>: PropertyWrapper {
 
     @ParameterStorage var finalValue: Type
 
-    let extractor: (RequestContext) throws -> Type
+    let extractor: @Sendable (RequestContext) throws -> Type
 
     func update(_ requestContext: RequestContext, errors: inout [Error]) {
         do {
