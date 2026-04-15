@@ -9,8 +9,8 @@ let package = Package(
         .library(name: "Meridian", targets: ["Meridian"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-nio", from: "2.64.0"),
-        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0"),
+        .package(url: "https://github.com/apple/swift-nio", from: "2.78.0"),
+        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.16.0"),
         .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.2.0"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.3.0"),
     ],
