@@ -11,7 +11,7 @@ import NIOHTTP1
 import NIOWebSocket
 import WebSocketKit
 
-final class WebSocketUpgrader: HTTPServerProtocolUpgrader {
+final class WebSocketUpgrader: HTTPServerProtocolUpgrader, @unchecked Sendable {
 
     let innerUpgrader: NIOWebSocketServerUpgrader
 
@@ -62,9 +62,10 @@ final class WebSocketUpgrader: HTTPServerProtocolUpgrader {
                         fatalError("should never get to here, should already be validated")
                     }
                     
+                    let websocket = Meridian.WebSocket(inner: ws)
+                    
                     Task {
                         do {
-                            let websocket = Meridian.WebSocket(inner: ws)
                             try await route.connected(to: websocket)
                         } catch {
                             _ = try await ws.close(code: .unexpectedServerError).get()

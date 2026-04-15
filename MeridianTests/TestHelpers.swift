@@ -158,7 +158,7 @@ final class World {
 
     let channel: NIOAsyncTestingChannel
 
-    init(errorRenderer: ErrorRenderer = BasicErrorRenderer(), @RouteBuilder builder: @escaping () -> [_BuildableRoute], middlewareProducers: [() -> Middleware] = []) throws {
+    init(errorRenderer: ErrorRenderer = BasicErrorRenderer(), @RouteBuilder builder: @Sendable @escaping () -> [_BuildableRoute], middlewareProducers: [@Sendable () -> Middleware] = []) throws {
         var router = Router(defaultErrorRenderer: errorRenderer, middlewareProducers: middlewareProducers)
         router.register(builder)
         let handler = HTTPHandler(router: router)
