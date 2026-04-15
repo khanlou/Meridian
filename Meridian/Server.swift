@@ -10,11 +10,6 @@ import NIO
 import NIOHTTP1
 import ArgumentParser
 
-func enableLineBufferedLogging() {
-    let result = setvbuf(stdout, nil, _IOLBF, 16 * 1024)
-    precondition(result == 0)
-}
-
 struct ServeOptions: ParsableArguments {
     @Option var port: Int = 3000
     @Option var host: String = "localhost"
@@ -33,7 +28,7 @@ public final class Server {
         self.router = Router(defaultErrorRenderer: errorRenderer)
         EnvironmentValues.shared[RouterEnvironmentKey.self] = self.router
         EnvironmentValues.shared.loopGroup = self.loopGroup
-   }
+    }
 
     // deprecate
     @discardableResult
