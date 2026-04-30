@@ -8,7 +8,7 @@
 import Foundation
 
 @propertyWrapper
-class ParameterStorage<T> {
+class ParameterStorage<T>: @unchecked Sendable {
 
     var storage: T?
 
@@ -25,6 +25,6 @@ class ParameterStorage<T> {
     }
 }
 
-protocol PropertyWrapper {
+protocol PropertyWrapper: Sendable {
     func update(_ requestContext: RequestContext, errors: inout [Error]) async
 }

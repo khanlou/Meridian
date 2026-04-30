@@ -7,33 +7,52 @@
 
 import Foundation
 import NIO
+import NIOConcurrencyHelpers
 
 public protocol EnvironmentKey {
 
-    associatedtype Value
+    associatedtype Value: Sendable
 
     static var defaultValue: Value { get }
 
 }
 
-public final class EnvironmentValues {
+public final class EnvironmentValues: @unchecked Sendable {
 
-    static var shared = EnvironmentValues()
+    static let shared = EnvironmentValues()
 
-    var storage: [ObjectIdentifier: Any] = [:]
+    private let lock = NIOLock()
+    private var storage: [ObjectIdentifier: Sendable] = [:]
 
     public subscript<Key: EnvironmentKey>(key: Key.Type) -> Key.Value {
         get {
-            let id = ObjectIdentifier(key)
-            return (storage[id] as? Key.Value) ?? Key.defaultValue
+            lock.withLock {
+                let id = ObjectIdentifier(key)
+                return (storage[id] as? Key.Value) ?? Key.defaultValue
+            }
         }
         set {
-            storage[ObjectIdentifier(key)] = newValue
+            lock.withLock {
+                storage[ObjectIdentifier(key)] = newValue
+            }
         }
     }
 
-    public func object<MyType>(ofType: MyType.Type) -> MyType? {
-        storage[ObjectIdentifier(MyType.self)] as? MyType
+    public func object<MyType: Sendable>(ofType: MyType.Type) -> MyType? {
+        lock.withLock {
+            storage[ObjectIdentifier(MyType.self)] as? MyType
+        }
     }
 
+    public func setObject<MyType: Sendable>(_ object: MyType, for type: MyType.Type) {
+        lock.withLock {
+            storage[ObjectIdentifier(type)] = object
+        }
+    }
+
+    public func set<Value>(_ keyPath: ReferenceWritableKeyPath<EnvironmentValues, Value>, _ value: Value) {
+        lock.lock()
+        defer { lock.unlock() }
+        self[keyPath: keyPath] = value
+    }
 }

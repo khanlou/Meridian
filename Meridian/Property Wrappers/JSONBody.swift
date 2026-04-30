@@ -12,7 +12,7 @@ public struct JSONBody<Type: Decodable>: PropertyWrapper {
 
     @ParameterStorage var finalValue: Type
 
-    let extractor: (RequestContext) throws -> Type
+    let extractor: @Sendable (RequestContext) throws -> Type
 
     public init<Inner>(decoder: JSONDecoder? = nil) where Type == Inner? {
         self.extractor = { context in
