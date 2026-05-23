@@ -8,7 +8,7 @@
 import Foundation
 
 @propertyWrapper
-public struct RequestState<Value>: PropertyWrapper {
+public struct RequestState<Value: Sendable>: PropertyWrapper {
 
     private let keyPath: ReferenceWritableKeyPath<RequestStateValues, Value>
 

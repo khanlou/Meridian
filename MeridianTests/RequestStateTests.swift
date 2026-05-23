@@ -125,4 +125,12 @@ final class RequestStateTests: XCTestCase {
         XCTAssertEqual(firstResponse.bodyString, expectedTrace)
         XCTAssertEqual(secondResponse.bodyString, expectedTrace)
     }
+
+    func testRequestStateValuesIsSendable() {
+        requireSendable(RequestStateValues())
+    }
+
+    private func requireSendable<Value: Sendable>(_ value: Value) {
+        _ = value
+    }
 }

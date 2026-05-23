@@ -6,18 +6,20 @@
 //
 
 import Foundation
+import NIOConcurrencyHelpers
 
 public protocol RequestStateKey {
 
-    associatedtype Value
+    associatedtype Value: Sendable
 
     static var defaultValue: Value { get }
 
 }
 
-public final class RequestStateValues {
+public final class RequestStateValues: @unchecked Sendable {
 
-    private var storage: [ObjectIdentifier: Any] = [:]
+    private let lock = NIOLock()
+    private var storage: [ObjectIdentifier: Sendable] = [:]
 
     public init() {
 
@@ -25,11 +27,15 @@ public final class RequestStateValues {
 
     public subscript<Key: RequestStateKey>(key: Key.Type) -> Key.Value {
         get {
-            let id = ObjectIdentifier(key)
-            return (storage[id] as? Key.Value) ?? Key.defaultValue
+            lock.withLock {
+                let id = ObjectIdentifier(key)
+                return (storage[id] as? Key.Value) ?? Key.defaultValue
+            }
         }
         set {
-            storage[ObjectIdentifier(key)] = newValue
+            lock.withLock {
+                storage[ObjectIdentifier(key)] = newValue
+            }
         }
     }
 

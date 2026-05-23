@@ -10,6 +10,8 @@ Request state follows the same key pattern as environment values. First, define 
         }
     }
 
+The value for a request state key must be `Sendable`, so custom types stored in request state should conform to `Sendable`.
+
 Then add a typed property to `RequestStateValues`:
 
     extension RequestStateValues {
