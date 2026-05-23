@@ -60,3 +60,5 @@ To execute something after the responder has done its work, store the result of 
     }
 
 Middleware can take an arbitrary amount of time to execute, using `async` tasks.
+
+Middleware can also use `@RequestState` to pass request-scoped values to later middleware or to the route itself. This is useful for things like authentication, rate-limit decisions, tracing, or any data that should live only for the current request.

@@ -54,7 +54,9 @@ public struct HeadMiddleware: Middleware {
         let request = try RequestContext(
             header: .init(method: .GET, httpVersion: fullContext.header.httpVersion, uri: fullContext.header.uri, headers: fullContext.header.headers.allHeaders),
             matchedRoute: nil,
-            postBody: .init()
+            postBody: .init(),
+            requestID: fullContext.requestID,
+            requestState: fullContext.requestState
         )
 
         let response = try await self.router.handle(request: request)

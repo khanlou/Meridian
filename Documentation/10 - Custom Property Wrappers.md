@@ -76,3 +76,5 @@ And now you can use your new authentication property wrapper:
     @Auth var user // => will have type `User`
 
 This requires the request to be logged into execute (providing access control) and also allows you to access the user in the request's `execute()` method.
+
+If a value should be written by one part of the request and read by another, prefer `@RequestState` over a custom extractor. Custom extractors are best for deriving a value from the request context, while request state is designed for mutable, request-scoped storage shared by middleware and responders.

@@ -25,3 +25,13 @@ To get the http method of the current request, you can use the `@RequestMethod `
     @RequestMethod var method
 
 The variable `method` will have the type `HTTPMethod`, which is one of Meridian's types.
+
+### Request ID
+
+Every request has a server-generated request ID. This can be useful for correlating logs and internal request-scoped work.
+
+To access the current request ID, use the `@RequestID` property wrapper:
+
+    @RequestID var requestID
+
+The variable `requestID` will be of type `String`.

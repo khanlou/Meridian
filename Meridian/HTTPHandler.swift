@@ -14,12 +14,22 @@ public struct RequestContext: Sendable {
     public var matchedRoute: MatchedRoute?
     public var postBody: Data
     public var environment: EnvironmentValues
+    public var requestID: String
+    public var requestState: RequestStateValues
 
-    public init(header: RequestHeader, matchedRoute: MatchedRoute?, postBody: Data = Data()) {
+    public init(
+        header: RequestHeader,
+        matchedRoute: MatchedRoute?,
+        postBody: Data = Data(),
+        requestID: String? = nil,
+        requestState: RequestStateValues = RequestStateValues()
+    ) {
         self.header = header
         self.matchedRoute = matchedRoute
         self.postBody = postBody
         self.environment = EnvironmentValues.shared
+        self.requestID = requestID ?? UUID().uuidString
+        self.requestState = requestState
     }
 
     public var queryParameters: [URLQueryItem] {
