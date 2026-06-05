@@ -7,10 +7,10 @@
 
 import Foundation
 
-struct RouterTrieNode {
+struct RouterTrieNode: Sendable {
     var children: [String: RouterTrieNode]
     var routes: [Route]
-    var middlewareProducers: [() -> Middleware]
+    var middlewareProducers: [@Sendable () -> Middleware]
     var errorRenderer: ErrorRenderer?
 
     static var empty: RouterTrieNode { .init(children: [:], routes: [], middlewareProducers: [], errorRenderer: nil) }
@@ -89,7 +89,7 @@ extension RouterTrieNode: Sequence {
     struct RoutableNode {
         let node: RouterTrieNode
         let errorRenderer: ErrorRenderer?
-        let middlewareProducers: [() -> Middleware]
+        let middlewareProducers: [@Sendable () -> Middleware]
         let path: [String]
     }
 
@@ -120,20 +120,20 @@ extension RouterTrieNode: Sequence {
     }
 }
 
-struct Router {
+struct Router: Sendable {
 
-    var registeredRoutes: [() -> [_BuildableRoute]] = []
+    var registeredRoutes: [@Sendable () -> [_BuildableRoute]] = []
 
     var defaultErrorRenderer: ErrorRenderer
 
-    var middlewareProducers: [() -> Middleware]
+    var middlewareProducers: [@Sendable () -> Middleware]
 
-    init(defaultErrorRenderer: ErrorRenderer, middlewareProducers: [() -> Middleware] = []) {
+    init(defaultErrorRenderer: ErrorRenderer, middlewareProducers: [@Sendable () -> Middleware] = []) {
         self.defaultErrorRenderer = defaultErrorRenderer
         self.middlewareProducers = middlewareProducers
     }
 
-    mutating func register(_ routes: @escaping () -> [_BuildableRoute]) {
+    mutating func register(_ routes: @Sendable @escaping () -> [_BuildableRoute]) {
         registeredRoutes.append(routes)
     }
 

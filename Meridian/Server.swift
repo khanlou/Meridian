@@ -10,11 +10,6 @@ import NIO
 import NIOHTTP1
 import ArgumentParser
 
-func enableLineBufferedLogging() {
-    let result = setvbuf(stdout, nil, _IOLBF, 16 * 1024)
-    precondition(result == 0)
-}
-
 struct ServeOptions: ParsableArguments {
     @Option var port: Int = 3000
     @Option var host: String = "localhost"
@@ -33,11 +28,11 @@ public final class Server {
         self.router = Router(defaultErrorRenderer: errorRenderer)
         EnvironmentValues.shared[RouterEnvironmentKey.self] = self.router
         EnvironmentValues.shared.loopGroup = self.loopGroup
-   }
+    }
 
     // deprecate
     @discardableResult
-    public func register(errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [_BuildableRoute]) -> Self {
+    public func register(errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @Sendable @escaping () -> [_BuildableRoute]) -> Self {
         self.routes {
             Group("", builder)
                 .errorRenderer(errorRenderer)
@@ -46,7 +41,7 @@ public final class Server {
 
     // deprecate
     @discardableResult
-    public func group(prefix: String, errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @escaping () -> [_BuildableRoute]) -> Self {
+    public func group(prefix: String, errorRenderer: ErrorRenderer? = nil, @RouteBuilder _ builder: @Sendable @escaping () -> [_BuildableRoute]) -> Self {
         self.routes {
             Group(prefix, builder)
                 .errorRenderer(errorRenderer)
@@ -54,7 +49,7 @@ public final class Server {
     }
 
     @discardableResult
-    public func routes(@RouteBuilder _ builder: @escaping () -> [_BuildableRoute]) -> Self {
+    public func routes(@RouteBuilder _ builder: @Sendable @escaping () -> [_BuildableRoute]) -> Self {
         self.router.register(builder)
         return self
     }
@@ -66,14 +61,14 @@ public final class Server {
         let bootstrap = ServerBootstrap(group: loopGroup)
             .serverChannelOption(ChannelOptions.backlog, value: 256)
             .serverChannelOption(reuseAddrOpt, value: 1)
-            .childChannelInitializer({ channel in
+            .childChannelInitializer({ [router] channel in
 
                 let parsing = HTTPRequestParsingHandler()
 
                 let http = HTTPHandler(router: self.router)
 
                 return channel.pipeline
-                    .configureHTTPServerPipeline(withServerUpgrade: (upgraders: [WebSocketUpgrader(router: self.router)], completionHandler: { context in
+                    .configureHTTPServerPipeline(withServerUpgrade: (upgraders: [WebSocketUpgrader(router: router)], completionHandler: { context in
                         _ = context.pipeline.removeHandler(parsing)
                             .and(context.pipeline.removeHandler(http))
                     }))
@@ -100,25 +95,25 @@ public final class Server {
 }
 
 extension Server {
-    public func environmentObject<T: AnyObject>(_ object: T) -> Self {
-        EnvironmentValues.shared.storage[ObjectIdentifier(T.self)] = object
+    public func environmentObject<T: AnyObject & Sendable>(_ object: T) -> Self {
+        EnvironmentValues.shared.setObject(object, for: T.self)
         return self
     }
 
-    public func environmentObject<T: AnyObject>(with constructor: (EnvironmentValues) -> T) -> Self {
+    public func environmentObject<T: AnyObject & Sendable>(with constructor: (EnvironmentValues) -> T) -> Self {
         let object = constructor(EnvironmentValues.shared)
-        EnvironmentValues.shared.storage[ObjectIdentifier(T.self)] = object
+        EnvironmentValues.shared.setObject(object, for: T.self)
         return self
     }
 
-    public func environment<Value>(_ keyPath: WritableKeyPath<EnvironmentValues, Value>, _ value: Value) -> Self {
-        EnvironmentValues.shared[keyPath: keyPath] = value
+    public func environment<Value>(_ keyPath: ReferenceWritableKeyPath<EnvironmentValues, Value>, _ value: Value) -> Self {
+        EnvironmentValues.shared.set(keyPath, value)
         return self
     }
 }
 
 extension Server {
-    public func middleware(_ middleware: @autoclosure @escaping () -> Middleware) -> Self {
+    public func middleware(_ middleware: @Sendable @autoclosure @escaping () -> Middleware) -> Self {
         self.router.middlewareProducers.append(middleware)
         return self
     }

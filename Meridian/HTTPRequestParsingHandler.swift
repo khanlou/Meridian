@@ -25,7 +25,7 @@ struct ParsedHTTPRequest {
     let data: Data
 }
 
-final class HTTPRequestParsingHandler: ChannelInboundHandler, RemovableChannelHandler {
+final class HTTPRequestParsingHandler: ChannelInboundHandler, RemovableChannelHandler, @unchecked Sendable {
     typealias InboundIn = HTTPServerRequestPart
     typealias InboundOut = ParsedHTTPRequest
 

@@ -14,7 +14,7 @@ public struct UnparseableRequest: ReportableError {
     public let statusCode: StatusCode = .badRequest
 }
 
-public struct RequestHeader: CustomStringConvertible {
+public struct RequestHeader: CustomStringConvertible, Sendable {
     public let method: HTTPMethod
     public let httpVersion: HTTPVersion
     public let headers: Headers

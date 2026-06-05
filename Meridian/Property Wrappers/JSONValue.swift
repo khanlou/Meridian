@@ -67,11 +67,11 @@ extension NSObject {
 }
 
 @propertyWrapper
-public struct JSONValue<Type: Decodable>: PropertyWrapper {
+public struct JSONValue<Type: Decodable & Sendable>: PropertyWrapper {
 
     @ParameterStorage var finalValue: Type
 
-    let extractor: (RequestContext) throws -> Type
+    let extractor: @Sendable (RequestContext) throws -> Type
 
     func update(_ requestContext: RequestContext, errors: inout [Error]) {
         do {

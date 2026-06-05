@@ -9,9 +9,9 @@ import Foundation
 
 public struct BlockResponder: Responder {
 
-    let block: () async throws -> Response
+    let block: @Sendable () async throws -> Response
 
-    public init(block: @escaping () async throws -> Response) {
+    public init(block: @Sendable @escaping () async throws -> Response) {
         self.block = block
     }
 
@@ -20,7 +20,7 @@ public struct BlockResponder: Responder {
     }
 }
 
-public protocol Middleware {
+public protocol Middleware: Sendable {
     func execute(next: Responder) async throws -> Response
 }
 
