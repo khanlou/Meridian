@@ -105,6 +105,7 @@ struct RoutingMiddleware: Middleware {
         if let route {
             try await hydration.hydrate(route)
             if let firstError = hydration.errors.first {
+                try await hydration.hydrate(errorRenderer)
                 let responder = BlockResponder {
                     try await errorRenderer.render(primaryError: firstError, context: .init(allErrors: hydration.errors))
                 }
@@ -122,13 +123,13 @@ struct RoutingMiddleware: Middleware {
             .flatMap({ middleware in
                 [
                     ResponseHydrationMiddleware(hydration: hydration),
-                    ErrorRescueMiddleware(errorRenderer: errorRenderer),
+                    ErrorRescueMiddleware(errorRenderer: errorRenderer, hydration: hydration),
                     middleware,
                 ]
             }) +
         [
             ResponseHydrationMiddleware(hydration: hydration),
-            ErrorRescueMiddleware(errorRenderer: errorRenderer),
+            ErrorRescueMiddleware(errorRenderer: errorRenderer, hydration: hydration),
         ]
 
         for middleware in middlewares {
@@ -142,11 +143,13 @@ struct RoutingMiddleware: Middleware {
 struct ErrorRescueMiddleware: Middleware {
 
     let errorRenderer: ErrorRenderer
+    let hydration: Hydration
 
     func execute(next: Responder) async throws -> Response {
         do {
             return try await next.execute()
         } catch {
+            try await hydration.hydrate(errorRenderer)
             return try await errorRenderer
                 .render(primaryError: error, context: .init(error: error))
         }

@@ -14,6 +14,10 @@ import NIOHTTP1
 
 final class RouterTests: XCTestCase {
 
+    struct ErrorRendererPrefixEnvironmentKey: EnvironmentKey {
+        static let defaultValue = ""
+    }
+
     struct Wrench: Error { }
 
     struct ThrowingExtractor: NonParameterizedExtractor {
@@ -40,8 +44,11 @@ final class RouterTests: XCTestCase {
     struct StringErrorRenderer: ErrorRenderer {
         let string: String
 
+        @Environment(\.errorRendererPrefix) var prefix
+        @Path var path
+
         func render(primaryError: any Error, context: ErrorsContext) async throws -> any Response {
-            string
+            "\(prefix)\(path): \(string)"
                 .statusCode(context.statusCode)
         }
     }
@@ -65,13 +72,18 @@ final class RouterTests: XCTestCase {
     }
 
     struct BasicErrorRendererWithDependency: ErrorRenderer {
+        @Environment(\.errorRendererPrefix) var prefix
+        @Path var path
+
         func render(primaryError: any Error, context: ErrorsContext) async throws -> any Response {
-            StringWithDependency(string: context.errorMessage)
+            StringWithDependency(string: "\(prefix)\(path): \(context.errorMessage)")
                 .statusCode(context.statusCode)
         }
     }
 
     func makeWorld() throws -> World {
+        EnvironmentValues.shared.errorRendererPrefix = "Hydrated "
+
         return try World(errorRenderer: BasicErrorRendererWithDependency(), builder: {
 
             StringResponder(string: "root paths should work")
@@ -129,13 +141,13 @@ final class RouterTests: XCTestCase {
         try await atPath("/a", expect: .header("Middleware", "A"))
         try await atPath("/", expect: .headerNil("Shared-Middleware"))
         try await atPath("/a", expect: .body("matching a subpath should work"))
-        try await atPath("/throws", expect: .body("An unknown error occurred in ThrowingExtractor. (Error with dependency)"))
+        try await atPath("/throws", expect: .body("Hydrated /throws: An unknown error occurred in ThrowingExtractor. (Error with dependency)"))
         try await atPath("/b", expect: .body("an group with no prefix should work"))
         try await atPath("/b", expect: .header("GroupWithNoNameMiddleware", "A"))
         try await atPath("/c", expect: .body("another group with no prefix should work"))
         try await atPath("/c", expect: .headerNil("Shared-Middleware"))
         try await atPath("/z", expect: .notFound)
-        try await atPath("/z", expect: .body("No matching route was found. (Error with dependency)"))
+        try await atPath("/z", expect: .body("Hydrated /z: No matching route was found. (Error with dependency)"))
         try await atPath("/b/a", expect: .body("a group with a prefix should work"))
         try await atPath("/b/a", expect: .header("Middleware", "B"))
         try await atPath("/b/a", expect: .header("Shared-Middleware", "B"))
@@ -145,9 +157,9 @@ final class RouterTests: XCTestCase {
         try await atPath("/b/e/f", expect: .body("two path components in the prefix should work"))
         try await atPath("/b/b", expect: .notFound)
         try await atPath("/b/z", expect: .notFound)
-        try await atPath("/b/z", expect: .body("error renderer on group b"))
+        try await atPath("/b/z", expect: .body("Hydrated /b/z: error renderer on group b"))
         try await atPath("/b/c/z", expect: .notFound)
-        try await atPath("/b/c/z", expect: .body("error renderer on group c"))
+        try await atPath("/b/c/z", expect: .body("Hydrated /b/c/z: error renderer on group c"))
     }
 
     func atPath(_ path: String, expect: Expectation, file: StaticString = #file, line: UInt = #line) async throws {
@@ -166,6 +178,17 @@ final class RouterTests: XCTestCase {
             XCTAssertNil(response.headers.first(where: { $0.name == key }), file: file, line: line)
         case let .header(key, value):
             XCTAssertEqual(response.headers.first(where: { $0.name == key })?.value, value, file: file, line: line)
+        }
+    }
+}
+
+extension EnvironmentValues {
+    var errorRendererPrefix: String {
+        get {
+            self[RouterTests.ErrorRendererPrefixEnvironmentKey.self]
+        }
+        set {
+            self[RouterTests.ErrorRendererPrefixEnvironmentKey.self] = newValue
         }
     }
 }
