@@ -17,7 +17,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio", from: "2.78.0"),
         .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.16.0"),
         .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.2.0"),
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "0.3.0"),
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.5.0"),
     ],
     targets: [
         .executableTarget(
